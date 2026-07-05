@@ -1,0 +1,177 @@
+/**
+ * Global Styles
+ * Base element and utility styles for the page shell. Site-specific
+ * overrides belong in _theme-customization.css, which is imported
+ * after this file and therefore wins ties in the cascade.
+ */
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  font-family: var(--font-primary);
+  font-size: var(--font-p);
+  font-weight: var(--default-font-weight);
+  line-height: var(--default-line-height);
+  letter-spacing: var(--tracking);
+  color: var(--color-text);
+  /* padding-top: var(--space-2xl-3xl); */
+  background-color: var(--color-background);
+
+  &.modal-active {
+    overflow: hidden;
+  }
+}
+
+.container {
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  height: 100%;
+  width: 100%;
+  max-width: var(--wrapper-max-width, 85rem);
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/**
+ * Heading Styles
+ */
+:is(h1, h2, h3, h4) {
+  font-family: var(--font-heading);
+  font-weight: var(--default-font-weight);
+  line-height: var(--smaller-line-height);
+}
+
+h1 {
+  font-size: var(--font-h1);
+}
+
+h2 {
+  font-size: var(--font-h2);
+}
+
+h3 {
+  font-size: var(--font-h3);
+}
+
+h4 {
+  font-size: var(--font-h4);
+}
+
+.lead-in {
+  font-size: var(--font-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-s);
+  text-transform: uppercase;
+  color: var(--color-text-highlight);
+}
+
+.is-dark .lead-in {
+  color: var(--color-text-highlight-light);
+}
+
+.lead-in + :is(h1, h2, h3, h4) {
+  margin-block-start: 0.5rem;
+}
+
+:is(h1, h2, h3, h4) + .sub-title {
+  margin-top: var(--space-xs-s);
+}
+
+p {
+  font-size: var(--font-p);
+  margin: 0;
+}
+strong {
+  font-size: 0.8em;
+}
+
+a {
+  font-size: inherit;
+  text-decoration: none;
+  color: var(--color-primary);
+  display: inline-block; /* Needed for transform to work */
+  background-color: transparent;
+  transition: all 0.5s ease-in-out;
+
+  &:hover {
+    background-color: var(--glass-background);
+  }
+}
+
+/* Horizontal rules */
+hr {
+  border: none;
+  height: 1px;
+  background-color: var(--color-border-light);
+  margin: var(--space-m) 0;
+}
+
+/**
+ * Default SVG Styles
+ */
+svg {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-primary);
+}
+
+/**
+ * Scroll to top button
+ */
+.to-top {
+  position: fixed;
+  bottom: 3rem;
+  right: 3rem;
+  opacity: 0;
+  z-index: 1000;
+  transition: opacity var(--transition-fade);
+  background: var(--glass-background-light);
+  border: var(--glass-border-dark);
+  border-radius: 50%;
+  box-shadow: var(--glass-box-shadow);
+  backdrop-filter: blur(10px);
+  text-decoration: none;
+  width: 3rem;
+  height: 3rem;
+  padding: 0.3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    stroke-width: 1px;
+  }
+}
+
+.scrolling .to-top {
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+
+    svg {
+      stroke-width: 2px;
+    }
+  }
+}
+
+/**
+ * Vertical Rhythm Utility
+ * https://every-layout.dev/layouts/stack/
+ */
+
+.flow {
+  & * {
+    margin-top: 0;
+  }
+
+  & > * + * {
+    margin-top: var(--flow-space, 1em);
+  }
+}
