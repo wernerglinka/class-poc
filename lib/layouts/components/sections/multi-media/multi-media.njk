@@ -5,6 +5,8 @@
 {% from "components/_partials/image/image.njk" import image %}
 {% from "components/_partials/video/video.njk" import video %}
 {% from "components/_partials/lottie/lottie.njk" import lottie %}
+{% from "components/_partials/iframe/iframe.njk" import iframe %}
+{% from "components/_partials/session-list/session-list.njk" import sessionList %}
 
 <div class="content {% if section.isReverse %}is-reverse{% endif %}">
   {% if section.mediaType === "audio" %}
@@ -28,13 +30,25 @@
     <div class="media">{{ lottie(section.lottie) }}</div>
   {% endif %}
 
-  {% if section.text | hasText %}
+  {% if section.mediaType === "text" and section.mediaText | hasText %}
+    <div class="media is-text flow">{{ text(section.mediaText) }}</div>
+  {% endif %}
+
+  {% if section.mediaType === "iframe" and section.iframe.src %}
+    <div class="media is-iframe">{{ iframe(section.iframe) }}</div>
+  {% endif %}
+
+  {% set hasSessions = section.sessions and section.sessions.length > 0 %}
+  {% if section.text | hasText or hasSessions %}
     <div class="text flow">
-      {% if section.text %}
+      {% if section.text | hasText %}
         <div class="prose flow">{{ text(section.text)}}</div>
       {% endif %}
       {% if section.ctas | hasCtas %}
         {{ ctas(section.ctas) }}
+      {% endif %}
+      {% if hasSessions %}
+        {{ sessionList(section.endpoint, section.sessions, section.sessionsTitle) }}
       {% endif %}
     </div><!-- .text -->
   {% endif %}

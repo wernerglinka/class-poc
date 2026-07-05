@@ -1,0 +1,27 @@
+{
+  "name": "session-list",
+  "type": "partial",
+  "styles": ["session-list.css"],
+  "scripts": ["session-list.js"],
+  "requires": [],
+  "validation": {
+    "properties": {
+      "endpoint": {
+        "type": "string",
+        "description": "Apps Script web app /exec URL for availability reads and signup writes"
+      },
+      "sessions": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "sessionId": { "type": "string" },
+            "dateDisplay": { "type": "string" },
+            "timeDisplay": { "type": "string" },
+            "hosted": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  },
+  "fields": {}
+}

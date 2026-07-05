@@ -3,7 +3,7 @@
   "type": "section",
   "styles": ["multi-media.css"],
   "scripts": [],
-  "requires": ["ctas", "text", "image", "video", "audio", "icon", "lottie", "commons"],
+  "requires": ["ctas", "text", "image", "video", "audio", "icon", "lottie", "iframe", "session-list", "commons"],
   "validation": {
     "required": ["sectionType", "mediaType"],
     "properties": {
@@ -13,7 +13,26 @@
       },
       "mediaType": {
         "type": "string",
-        "enum": ["image", "video", "audio", "icon", "lottie"]
+        "enum": ["image", "video", "audio", "icon", "lottie", "text", "iframe"]
+      },
+      "endpoint": {
+        "type": "string",
+        "description": "Apps Script web app /exec URL for the optional session list"
+      },
+      "sessionsTitle": {
+        "type": "string",
+        "description": "Heading rendered above the optional session list"
+      },
+      "sessions": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "sessionId": { "type": "string" },
+            "dateDisplay": { "type": "string" },
+            "timeDisplay": { "type": "string" },
+            "hosted": { "type": "boolean" }
+          }
+        }
       },
       "isReverse": {
         "type": "boolean"
@@ -78,7 +97,7 @@
     "mediaType": {
       "widget": "select",
       "label": "Media type",
-      "enum": ["image", "video", "audio", "icon", "lottie"],
+      "enum": ["image", "video", "audio", "icon", "lottie", "text", "iframe"],
       "default": "image"
     },
     "isReverse": {
@@ -88,6 +107,12 @@
     },
     "text": {
       "$use": "text"
+    },
+    "mediaText": {
+      "$use": "text"
+    },
+    "iframe": {
+      "$use": "iframe"
     },
     "image": {
       "$use": "image"

@@ -1,0 +1,22 @@
+{#
+  iframe
+  Responsive wrapper for an embedded third-party frame (e.g. the
+  Givebutter registration form). The iframe fills the available
+  width; the embedded page's own layout is responsive inside it.
+
+  Expected properties:
+  - src: string - the embed URL
+  - title: string - accessible title for the frame
+  - allow: string - optional permissions policy (e.g. "payment")
+#}
+
+{% macro iframe(info) %}
+  <div class="iframe-frame">
+    <iframe
+      src="{{ info.src }}"
+      title="{{ info.title }}"
+      loading="lazy"
+      {% if info.allow %}allow="{{ info.allow }}"{% endif %}
+    ></iframe>
+  </div>
+{% endmacro %}

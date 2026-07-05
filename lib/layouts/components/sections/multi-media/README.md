@@ -1,6 +1,6 @@
 # Multi-Media Section Component
 
-A flexible section component that renders text content alongside various media types. Supports images, videos, audio, icons, and Lottie animations with reversible layouts and responsive behavior.
+A flexible section component that renders text content alongside various media types. Supports images, videos, audio, icons, Lottie animations, a second text block, and embedded frames with reversible layouts and responsive behavior.
 
 ## Supported Media Types
 
@@ -9,6 +9,15 @@ A flexible section component that renders text content alongside various media t
 - **audio**: MP3/OGG audio with background image
 - **icon**: SVG icons from the component library
 - **lottie**: JSON animations with playback controls
+- **text**: A second text block (`mediaText`), for two-column text layouts
+- **iframe**: An embedded frame (`iframe.src`/`iframe.title`), e.g. a registration form
+
+## Optional Session List
+
+When `sessions` (with `endpoint` and `sessionsTitle`) is present, the
+text column appends the interactive session-list partial (volunteer
+host status and signup). This is normally supplied by the class-pages
+plugin, not hand-written.
 
 ## Data Structure
 
@@ -19,7 +28,7 @@ A flexible section component that renders text content alongside various media t
   id: ""
   classes: ""
   isReverse: false     # Reverses media/text positioning
-  mediaType: image     # Required: 'image', 'video', 'audio', 'icon', or 'lottie'
+  mediaType: image     # Required: 'image', 'video', 'audio', 'icon', 'lottie', 'text', or 'iframe'
   containerFields:
     inContainer: true
     isAnimated: true

@@ -74,9 +74,7 @@ describe('formatTime', () => {
 
 describe('buildScheduleLine', () => {
   it('formats a single session with full date', () => {
-    const line = buildScheduleLine([
-      { sessionDate: '2026-07-10', startTime: '13:00', endTime: '16:00' }
-    ]);
+    const line = buildScheduleLine([{ sessionDate: '2026-07-10', startTime: '13:00', endTime: '16:00' }]);
     assert.equal(line, 'Friday, July 10, 2026: 1:00 PM - 4:00 PM');
   });
 
@@ -137,30 +135,28 @@ describe('buildSessionItems', () => {
 });
 
 describe('buildSections', () => {
-  it('builds the full page structure in order', () => {
+  it('builds the consolidated page structure in order', () => {
     const sections = buildSections(sampleOffering, cpcData);
     assert.deepEqual(
       sections.map((section) => section.sectionType),
-      [
-        'hero',
-        'rich-text',
-        'rich-text',
-        'givebutter-embed',
-        'rich-text',
-        'class-sessions',
-        'rich-text',
-        'rich-text',
-        'columns'
-      ]
+      ['hero', 'multi-media', 'multi-media', 'multi-media', 'multi-media']
+    );
+    assert.deepEqual(
+      sections.slice(1).map((section) => section.mediaType),
+      ['text', 'iframe', 'text', 'image']
     );
   });
 
-  it('wires the sessions section with endpoint and session items', () => {
+  it('pairs the description with details and the session list', () => {
     const sections = buildSections(sampleOffering, cpcData, 'https://example.com/exec');
-    const sessionsSection = sections.find((section) => section.sectionType === 'class-sessions');
-    assert.equal(sessionsSection.endpoint, 'https://example.com/exec');
-    assert.equal(sessionsSection.sessions.length, 3);
-    assert.equal(sessionsSection.sessions[0].sessionId, 's1');
+    const details = sections[1];
+    assert.equal(details.mediaText.prose, 'A three session woodworking class.');
+    assert.equal(details.text.title, 'Class details');
+    assert.match(details.text.prose, /Tuition: \$225/);
+    assert.equal(details.endpoint, 'https://example.com/exec');
+    assert.equal(details.sessionsTitle, 'Sessions and volunteer hosts');
+    assert.equal(details.sessions.length, 3);
+    assert.equal(details.sessions[0].sessionId, 's1');
   });
 
   it('puts title, schedule, and an anchor register CTA in the hero', () => {
@@ -171,14 +167,23 @@ describe('buildSections', () => {
     assert.equal(hero.ctas[0].url, '#register', 'CTA scrolls to the embed when one exists');
   });
 
-  it('builds the registration embed from the campaign URL', () => {
+  it('pairs what to expect with the registration embed', () => {
     const sections = buildSections(sampleOffering, cpcData);
-    const embed = sections.find((section) => section.sectionType === 'givebutter-embed');
-    assert.equal(embed.id, 'register');
-    assert.equal(embed.embedUrl, 'https://givebutter.com/embed/c/example?goalBar=false');
+    const register = sections[2];
+    assert.equal(register.id, 'register');
+    assert.equal(register.isReverse, true, 'text reads first, embed sits in the second column');
+    assert.equal(register.text.title, 'What to expect');
+    assert.equal(register.iframe.src, 'https://givebutter.com/embed/c/example?goalBar=false');
   });
 
-  it('skips optional sections when fields are empty', () => {
+  it('pairs the accessibility and cancellation boilerplate', () => {
+    const sections = buildSections(sampleOffering, cpcData);
+    const policies = sections[3];
+    assert.equal(policies.mediaText.title, 'Accessibility');
+    assert.equal(policies.text.title, 'Cancellation policy');
+  });
+
+  it('skips the registration section and session list when fields are empty', () => {
     const bare = {
       ...sampleOffering,
       fullDescription: '',
@@ -190,25 +195,41 @@ describe('buildSections', () => {
     const sections = buildSections(bare, cpcData);
     assert.deepEqual(
       sections.map((section) => section.sectionType),
-      ['hero', 'rich-text', 'rich-text', 'rich-text', 'columns']
+      ['hero', 'multi-media', 'multi-media', 'multi-media']
     );
+    assert.equal(sections[1].sessions, undefined);
     assert.equal(sections[0].ctas.length, 0);
     assert.equal(sections[0].containerFields.background.imageScreen, 'none');
   });
 
-  it('drops the photo column when there is no instructor photo', () => {
+  it('keeps the what-to-expect column when only the embed is missing', () => {
+    const sections = buildSections({ ...sampleOffering, givebutterUrl: '' }, cpcData);
+    const register = sections[2];
+    assert.equal(register.text.title, 'What to expect');
+    assert.equal(register.iframe, undefined);
+  });
+
+  it('builds the instructor section from photo and bio', () => {
+    const sections = buildSections(sampleOffering, cpcData);
+    const instructor = sections[sections.length - 1];
+    assert.equal(instructor.mediaType, 'image');
+    assert.equal(instructor.image.src, 'https://example.com/jacob.jpg');
+    assert.equal(instructor.text.subTitle, 'Jacob Mathioudis-Goudey');
+    assert.equal(instructor.text.prose, 'Woodworker in Minneapolis.');
+  });
+
+  it('drops the photo when there is no instructor photo', () => {
     const sections = buildSections({ ...sampleOffering, instructorPhotoUrl: '' }, cpcData);
     const instructor = sections[sections.length - 1];
-    assert.equal(instructor.columns.length, 1);
-    assert.equal(instructor.columns[0].blocks[0].text.subTitle, 'Jacob Mathioudis-Goudey');
+    assert.equal(instructor.mediaType, 'text');
+    assert.equal(instructor.image, undefined);
+    assert.equal(instructor.text.subTitle, 'Jacob Mathioudis-Goudey');
   });
 
   it('renders instructor links as CTA buttons, not prose', () => {
     const sections = buildSections(sampleOffering, cpcData);
     const instructor = sections[sections.length - 1];
-    const textColumn = instructor.columns[1];
-    assert.equal(textColumn.blocks[0].text.prose, 'Woodworker in Minneapolis.');
-    assert.deepEqual(textColumn.blocks[1].ctas, [
+    assert.deepEqual(instructor.ctas, [
       {
         url: 'https://instagram.com/@jake.mg.furniture',
         label: 'Instagram',
@@ -218,10 +239,10 @@ describe('buildSections', () => {
     ]);
   });
 
-  it('omits the CTA block when there are no instructor links', () => {
+  it('omits CTAs when there are no instructor links', () => {
     const sections = buildSections({ ...sampleOffering, instructorLinks: '' }, cpcData);
     const instructor = sections[sections.length - 1];
-    assert.equal(instructor.columns[1].blocks.length, 1);
+    assert.deepEqual(instructor.ctas, []);
   });
 });
 
@@ -238,10 +259,7 @@ describe('image resolution', () => {
 
   it('prefers the campaign slug for the image folder, falling back to the title slug', () => {
     assert.equal(imageFolderSlug(sampleOffering), 'example');
-    assert.equal(
-      imageFolderSlug({ ...sampleOffering, givebutterUrl: '' }),
-      'staked-side-table'
-    );
+    assert.equal(imageFolderSlug({ ...sampleOffering, givebutterUrl: '' }), 'staked-side-table');
     assert.equal(slugify('Appliqué as Adornment'), 'applique-as-adornment');
   });
 
@@ -350,7 +368,7 @@ describe('plugin behavior', () => {
       assert.ok(file, 'expected generated file');
       assert.equal(file.layout, 'pages/sections.njk');
       assert.equal(file.seo.title, 'Staked Side Table | Center for People and Craft');
-      assert.equal(file.sections.length, 9);
+      assert.equal(file.sections.length, 5);
       assert.deepEqual(file.card, {
         title: 'Staked Side Table',
         description: 'Learn staked furniture.',

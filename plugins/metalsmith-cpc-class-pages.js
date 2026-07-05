@@ -10,11 +10,13 @@
  * sections renderer, and the component bundler treat them exactly like
  * hand-written pages.
  *
- * The section mapping mirrors the live CPC class page structure
- * (modeled on Summer Herbs for Home Medicine): hero with title and
- * schedule, description, class details, what to expect, session list,
- * org boilerplate (accessibility, cancellation policy) from
- * lib/data/cpc.json, and an instructor block.
+ * The section mapping mirrors the live CPC class page content
+ * (modeled on Summer Herbs for Home Medicine), consolidated into a
+ * hero plus four two-column multi-media sections: description beside
+ * class details with the session/volunteer list, what to expect
+ * beside the Givebutter registration embed, org boilerplate
+ * (accessibility beside the cancellation policy, from
+ * lib/data/cpc.json), and instructor photo beside the bio.
  *
  * @author Werner Glinka <werner@glinka.co>
  */
@@ -82,8 +84,7 @@ const parseIsoDate = (isoDate) => new Date(`${isoDate}T00:00:00`);
  * @param {Object} formatOptions - Intl.DateTimeFormat options
  * @returns {string} Formatted date
  */
-const formatDate = (isoDate, formatOptions) =>
-  parseIsoDate(isoDate).toLocaleDateString('en-US', formatOptions);
+const formatDate = (isoDate, formatOptions) => parseIsoDate(isoDate).toLocaleDateString('en-US', formatOptions);
 
 /**
  * Build the human-readable schedule line for an offering, in the style
@@ -111,9 +112,7 @@ export function buildScheduleLine(sessions) {
     return `${fullDate}: ${times}`;
   }
 
-  const weekdays = sessions.map((session) =>
-    formatDate(session.sessionDate, { weekday: 'long' })
-  );
+  const weekdays = sessions.map((session) => formatDate(session.sessionDate, { weekday: 'long' }));
   const sameWeekday = weekdays.every((weekday) => weekday === weekdays[0]);
 
   if (sameWeekday) {
@@ -154,10 +153,7 @@ export function buildDetailsProse(offering, cpcData) {
     lines.push(`**Materials fee: $${offering.materialsFee}**${note}`);
   }
 
-  const ageAndAbility = [
-    offering.minimumAge !== '' ? `${offering.minimumAge}+` : '',
-    offering.abilityLevel
-  ]
+  const ageAndAbility = [offering.minimumAge !== '' ? `${offering.minimumAge}+` : '', offering.abilityLevel]
     .filter((part) => part !== '')
     .join(', ');
   if (ageAndAbility !== '') {
@@ -389,64 +385,114 @@ const containerDefaults = (overrides = {}) => ({
 });
 
 /**
- * Build a rich-text section.
- * @param {string} title - Section title ('' for none)
+ * Build a text block in the shape the text partial renders.
+ * @param {string} title - Block title ('' for none)
  * @param {string} prose - Markdown prose
- * @param {string} [classes] - Extra CSS classes
- * @returns {Object} Section object
+ * @param {Object} [overrides] - Extra text fields (e.g. subTitle)
+ * @returns {Object} Text block object
  */
-const richTextSection = (title, prose, classes = '') => ({
-  sectionType: 'rich-text',
-  containerTag: 'section',
-  classes,
-  id: '',
-  isDisabled: false,
-  containerFields: containerDefaults(),
-  text: { leadIn: '', title, titleTag: 'h2', subTitle: '', prose },
-  ctas: []
+const textBlock = (title, prose, overrides = {}) => ({
+  leadIn: '',
+  title,
+  titleTag: 'h2',
+  subTitle: '',
+  prose,
+  ...overrides
 });
 
 /**
- * Build the interactive sessions section. Server-rendered host state
- * comes from the build; the component's JS refreshes it at page load
- * and handles volunteer signups.
+ * Build a two-column multi-media section. The media slot (mediaText,
+ * image, or iframe) renders first; the text column renders second and
+ * may carry CTAs and the interactive session list.
+ * @param {Object} spec - Section spec
+ * @returns {Object} Section object
+ */
+const multiMediaSection = ({
+  classes = '',
+  id = '',
+  mediaType,
+  isReverse = false,
+  text = textBlock('', ''),
+  mediaText,
+  image,
+  iframe,
+  ctas = [],
+  sessions,
+  endpoint,
+  sessionsTitle
+}) => ({
+  sectionType: 'multi-media',
+  containerTag: 'section',
+  classes,
+  id,
+  isDisabled: false,
+  isReverse,
+  containerFields: containerDefaults(),
+  mediaType,
+  text,
+  ctas,
+  ...(mediaText !== undefined ? { mediaText } : {}),
+  ...(image !== undefined ? { image } : {}),
+  ...(iframe !== undefined ? { iframe } : {}),
+  ...(sessions !== undefined ? { sessions, endpoint, sessionsTitle } : {})
+});
+
+/**
+ * Build the details section: description on the left, class details
+ * plus the interactive session/volunteer list on the right.
+ * Server-rendered host state comes from the build; the session-list
+ * partial's JS refreshes it at page load and handles signups.
  * @param {Object} offering - Offering record
+ * @param {Object} cpcData - Org config from lib/data/cpc.json
  * @param {string} apiUrl - Web app /exec URL
  * @returns {Object} Section object
  */
-const classSessionsSection = (offering, apiUrl) => ({
-  sectionType: 'class-sessions',
-  containerTag: 'section',
-  classes: '',
-  id: 'sessions',
-  isDisabled: false,
-  containerFields: containerDefaults(),
-  text: {
-    leadIn: '',
-    title: 'Sessions and volunteer hosts',
-    titleTag: 'h2',
-    subTitle: '',
-    prose: ''
-  },
-  endpoint: apiUrl,
-  sessions: buildSessionItems(offering.sessions)
-});
+const detailsSection = (offering, cpcData, apiUrl) =>
+  multiMediaSection({
+    classes: 'class-details',
+    id: 'sessions',
+    mediaType: 'text',
+    mediaText: textBlock('', offering.fullDescription),
+    text: textBlock('Class details', buildDetailsProse(offering, cpcData)),
+    ...(offering.sessions.length > 0
+      ? {
+          sessions: buildSessionItems(offering.sessions),
+          endpoint: apiUrl,
+          sessionsTitle: 'Sessions and volunteer hosts'
+        }
+      : {})
+  });
 
 /**
- * Build the Givebutter registration embed section.
- * @param {string} embedUrl - Givebutter embed URL
+ * Build the registration section: what to expect on the left, the
+ * Givebutter embed on the right (isReverse puts the media slot last).
+ * @param {Object} offering - Offering record
+ * @param {string} embedUrl - Givebutter embed URL ('' for none)
  * @returns {Object} Section object
  */
-const givebutterSection = (embedUrl) => ({
-  sectionType: 'givebutter-embed',
-  containerTag: 'section',
-  classes: 'class-registration',
-  id: 'register',
-  isDisabled: false,
-  containerFields: containerDefaults(),
-  text: { leadIn: '', title: 'Register', titleTag: 'h2', subTitle: '', prose: '' },
-  embedUrl
-});
+const registrationSection = (offering, embedUrl) =>
+  multiMediaSection({
+    classes: 'class-registration',
+    id: 'register',
+    mediaType: 'iframe',
+    isReverse: true,
+    text: textBlock('What to expect', offering.whatToExpect),
+    ...(embedUrl !== '' ? { iframe: { src: embedUrl, title: 'Class registration form', allow: 'payment' } } : {})
+  });
+
+/**
+ * Build the org boilerplate section: accessibility on the left, the
+ * cancellation policy on the right.
+ * @param {Object} cpcData - Org config from lib/data/cpc.json
+ * @returns {Object} Section object
+ */
+const policiesSection = (cpcData) =>
+  multiMediaSection({
+    classes: 'class-boilerplate',
+    mediaType: 'text',
+    mediaText: textBlock(cpcData.accessibility.title, cpcData.accessibility.prose),
+    text: textBlock(cpcData.cancellationPolicy.title, cpcData.cancellationPolicy.prose)
+  });
 
 /**
  * Build the hero section for an offering.
@@ -493,62 +539,23 @@ const heroSection = (offering) => ({
 });
 
 /**
- * Build the instructor section: photo column plus bio column, or a
- * single text column when there is no photo.
+ * Build the instructor section: photo on the left, bio on the right,
+ * or a single text column when there is no photo.
  * @param {Object} offering - Offering record
  * @returns {Object} Section object
  */
-const instructorSection = (offering) => {
-  const textColumnBlocks = [
-    {
-      text: {
-        leadIn: '',
-        title: 'Meet your instructor',
-        titleTag: 'h2',
-        subTitle: offering.instructorName,
-        prose: offering.instructorBio
-      }
-    }
-  ];
-
-  const instructorCtas = buildInstructorCtas(offering.instructorLinks);
-  if (instructorCtas.length > 0) {
-    textColumnBlocks.push({ ctas: instructorCtas });
-  }
-
-  const textColumn = { column: null, columnClasses: 'text flow', blocks: textColumnBlocks };
-
-  const columns =
-    offering.instructorPhotoUrl !== ''
-      ? [
-          {
-            column: null,
-            columnClasses: 'image',
-            blocks: [
-              {
-                image: {
-                  src: offering.instructorPhotoUrl,
-                  alt: offering.instructorName,
-                  caption: ''
-                }
-              }
-            ]
-          },
-          textColumn
-        ]
-      : [textColumn];
-
-  return {
-    sectionType: 'columns',
-    containerTag: 'section',
+const instructorSection = (offering) =>
+  multiMediaSection({
     classes: 'class-instructor',
-    id: '',
-    isDisabled: false,
-    containerFields: containerDefaults(),
-    contentClasses: '',
-    columns
-  };
-};
+    mediaType: offering.instructorPhotoUrl !== '' ? 'image' : 'text',
+    ...(offering.instructorPhotoUrl !== ''
+      ? { image: { src: offering.instructorPhotoUrl, alt: offering.instructorName, caption: '' } }
+      : {}),
+    text: textBlock('Meet your instructor', offering.instructorBio, {
+      subTitle: offering.instructorName
+    }),
+    ctas: buildInstructorCtas(offering.instructorLinks)
+  });
 
 /**
  * Build the full sections array for one offering.
@@ -560,29 +567,14 @@ const instructorSection = (offering) => {
 export function buildSections(offering, cpcData, apiUrl = '') {
   const sections = [heroSection(offering)];
 
-  if (offering.fullDescription !== '') {
-    sections.push(richTextSection('', offering.fullDescription, 'class-description'));
-  }
-
-  sections.push(richTextSection('Class details', buildDetailsProse(offering, cpcData), 'class-details'));
+  sections.push(detailsSection(offering, cpcData, apiUrl));
 
   const embedUrl = buildGivebutterEmbedUrl(offering.givebutterUrl);
-  if (embedUrl !== '') {
-    sections.push(givebutterSection(embedUrl));
+  if (embedUrl !== '' || offering.whatToExpect !== '') {
+    sections.push(registrationSection(offering, embedUrl));
   }
 
-  if (offering.whatToExpect !== '') {
-    sections.push(richTextSection('What to expect', offering.whatToExpect, 'class-expectations'));
-  }
-
-  if (offering.sessions.length > 0) {
-    sections.push(classSessionsSection(offering, apiUrl));
-  }
-
-  sections.push(richTextSection(cpcData.accessibility.title, cpcData.accessibility.prose, 'class-boilerplate'));
-  sections.push(
-    richTextSection(cpcData.cancellationPolicy.title, cpcData.cancellationPolicy.prose, 'class-boilerplate')
-  );
+  sections.push(policiesSection(cpcData));
   sections.push(instructorSection(offering));
 
   return sections;
@@ -663,8 +655,7 @@ export default function cpcClassPages(options = {}) {
     // never ship broken references; missing files warn loudly because
     // the fix (committing the emailed image) is the webmaster's job.
     const fileExists =
-      config.fileExists ??
-      ((sitePath) => existsSync(path.join(metalsmith.source(), sitePath.replace(/^\//, ''))));
+      config.fileExists ?? ((sitePath) => existsSync(path.join(metalsmith.source(), sitePath.replace(/^\//, ''))));
 
     for (const offering of offerings) {
       const resolvedOffering = resolveOfferingImages(offering, fileExists, console.warn);

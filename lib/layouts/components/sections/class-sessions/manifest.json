@@ -1,9 +1,9 @@
 {
   "name": "class-sessions",
   "type": "section",
-  "styles": ["class-sessions.css"],
-  "scripts": ["class-sessions.js"],
-  "requires": ["text", "commons"],
+  "styles": [],
+  "scripts": [],
+  "requires": ["text", "session-list", "commons"],
   "validation": {
     "required": ["sectionType", "endpoint", "sessions"],
     "properties": {

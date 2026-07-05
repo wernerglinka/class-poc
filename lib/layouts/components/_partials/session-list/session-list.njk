@@ -1,0 +1,62 @@
+{#
+  session-list
+  Renders the session list of a class offering. Host privacy: hosted
+  sessions show only date and time; open sessions additionally show a
+  quiet "(host needed)" link that opens the volunteer signup dialog.
+  Volunteer names are never displayed.
+
+  Server-rendered state comes from the build; session-list.js
+  refreshes availability from the web app on page load and handles the
+  signup POST.
+
+  Parameters:
+  - endpoint: string - the Apps Script web app /exec URL
+  - sessions: array of { sessionId, dateDisplay, timeDisplay, hosted }
+  - heading: string - optional heading rendered above the list
+#}
+
+{% macro sessionList(endpoint, sessions, heading = '') %}
+  <div class="session-list js-class-sessions" data-endpoint="{{ endpoint }}">
+    {% if heading %}
+      <h3 class="session-list-title">{{ heading }}</h3>
+    {% endif %}
+
+    <ul class="class-sessions-list">
+      {% for session in sessions %}
+        <li data-session-id="{{ session.sessionId }}">
+          <span class="session-date">{{ session.dateDisplay }}</span>
+          <span class="session-time">{{ session.timeDisplay }}</span>
+          <a
+            href="#"
+            class="host-needed-link js-host-signup{% if session.hosted %} is-hidden{% endif %}"
+          >(host needed)</a>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <dialog class="class-sessions-dialog">
+      <form>
+        <h3>Volunteer to host</h3>
+        <input type="hidden" name="sessionId" value="">
+        <label>
+          Your name
+          <input type="text" name="hostName" required maxlength="100">
+        </label>
+        <label>
+          Your email
+          <input type="email" name="hostEmail" required>
+        </label>
+        <label>
+          Volunteer code
+          <input type="text" name="volunteerCode" required autocomplete="off">
+          <small>The current code is in the latest volunteer email.</small>
+        </label>
+        <p class="js-feedback" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button type="submit" class="button primary">Sign up</button>
+          <button type="button" class="button js-cancel">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+  </div>
+{% endmacro %}

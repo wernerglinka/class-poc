@@ -29,7 +29,7 @@
       label: 'Learn More'
       isButton: true
       buttonStyle: 'primary'
-  mediaType: image # may be 'audio', 'icon', lottie','image', or 'video'. Not used media types may be removed
+  mediaType: image # may be 'audio', 'icon', 'lottie', 'image', 'video', 'text', or 'iframe'. Not used media types may be removed
   image:
     src: '/assets/images/sample.jpg'
     alt: 'Image description'
@@ -52,3 +52,19 @@
     control:
       autoplay: true
       loop: true
+  mediaText: # second text block, shown in the media slot when mediaType is 'text'
+    leadIn: ''
+    title: ''
+    titleTag: 'h2'
+    subTitle: ''
+    prose: 'Text for the media column goes here.'
+    isCentered: false
+  iframe: # embedded frame, shown in the media slot when mediaType is 'iframe'
+    src: 'https://example.com/embed'
+    title: 'Accessible frame title'
+    allow: '' # optional permissions policy, e.g. 'payment'
+  # Optional interactive session list appended to the text column;
+  # normally supplied by the class-pages plugin, not hand-written.
+  # endpoint: ''
+  # sessionsTitle: 'Sessions and volunteer hosts'
+  # sessions: []

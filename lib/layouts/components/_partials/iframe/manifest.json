@@ -1,0 +1,39 @@
+{
+  "name": "iframe",
+  "type": "partial",
+  "styles": ["iframe.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "properties": {
+      "src": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "allow": {
+        "type": "string"
+      }
+    }
+  },
+  "fields": {
+    "src": {
+      "widget": "text",
+      "label": "Embed URL",
+      "default": "",
+      "required": true
+    },
+    "title": {
+      "widget": "text",
+      "label": "Frame title",
+      "default": "",
+      "required": true
+    },
+    "allow": {
+      "widget": "text",
+      "label": "Permissions policy (e.g. payment)",
+      "default": ""
+    }
+  }
+}

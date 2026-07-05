@@ -46,6 +46,26 @@
       position: relative;
     }
 
+    /*
+      A text block in the media slot (mediaType "text") reads as prose,
+      not as a framed media object: no border, natural block flow, and
+      some breathing room against the offset glass card next to it.
+    */
+    .media.is-text {
+      display: block;
+      border: none;
+      overflow: visible;
+      padding-block: var(--space-s-m);
+    }
+
+    /*
+      An embedded frame (mediaType "iframe") fills its column; the
+      iframe partial's own height variable controls the frame height.
+    */
+    .media.is-iframe {
+      align-items: stretch;
+    }
+
     .icon-wrapper {
       display: flex;
       justify-content: center;

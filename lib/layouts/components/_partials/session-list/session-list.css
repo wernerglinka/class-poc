@@ -1,15 +1,15 @@
 /*
- * class-sessions
+ * session-list
  * Session list with volunteer host status and signup dialog.
  */
-.class-sessions .class-sessions-list {
+.session-list .class-sessions-list {
   list-style: none;
   padding: 0;
   display: grid;
   gap: var(--space-s, 1rem);
 }
 
-.class-sessions .class-sessions-list li {
+.session-list .class-sessions-list li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -19,7 +19,7 @@
   border-radius: 4px;
 }
 
-.class-sessions .session-date {
+.session-list .session-date {
   font-weight: 600;
 }
 
@@ -27,7 +27,7 @@
  * Class-based hiding: global button styles set display and would win
  * over the [hidden] attribute, so visibility is controlled by class.
  */
-.class-sessions .is-hidden {
+.session-list .is-hidden {
   display: none !important;
 }
 
@@ -35,19 +35,19 @@
  * The signup affordance is deliberately quiet: a plain text link, so
  * hosting reads as an aside rather than a call to action.
  */
-.class-sessions .host-needed-link {
+.session-list .host-needed-link {
   margin-inline-start: auto;
   font-style: italic;
   color: var(--color-text-muted, #666);
   text-decoration: underline;
 }
 
-.class-sessions .host-needed-link:hover,
-.class-sessions .host-needed-link:focus-visible {
+.session-list .host-needed-link:hover,
+.session-list .host-needed-link:focus-visible {
   color: inherit;
 }
 
-.class-sessions .session-thanks {
+.session-list .session-thanks {
   margin-inline-start: auto;
   font-style: italic;
 }
