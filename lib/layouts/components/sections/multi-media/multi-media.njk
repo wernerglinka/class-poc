@@ -8,6 +8,7 @@
 {% from "components/_partials/iframe/iframe.njk" import iframe %}
 {% from "components/_partials/givebutter-widget/givebutter-widget.njk" import givebutterWidget %}
 {% from "components/_partials/session-list/session-list.njk" import sessionList %}
+{% from "components/_partials/disclosure/disclosure.njk" import disclosures %}
 
 <div class="content {% if section.isReverse %}is-reverse{% endif %}">
   {% if section.mediaType === "audio" %}
@@ -44,7 +45,8 @@
   {% endif %}
 
   {% set hasSessions = section.sessions and section.sessions.length > 0 %}
-  {% if section.text | hasText or hasSessions %}
+  {% set hasDisclosures = section.disclosures and section.disclosures.length > 0 %}
+  {% if section.text | hasText or hasSessions or hasDisclosures %}
     <div class="text flow">
       {% if section.text | hasText %}
         <div class="prose flow">{{ text(section.text)}}</div>
@@ -54,6 +56,9 @@
       {% endif %}
       {% if hasSessions %}
         {{ sessionList(section.endpoint, section.sessions, section.sessionsTitle) }}
+      {% endif %}
+      {% if hasDisclosures %}
+        {{ disclosures(section.disclosures) }}
       {% endif %}
     </div><!-- .text -->
   {% endif %}

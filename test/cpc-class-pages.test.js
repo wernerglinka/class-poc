@@ -107,17 +107,24 @@ describe('buildScheduleLine', () => {
 });
 
 describe('buildDetailsProse', () => {
-  it('includes tuition, scholarship, materials, and age/ability', () => {
+  it('lists tuition, scholarship, materials, and age/ability', () => {
     const prose = buildDetailsProse(sampleOffering, cpcData);
-    assert.match(prose, /\*\*Tuition: \$225\*\* per participant/);
-    assert.match(prose, /Apply for a scholarship/);
-    assert.match(prose, /\*\*Materials fee: \$50\*\* \(Paid to instructor\)/);
-    assert.match(prose, /\*\*Age \/ Ability level:\*\* 16\+, Advanced beginner/);
+    assert.match(prose, /^<ul class="class-details-list">/);
+    assert.match(prose, /<li><strong>Tuition: \$225<\/strong> per participant<\/li>/);
+    assert.match(prose, /<li><a href="https:\/\/example\.com\/scholarship"><strong>Apply for a scholarship<\/strong><\/a><\/li>/);
+    assert.match(prose, /<li><strong>Materials fee: \$50<\/strong> \(Paid to instructor\)<\/li>/);
+    assert.match(prose, /<li><strong>Age \/ Ability level:<\/strong> 16\+, Advanced beginner<\/li>/);
+    assert.match(prose, /<\/ul>$/);
   });
 
   it('omits a zero materials fee', () => {
     const prose = buildDetailsProse({ ...sampleOffering, materialsFee: '0' }, cpcData);
     assert.doesNotMatch(prose, /Materials fee/);
+  });
+
+  it('returns empty when there are no details at all', () => {
+    const bare = { ...sampleOffering, tuition: '', materialsFee: '', minimumAge: '', abilityLevel: '' };
+    assert.equal(buildDetailsProse(bare, { ...cpcData, scholarshipUrl: '' }), '');
   });
 });
 
@@ -141,11 +148,11 @@ describe('buildSections', () => {
     const sections = buildSections(sampleOffering, cpcData);
     assert.deepEqual(
       sections.map((section) => section.sectionType),
-      ['hero', 'multi-media', 'multi-media', 'multi-media', 'multi-media']
+      ['hero', 'multi-media', 'multi-media', 'multi-media']
     );
     assert.deepEqual(
       sections.slice(1).map((section) => section.mediaType),
-      ['text', 'iframe', 'text', 'image']
+      ['text', 'iframe', 'image']
     );
   });
 
@@ -156,15 +163,14 @@ describe('buildSections', () => {
     assert.equal(details.text.title, 'Class details');
     assert.match(details.text.prose, /Tuition: \$225/);
     assert.equal(details.endpoint, 'https://example.com/exec');
-    assert.equal(details.sessionsTitle, 'Sessions and volunteer hosts');
+    assert.equal(details.sessionsTitle, 'Dates');
     assert.equal(details.sessions.length, 3);
     assert.equal(details.sessions[0].sessionId, 's1');
   });
 
-  it('puts title, schedule, and an anchor register CTA in the hero', () => {
+  it('puts title and an anchor register CTA in the hero', () => {
     const hero = buildSections(sampleOffering, cpcData)[0];
     assert.equal(hero.text.title, 'Staked Side Table');
-    assert.equal(hero.text.subTitle, 'Wednesdays, July 15, 22, 29: 6:00 PM - 9:00 PM');
     assert.equal(hero.containerFields.background.image, 'https://example.com/table.jpg');
     assert.equal(hero.ctas[0].url, '#register', 'CTA scrolls to the embed when one exists');
   });
@@ -200,14 +206,16 @@ describe('buildSections', () => {
     assert.match(register.iframe.src, /gba_gb\.element\.id=gGRrMX/);
   });
 
-  it('pairs the accessibility and cancellation boilerplate', () => {
+  it('folds the policy boilerplate into disclosures under what to expect', () => {
     const sections = buildSections(sampleOffering, cpcData);
-    const policies = sections[3];
-    assert.equal(policies.mediaText.title, 'Accessibility');
-    assert.equal(policies.text.title, 'Cancellation policy');
+    const register = sections[2];
+    assert.deepEqual(register.disclosures, [
+      { title: 'Accessibility', prose: 'Accessibility prose.' },
+      { title: 'Cancellation policy', prose: 'Cancellation prose.' }
+    ]);
   });
 
-  it('skips the registration section and session list when fields are empty', () => {
+  it('keeps the registration section for its disclosures when fields are empty', () => {
     const bare = {
       ...sampleOffering,
       fullDescription: '',
@@ -222,6 +230,8 @@ describe('buildSections', () => {
       ['hero', 'multi-media', 'multi-media', 'multi-media']
     );
     assert.equal(sections[1].sessions, undefined);
+    assert.equal(sections[2].iframe, undefined);
+    assert.equal(sections[2].disclosures.length, 2);
     assert.equal(sections[0].ctas.length, 0);
     assert.equal(sections[0].containerFields.background.imageScreen, 'none');
   });
@@ -408,7 +418,7 @@ describe('plugin behavior', () => {
       assert.ok(file, 'expected generated file');
       assert.equal(file.layout, 'pages/sections.njk');
       assert.equal(file.seo.title, 'Staked Side Table | Center for People and Craft');
-      assert.equal(file.sections.length, 5);
+      assert.equal(file.sections.length, 4);
       assert.deepEqual(file.card, {
         title: 'Staked Side Table',
         description: 'Learn staked furniture.',

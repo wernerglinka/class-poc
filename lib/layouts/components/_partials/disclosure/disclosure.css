@@ -1,0 +1,54 @@
+/*
+ * disclosure
+ * Native details/summary disclosure blocks. The summary reads as a
+ * quiet heading row; the open body gets breathing room before the
+ * next block's border.
+ *
+ * The expand/collapse is animated with ::details-content plus
+ * interpolate-size, which lets block-size transition between 0 and
+ * auto. Browsers without support simply snap open, the pre-animation
+ * behavior, so this is a progressive enhancement.
+ */
+.disclosures {
+  /* Opt in to animating to/from intrinsic sizes (auto) */
+  interpolate-size: allow-keywords;
+
+  .disclosure {
+    border-block-start: 1px solid var(--color-border-light, #ddd);
+
+    &:last-child {
+      border-block-end: 1px solid var(--color-border-light, #ddd);
+    }
+
+    summary {
+      cursor: pointer;
+      padding-block: var(--space-s, 1rem);
+      font-weight: 600;
+
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+
+    &::details-content {
+      block-size: 0;
+      overflow-y: clip;
+    }
+
+    &[open]::details-content {
+      block-size: auto;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      &::details-content {
+        transition:
+          block-size 0.3s ease,
+          content-visibility 0.3s allow-discrete;
+      }
+    }
+
+    .disclosure-body {
+      padding-block-end: var(--space-s, 1rem);
+    }
+  }
+}

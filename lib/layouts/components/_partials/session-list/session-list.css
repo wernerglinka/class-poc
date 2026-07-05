@@ -3,6 +3,9 @@
  * Session list with volunteer host status and signup dialog.
  */
 .session-list {
+  .session-list-title {
+    margin-block: 1rem;
+  }
   .class-sessions-list {
     list-style: none;
     padding: 0;
@@ -14,7 +17,7 @@
       flex-wrap: wrap;
       align-items: center;
       gap: var(--space-s, 1rem);
-      padding: var(--space-s, 1rem);
+      padding: 0;
     }
   }
 

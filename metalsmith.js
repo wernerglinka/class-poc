@@ -114,12 +114,10 @@ metalsmith
     isProduction
       ? false
       : [
-          'src/**/*',
-          'lib/layouts/**/*',
-          'lib/assets/main.css',
-          'lib/assets/main.js',
-          'lib/assets/styles/**/*',
-          'lib/data/**/*'
+          'src/',
+          'lib/layouts/',
+          'lib/assets/',
+          'lib/data/'
         ]
   )
   // Pass NODE_ENV to plugins

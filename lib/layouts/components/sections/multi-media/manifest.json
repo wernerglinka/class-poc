@@ -13,6 +13,7 @@
     "lottie",
     "iframe",
     "session-list",
+    "disclosure",
     "givebutter-widget",
     "commons"
   ],
@@ -118,6 +119,20 @@
       "givebutter.widgetId": {
         "type": "string",
         "description": "Widget element id from the pasted embed URL"
+      },
+      "disclosures": {
+        "type": "array",
+        "description": "Disclosure blocks appended to the text column",
+        "items": {
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "prose": {
+              "type": "string"
+            }
+          }
+        }
       }
     }
   },

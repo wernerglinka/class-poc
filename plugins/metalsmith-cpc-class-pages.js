@@ -12,11 +12,11 @@
  *
  * The section mapping mirrors the live CPC class page content
  * (modeled on Summer Herbs for Home Medicine), consolidated into a
- * hero plus four two-column multi-media sections: description beside
+ * hero plus three two-column multi-media sections: description beside
  * class details with the session/volunteer list, what to expect
- * beside the Givebutter registration embed, org boilerplate
- * (accessibility beside the cancellation policy, from
- * lib/data/cpc.json), and instructor photo beside the bio.
+ * beside the Givebutter registration embed with the org boilerplate
+ * (accessibility, cancellation policy, from lib/data/cpc.json) as
+ * disclosures beneath, and instructor photo beside the bio.
  *
  * @author Werner Glinka <werner@glinka.co>
  */
@@ -134,33 +134,41 @@ export function buildScheduleLine(sessions) {
 }
 
 /**
- * Build the class details prose (markdown) from offering fields.
+ * Build the class details from offering fields, as an unordered list
+ * with one item per detail. Emitted as raw HTML rather than markdown
+ * so the list carries the class-details-list class: the markdown
+ * pipeline passes block-level HTML through untouched and has no
+ * syntax for classing a list.
  * @param {Object} offering - Offering record
  * @param {Object} cpcData - Org config from lib/data/cpc.json
- * @returns {string} Markdown prose
+ * @returns {string} HTML list
  */
 export function buildDetailsProse(offering, cpcData) {
-  const lines = [];
+  const items = [];
 
   if (offering.tuition !== '') {
-    lines.push(`**Tuition: $${offering.tuition}** per participant`);
+    items.push(`<strong>Tuition: $${offering.tuition}</strong> per participant`);
   }
   if (cpcData.scholarshipUrl) {
-    lines.push(`[**Apply for a scholarship**](${cpcData.scholarshipUrl})`);
+    items.push(`<a href="${cpcData.scholarshipUrl}"><strong>Apply for a scholarship</strong></a>`);
   }
   if (offering.materialsFee !== '' && Number(offering.materialsFee) > 0) {
     const note = offering.materialsFeeNote !== '' ? ` (${offering.materialsFeeNote})` : '';
-    lines.push(`**Materials fee: $${offering.materialsFee}**${note}`);
+    items.push(`<strong>Materials fee: $${offering.materialsFee}</strong>${note}`);
   }
 
   const ageAndAbility = [offering.minimumAge !== '' ? `${offering.minimumAge}+` : '', offering.abilityLevel]
     .filter((part) => part !== '')
     .join(', ');
   if (ageAndAbility !== '') {
-    lines.push(`**Age / Ability level:** ${ageAndAbility}`);
+    items.push(`<strong>Age / Ability level:</strong> ${ageAndAbility}`);
   }
 
-  return lines.join('\n\n');
+  if (items.length === 0) {
+    return '';
+  }
+
+  return `<ul class="class-details-list">\n${items.map((item) => `  <li>${item}</li>`).join('\n')}\n</ul>`;
 }
 
 /**
@@ -423,7 +431,8 @@ const textBlock = (title, prose, overrides = {}) => ({
 /**
  * Build a two-column multi-media section. The media slot (mediaText,
  * image, iframe, or givebutter widget) renders first; the text column
- * renders second and may carry CTAs and the interactive session list.
+ * renders second and may carry CTAs, the interactive session list,
+ * and disclosure disclosures.
  * @param {Object} spec - Section spec
  * @returns {Object} Section object
  */
@@ -440,7 +449,8 @@ const multiMediaSection = ({
   ctas = [],
   sessions,
   endpoint,
-  sessionsTitle
+  sessionsTitle,
+  disclosures
 }) => ({
   sectionType: 'multi-media',
   containerTag: 'section',
@@ -456,7 +466,8 @@ const multiMediaSection = ({
   ...(image !== undefined ? { image } : {}),
   ...(iframe !== undefined ? { iframe } : {}),
   ...(givebutter !== undefined ? { givebutter } : {}),
-  ...(sessions !== undefined ? { sessions, endpoint, sessionsTitle } : {})
+  ...(sessions !== undefined ? { sessions, endpoint, sessionsTitle } : {}),
+  ...(disclosures !== undefined ? { disclosures } : {})
 });
 
 /**
@@ -480,14 +491,16 @@ const detailsSection = (offering, cpcData, apiUrl) =>
       ? {
           sessions: buildSessionItems(offering.sessions),
           endpoint: apiUrl,
-          sessionsTitle: 'Sessions and volunteer hosts'
+          sessionsTitle: 'Dates'
         }
       : {})
   });
 
 /**
- * Build the registration section: what to expect on the left, the
- * Givebutter embed on the right (isReverse puts the media slot last).
+ * Build the registration section: what to expect on the left with the
+ * org boilerplate (accessibility, cancellation policy) as collapsed
+ * disclosures beneath it, and the Givebutter embed on the right
+ * (isReverse puts the media slot last).
  *
  * Prefers Givebutter's widget, which resizes to the form's native
  * height; it needs the widget element id (carried by the pasted embed
@@ -510,26 +523,16 @@ const registrationSection = (offering, cpcData, embedUrl) => {
     mediaType: useWidget ? 'givebutter' : 'iframe',
     isReverse: true,
     text: textBlock('What to expect', offering.whatToExpect),
+    disclosures: [
+      { title: cpcData.accessibility.title, prose: cpcData.accessibility.prose },
+      { title: cpcData.cancellationPolicy.title, prose: cpcData.cancellationPolicy.prose }
+    ],
     ...(useWidget ? { givebutter: { accountId, widgetId } } : {}),
     ...(!useWidget && embedUrl !== ''
       ? { iframe: { src: embedUrl, title: 'Class registration form', allow: 'payment' } }
       : {})
   });
 };
-
-/**
- * Build the org boilerplate section: accessibility on the left, the
- * cancellation policy on the right.
- * @param {Object} cpcData - Org config from lib/data/cpc.json
- * @returns {Object} Section object
- */
-const policiesSection = (cpcData) =>
-  multiMediaSection({
-    classes: 'class-boilerplate',
-    mediaType: 'text',
-    mediaText: textBlock(cpcData.accessibility.title, cpcData.accessibility.prose),
-    text: textBlock(cpcData.cancellationPolicy.title, cpcData.cancellationPolicy.prose)
-  });
 
 /**
  * Build the hero section for an offering.
@@ -557,7 +560,7 @@ const heroSection = (offering) => ({
     leadIn: offering.category,
     title: offering.classTitle,
     titleTag: 'h1',
-    subTitle: buildScheduleLine(offering.sessions),
+    // subTitle: buildScheduleLine(offering.sessions),
     prose: offering.shortSummary
   },
   // With an embed on the page the hero CTA scrolls to it; otherwise
@@ -606,12 +609,10 @@ export function buildSections(offering, cpcData, apiUrl = '') {
 
   sections.push(detailsSection(offering, cpcData, apiUrl));
 
-  const embedUrl = buildGivebutterEmbedUrl(offering.givebutterUrl);
-  if (embedUrl !== '' || offering.whatToExpect !== '') {
-    sections.push(registrationSection(offering, cpcData, embedUrl));
-  }
+  // Always present: even without an embed or what-to-expect prose,
+  // the section carries the org's policy disclosures.
+  sections.push(registrationSection(offering, cpcData, buildGivebutterEmbedUrl(offering.givebutterUrl)));
 
-  sections.push(policiesSection(cpcData));
   sections.push(instructorSection(offering));
 
   return sections;

@@ -1,0 +1,20 @@
+{#
+  disclosure
+  Renders a list of collapsed disclosure blocks using the native
+  details/summary elements: accessible, keyboard-operable, and
+  JS-free. Body content is markdown.
+
+  Parameters:
+  - items: array of { title, prose }
+#}
+
+{% macro disclosures(items) %}
+  <div class="disclosures">
+    {% for item in items %}
+      <details class="disclosure">
+        <summary>{{ item.title }}</summary>
+        <div class="disclosure-body prose flow">{{ item.prose | mdToHTML | safe }}</div>
+      </details>
+    {% endfor %}
+  </div>
+{% endmacro %}

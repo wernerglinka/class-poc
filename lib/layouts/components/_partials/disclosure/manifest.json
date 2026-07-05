@@ -1,0 +1,21 @@
+{
+  "name": "disclosure",
+  "type": "partial",
+  "styles": ["disclosure.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "title": { "type": "string" },
+            "prose": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "fields": {}
+}

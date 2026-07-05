@@ -3,3 +3,22 @@
 givebutter-widget {
   width: 100%;
 }
+
+/*
+  Class-details list: bold labels at full size, trailing explanations
+  smaller. The explanations are bare text nodes, which CSS cannot
+  select, so the small size sits on the li and <strong> scales back
+  up: 0.8em x 1.25em = 1em, the surrounding text size.
+*/
+.class-details-list {
+  margin-block-end: 2rem;
+
+  li {
+    margin: 0;
+    font-size: 0.8em;
+
+    strong {
+      font-size: 1.25em;
+    }
+  }
+}
