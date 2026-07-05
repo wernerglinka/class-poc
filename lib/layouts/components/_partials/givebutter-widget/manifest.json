@@ -1,0 +1,20 @@
+{
+  "name": "givebutter-widget",
+  "type": "partial",
+  "styles": ["givebutter-widget.css"],
+  "scripts": ["givebutter-widget.js"],
+  "requires": [],
+  "validation": {
+    "properties": {
+      "accountId": {
+        "type": "string",
+        "description": "The org's Givebutter account id (public, from the campaign page)"
+      },
+      "widgetId": {
+        "type": "string",
+        "description": "Widget element id, extracted from the pasted embed URL"
+      }
+    }
+  },
+  "fields": {}
+}

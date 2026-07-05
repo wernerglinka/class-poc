@@ -1,0 +1,18 @@
+{#
+  givebutter-widget
+  Renders a Givebutter widget element. Givebutter's widget script
+  (loaded once by givebutter-widget.js, using the account id from the
+  data attribute) upgrades the element to the embedded form and
+  adjusts its height automatically as donors move through checkout,
+  so no fixed frame height is needed.
+
+  Expected properties:
+  - accountId: string - the org's Givebutter account id
+  - widgetId: string - the widget element id from the embed URL
+#}
+
+{% macro givebutterWidget(info) %}
+  <div class="givebutter-widget-frame js-givebutter-widget" data-account="{{ info.accountId }}">
+    <givebutter-widget id="{{ info.widgetId }}"></givebutter-widget>
+  </div>
+{% endmacro %}

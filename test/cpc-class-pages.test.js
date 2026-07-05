@@ -19,6 +19,7 @@ import cpcClassPages, {
   buildSections,
   buildSessionItems,
   extractGivebutterSlug,
+  extractGivebutterWidgetId,
   formatTime,
   imageFolderSlug,
   resolveImagePath,
@@ -29,6 +30,7 @@ import cpcClassPages, {
 const cpcData = {
   organization: 'Center for People and Craft',
   scholarshipUrl: 'https://example.com/scholarship',
+  givebutterAccountId: 'Acct1234Acct1234',
   accessibility: { title: 'Accessibility', prose: 'Accessibility prose.' },
   cancellationPolicy: { title: 'Cancellation policy', prose: 'Cancellation prose.' }
 };
@@ -176,6 +178,28 @@ describe('buildSections', () => {
     assert.equal(register.iframe.src, 'https://givebutter.com/embed/c/example?goalBar=false');
   });
 
+  it('renders the self-sizing widget when the embed URL carries an element id', () => {
+    const withElementId = {
+      ...sampleOffering,
+      givebutterUrl: 'https://givebutter.com/embed/c/example?goalBar=false&gba_gb.element.id=gGRrMX'
+    };
+    const register = buildSections(withElementId, cpcData)[2];
+    assert.equal(register.mediaType, 'givebutter');
+    assert.deepEqual(register.givebutter, { accountId: 'Acct1234Acct1234', widgetId: 'gGRrMX' });
+    assert.equal(register.iframe, undefined);
+  });
+
+  it('falls back to the iframe when the account id is not configured', () => {
+    const withElementId = {
+      ...sampleOffering,
+      givebutterUrl: 'https://givebutter.com/embed/c/example?goalBar=false&gba_gb.element.id=gGRrMX'
+    };
+    const register = buildSections(withElementId, { ...cpcData, givebutterAccountId: undefined })[2];
+    assert.equal(register.mediaType, 'iframe');
+    assert.equal(register.givebutter, undefined);
+    assert.match(register.iframe.src, /gba_gb\.element\.id=gGRrMX/);
+  });
+
   it('pairs the accessibility and cancellation boilerplate', () => {
     const sections = buildSections(sampleOffering, cpcData);
     const policies = sections[3];
@@ -243,6 +267,22 @@ describe('buildSections', () => {
     const sections = buildSections({ ...sampleOffering, instructorLinks: '' }, cpcData);
     const instructor = sections[sections.length - 1];
     assert.deepEqual(instructor.ctas, []);
+  });
+});
+
+describe('extractGivebutterWidgetId', () => {
+  it('extracts the element id from a full embed URL', () => {
+    assert.equal(
+      extractGivebutterWidgetId('https://givebutter.com/embed/c/summer-herbs?goalBar=false&gba_gb.element.id=gGRrMX'),
+      'gGRrMX'
+    );
+  });
+
+  it('returns empty for plain campaign URLs and junk', () => {
+    assert.equal(extractGivebutterWidgetId('https://givebutter.com/summer-herbs'), '');
+    assert.equal(extractGivebutterWidgetId('not a url'), '');
+    assert.equal(extractGivebutterWidgetId(''), '');
+    assert.equal(extractGivebutterWidgetId(undefined), '');
   });
 });
 

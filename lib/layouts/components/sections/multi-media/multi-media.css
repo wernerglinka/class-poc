@@ -55,7 +55,8 @@
       display: block;
       border: none;
       overflow: visible;
-      padding-block: var(--space-s-m);
+      padding: var(--space-s-m);
+      background-color: var(--color-background-light);
     }
 
     /*
@@ -64,6 +65,16 @@
     */
     .media.is-iframe {
       align-items: stretch;
+    }
+
+    /*
+      A Givebutter widget (mediaType "givebutter") sizes itself to the
+      form's native height, so the column must not clip or frame it.
+    */
+    .media.is-givebutter {
+      display: block;
+      border: none;
+      overflow: visible;
     }
 
     .icon-wrapper {

@@ -1,0 +1,10 @@
+/*
+ * givebutter-widget
+ * The widget sizes itself (max width 420px, native height), so the
+ * wrapper only centers it in its column.
+ */
+.givebutter-widget-frame {
+  inline-size: 100%;
+  display: flex;
+  justify-content: center;
+}

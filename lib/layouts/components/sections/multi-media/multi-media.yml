@@ -29,7 +29,7 @@
       label: 'Learn More'
       isButton: true
       buttonStyle: 'primary'
-  mediaType: image # may be 'audio', 'icon', 'lottie', 'image', 'video', 'text', or 'iframe'. Not used media types may be removed
+  mediaType: image # may be 'audio', 'icon', 'lottie', 'image', 'video', 'text', 'iframe', or 'givebutter'. Not used media types may be removed
   image:
     src: '/assets/images/sample.jpg'
     alt: 'Image description'
@@ -63,6 +63,9 @@
     src: 'https://example.com/embed'
     title: 'Accessible frame title'
     allow: '' # optional permissions policy, e.g. 'payment'
+  givebutter: # self-sizing Givebutter widget, when mediaType is 'givebutter'
+    accountId: '' # the org's Givebutter account id
+    widgetId: '' # widget element id from the embed URL
   # Optional interactive session list appended to the text column;
   # normally supplied by the class-pages plugin, not hand-written.
   # endpoint: ''

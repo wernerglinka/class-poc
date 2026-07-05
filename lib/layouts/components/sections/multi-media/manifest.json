@@ -3,7 +3,19 @@
   "type": "section",
   "styles": ["multi-media.css"],
   "scripts": [],
-  "requires": ["ctas", "text", "image", "video", "audio", "icon", "lottie", "iframe", "session-list", "commons"],
+  "requires": [
+    "ctas",
+    "text",
+    "image",
+    "video",
+    "audio",
+    "icon",
+    "lottie",
+    "iframe",
+    "session-list",
+    "givebutter-widget",
+    "commons"
+  ],
   "validation": {
     "required": ["sectionType", "mediaType"],
     "properties": {
@@ -13,7 +25,7 @@
       },
       "mediaType": {
         "type": "string",
-        "enum": ["image", "video", "audio", "icon", "lottie", "text", "iframe"]
+        "enum": ["image", "video", "audio", "icon", "lottie", "text", "iframe", "givebutter"]
       },
       "endpoint": {
         "type": "string",
@@ -27,10 +39,18 @@
         "type": "array",
         "items": {
           "properties": {
-            "sessionId": { "type": "string" },
-            "dateDisplay": { "type": "string" },
-            "timeDisplay": { "type": "string" },
-            "hosted": { "type": "boolean" }
+            "sessionId": {
+              "type": "string"
+            },
+            "dateDisplay": {
+              "type": "string"
+            },
+            "timeDisplay": {
+              "type": "string"
+            },
+            "hosted": {
+              "type": "boolean"
+            }
           }
         }
       },
@@ -90,6 +110,14 @@
             }
           }
         }
+      },
+      "givebutter.accountId": {
+        "type": "string",
+        "description": "The org's Givebutter account id"
+      },
+      "givebutter.widgetId": {
+        "type": "string",
+        "description": "Widget element id from the pasted embed URL"
       }
     }
   },
@@ -97,7 +125,7 @@
     "mediaType": {
       "widget": "select",
       "label": "Media type",
-      "enum": ["image", "video", "audio", "icon", "lottie", "text", "iframe"],
+      "enum": ["image", "video", "audio", "icon", "lottie", "text", "iframe", "givebutter"],
       "default": "image"
     },
     "isReverse": {

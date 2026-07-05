@@ -11,6 +11,7 @@ A flexible section component that renders text content alongside various media t
 - **lottie**: JSON animations with playback controls
 - **text**: A second text block (`mediaText`), for two-column text layouts
 - **iframe**: An embedded frame (`iframe.src`/`iframe.title`), e.g. a registration form
+- **givebutter**: Givebutter's self-sizing registration widget (`givebutter.accountId`/`givebutter.widgetId`); site-local addition, see `_partials/givebutter-widget`
 
 ## Optional Session List
 

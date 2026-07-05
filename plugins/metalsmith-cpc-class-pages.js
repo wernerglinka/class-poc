@@ -276,6 +276,26 @@ export function extractGivebutterSlug(givebutterUrl) {
 }
 
 /**
+ * Extract the Givebutter widget element id from an embed URL. The
+ * embed dialog's URL carries it as the gba_gb.element.id query
+ * parameter; with it (plus the org's account id) the page can render
+ * Givebutter's self-sizing widget instead of a fixed-height iframe.
+ * @param {string} givebutterUrl - Raw Givebutter field value
+ * @returns {string} Widget element id, or '' when absent/unusable
+ */
+export function extractGivebutterWidgetId(givebutterUrl) {
+  const trimmed = String(givebutterUrl ?? '').trim();
+  if (trimmed === '') {
+    return '';
+  }
+  try {
+    return new URL(trimmed).searchParams.get('gba_gb.element.id') ?? '';
+  } catch (error) {
+    return '';
+  }
+}
+
+/**
  * The image folder for an offering: the Givebutter campaign slug when
  * one exists (the canonical identifier across systems), otherwise the
  * slugified class title.
@@ -402,8 +422,8 @@ const textBlock = (title, prose, overrides = {}) => ({
 
 /**
  * Build a two-column multi-media section. The media slot (mediaText,
- * image, or iframe) renders first; the text column renders second and
- * may carry CTAs and the interactive session list.
+ * image, iframe, or givebutter widget) renders first; the text column
+ * renders second and may carry CTAs and the interactive session list.
  * @param {Object} spec - Section spec
  * @returns {Object} Section object
  */
@@ -416,6 +436,7 @@ const multiMediaSection = ({
   mediaText,
   image,
   iframe,
+  givebutter,
   ctas = [],
   sessions,
   endpoint,
@@ -434,6 +455,7 @@ const multiMediaSection = ({
   ...(mediaText !== undefined ? { mediaText } : {}),
   ...(image !== undefined ? { image } : {}),
   ...(iframe !== undefined ? { iframe } : {}),
+  ...(givebutter !== undefined ? { givebutter } : {}),
   ...(sessions !== undefined ? { sessions, endpoint, sessionsTitle } : {})
 });
 
@@ -466,19 +488,34 @@ const detailsSection = (offering, cpcData, apiUrl) =>
 /**
  * Build the registration section: what to expect on the left, the
  * Givebutter embed on the right (isReverse puts the media slot last).
+ *
+ * Prefers Givebutter's widget, which resizes to the form's native
+ * height; it needs the widget element id (carried by the pasted embed
+ * URL) and the org's account id from cpc.json. When either is missing
+ * (a plain campaign URL, or an unconfigured account id) the section
+ * falls back to the fixed-height iframe embed.
  * @param {Object} offering - Offering record
+ * @param {Object} cpcData - Org config from lib/data/cpc.json
  * @param {string} embedUrl - Givebutter embed URL ('' for none)
  * @returns {Object} Section object
  */
-const registrationSection = (offering, embedUrl) =>
-  multiMediaSection({
+const registrationSection = (offering, cpcData, embedUrl) => {
+  const widgetId = extractGivebutterWidgetId(offering.givebutterUrl);
+  const accountId = cpcData.givebutterAccountId ?? '';
+  const useWidget = widgetId !== '' && accountId !== '';
+
+  return multiMediaSection({
     classes: 'class-registration',
     id: 'register',
-    mediaType: 'iframe',
+    mediaType: useWidget ? 'givebutter' : 'iframe',
     isReverse: true,
     text: textBlock('What to expect', offering.whatToExpect),
-    ...(embedUrl !== '' ? { iframe: { src: embedUrl, title: 'Class registration form', allow: 'payment' } } : {})
+    ...(useWidget ? { givebutter: { accountId, widgetId } } : {}),
+    ...(!useWidget && embedUrl !== ''
+      ? { iframe: { src: embedUrl, title: 'Class registration form', allow: 'payment' } }
+      : {})
   });
+};
 
 /**
  * Build the org boilerplate section: accessibility on the left, the
@@ -571,7 +608,7 @@ export function buildSections(offering, cpcData, apiUrl = '') {
 
   const embedUrl = buildGivebutterEmbedUrl(offering.givebutterUrl);
   if (embedUrl !== '' || offering.whatToExpect !== '') {
-    sections.push(registrationSection(offering, embedUrl));
+    sections.push(registrationSection(offering, cpcData, embedUrl));
   }
 
   sections.push(policiesSection(cpcData));
