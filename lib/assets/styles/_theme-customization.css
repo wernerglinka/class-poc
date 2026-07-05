@@ -1,0 +1,5 @@
+/* the giverbutter-widget should fill the with of its container */
+
+givebutter-widget {
+  width: 100%;
+}
