@@ -1,0 +1,69 @@
+/**
+ * Columns Section Styles
+ *
+ * Design Tokens:
+ * - --space-xl-2xl
+ */
+
+/**
+ * Custom composition with text, image and cta, from left to right
+ */
+.text-image-cta {
+  .text {
+    flex-grow: 2;
+  }
+
+  .image,
+  .ctas {
+    flex-grow: 1;
+  }
+
+  .ctas {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-block: var(--space-xl-2xl);
+  }
+}
+
+/**
+ * Custom composition with text, image and cta to be using in combination
+ * with a hero section. Removes padding from the content container and set
+ * a different flex-grow value for the columns.
+ */
+.hero-cta .content {
+  container-type: inline-size;
+  opacity: 1;
+  box-shadow: 0 2px 4px var(--color-shadow);
+  border-radius: var(--space-2xs-xs);
+  overflow: hidden;
+  background-color: var(--color-text-highlight-light);
+
+  .column.image {
+    flex-grow: 1;
+  }
+
+  .column.text {
+    flex-grow: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-s-l);
+  }
+
+  .column.ctas {
+    flex-grow: 1;
+    padding-block: var(--space-xl-2xl);
+  }
+}
+
+/**
+ * Responsive adjustments for the hero-cta section
+ * Needs to be absolute number for the max-width to work properly
+ */
+@container (max-width: 60rem) {
+  .hero-cta .content .column.image {
+    display: none;
+  }
+}

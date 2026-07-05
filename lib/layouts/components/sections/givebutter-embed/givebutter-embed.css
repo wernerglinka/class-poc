@@ -1,0 +1,19 @@
+/*
+ * givebutter-embed
+ * Responsive wrapper for the embedded Givebutter registration form.
+ * The iframe fills the available width; Givebutter's own layout is
+ * responsive inside it. The fixed height matches Givebutter's typical
+ * form height and avoids double scrollbars.
+ */
+.givebutter-embed .givebutter-embed-frame {
+  inline-size: 100%;
+  max-inline-size: 40rem;
+  margin-inline: auto;
+}
+
+.givebutter-embed .givebutter-embed-frame iframe {
+  inline-size: 100%;
+  block-size: 50rem;
+  border: 0;
+  border-radius: 4px;
+}

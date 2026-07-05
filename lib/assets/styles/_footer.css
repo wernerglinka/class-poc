@@ -1,0 +1,50 @@
+/**
+ * Footer Section Styles
+ *
+ * Design Tokens:
+ * - --color-dark-background
+ * - --space-s-l
+ * - --font-p
+ * - --color-footer-text-light
+ * - --transition-fade
+ * - --color-border-light
+ * - --color-text
+ */
+
+footer {
+  background: var(--color-dark-background);
+  padding: var(--space-s-l);
+  font-size: var(--font-p);
+  color: var(--color-footer-text-light);
+  margin-top: auto; /* Push footer to bottom */
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    transition: opacity var(--transition-fade);
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+
+/**
+ * Adjust footer styles when sidebar is present
+ * Background is dependent on theme light or dark, ergo
+ * text color is always dark
+ */
+body.with-sidebar footer {
+  background: none;
+  box-shadow: none;
+  padding-left: 0;
+  border-top: 1px solid var(--color-border-light);
+
+  .container {
+    padding: 0;
+  }
+
+  p {
+    color: var(--color-text);
+  }
+}

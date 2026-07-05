@@ -1,0 +1,38 @@
+{% from "components/_partials/icon/icon.njk" import icon %}
+
+{#
+  Language Switcher Component
+
+  A dropdown-based language selector with URL-based navigation.
+  Builds localized URLs from the current path and navigates to language versions.
+  Falls back to the implementation guide if the localized page doesn't exist.
+
+  Languages are configured in lib/data/languages.json
+
+  Parameters (optional overrides):
+    languages - Array of language objects (defaults to data.languages.available)
+    defaultLang - Default language code (defaults to data.languages.defaultLang)
+    fallbackUrl - URL to navigate to if localized page doesn't exist
+#}
+
+{% macro languageSwitcher(languages, defaultLang, fallbackUrl) %}
+  {% set langs = languages or data.languages.available %}
+  {% set default = defaultLang or data.languages.defaultLang %}
+  {% set fallback = fallbackUrl or data.languages.fallbackUrl or '/404/' %}
+
+  <div class="language-switcher js-language-switcher" data-default-lang="{{ default }}" data-fallback-url="{{ fallback }}">
+    {{ icon({ url: "#", icon: "globe" }) }}
+    <span class="current-lang js-current-lang">{{ default | upper }}</span>
+
+    <ul class="language-dropdown js-language-dropdown" role="listbox" aria-label="Available languages">
+      {% for lang in langs %}
+        <li role="option" data-lang="{{ lang.code }}"{% if lang.code == default %} aria-selected="true"{% endif %}>
+          <a href="{{ fallback }}" class="language-option js-language-option">
+            <span class="lang-code">{{ lang.code | upper }}</span>
+            <span class="lang-label">{{ lang.label }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endmacro %}

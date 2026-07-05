@@ -1,0 +1,30 @@
+{# register all supported blocks #}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/image/image.njk" import image %}
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+
+<div class="columns content {{ section.contentClasses }} cols{{ section.columns | length }}{% if section.columnsDirection == 'reverse' %} reverse{% endif %}" >
+  {# render the section columns #}
+  {% for column in section.columns %}
+    {# render individual columns and their respective
+  blocks #}
+    <div class="column {{ column.columnClasses }}">
+      {# Columns is an array of objects that contains a column array. #}
+      {% for blocks in column.blocks %}
+        {% for key, value in blocks %}
+          {% if key == "text" %}
+            {{ text(value) }}
+          {% elif key == "ctas" %}
+            {{ ctas(value) }}
+          {% elif key == "image" %}
+            {{ image(value) }}
+          {% elif key == "ctas" %}
+            {{ ctas(value) }}
+          {% else %}
+            <p>Unsupported block type: {{ key }}</p>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>

@@ -1,0 +1,45 @@
+{
+  "name": "audio",
+  "type": "partial",
+  "styles": ["audio.css"],
+  "scripts": ["audio.js"],
+  "requires": ["image", "icon"],
+  "validation": {
+    "properties": {
+      "bgImage": {
+        "type": "string"
+      },
+      "alt": {
+        "type": "string"
+      },
+      "ogg": {
+        "type": "string"
+      },
+      "mpeg": {
+        "type": "string"
+      }
+    }
+  },
+  "fields": {
+    "ogg": {
+      "widget": "text",
+      "label": "OGG file URL",
+      "default": ""
+    },
+    "mpeg": {
+      "widget": "text",
+      "label": "MP3/MPEG file URL",
+      "default": ""
+    },
+    "bgImage": {
+      "widget": "image",
+      "label": "Background image (optional)",
+      "default": ""
+    },
+    "alt": {
+      "widget": "text",
+      "label": "Background image alt text",
+      "default": ""
+    }
+  }
+}

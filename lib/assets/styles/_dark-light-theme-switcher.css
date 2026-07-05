@@ -1,0 +1,63 @@
+/**
+ * Dark Light Theme Switcher Component Styles
+ *
+ * Design Tokens:
+ * - --space-m-l
+ * - --color-primary
+ * - --color-link-navigation
+ */
+.theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  width: var(--space-m-l);
+  height: var(--space-m-l);
+
+  /* Focus indicator */
+  &:focus {
+    outline: 2px solid var(--color-primary, #007acc);
+    outline-offset: 2px;
+  }
+
+  /* Remove default focus outline */
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  span {
+    position: relative;
+    top: -2px;
+  }
+
+  a {
+    border-bottom: none;
+
+    svg {
+      width: 1.4em;
+      height: 1.4em;
+      vertical-align: middle;
+
+      * {
+        stroke: var(--color-link-navigation);
+        transition: stroke 0.5s ease-in-out;
+      }
+    }
+  }
+
+  .dark {
+    display: none;
+  }
+
+  .light {
+    display: inline;
+  }
+}
+
+.dark-theme .theme-toggle .dark {
+  display: inline;
+}
+
+.dark-theme .theme-toggle .light {
+  display: none;
+}

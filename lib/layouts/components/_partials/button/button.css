@@ -1,0 +1,84 @@
+/**
+ * Button Component Styles
+ *
+ * Design Tokens:
+ * - --space-2xs-xs
+ * - --space-s-m
+ * - --default-letter-spacing
+ * - --glass-backdrop-filter
+ * - --glass-box-shadow
+ * - --primary-button-text-color
+ * - --primary-button-color
+ * - --secondary-button-text-color
+ * - --secondary-button-color
+ * - --tertiary-button-color
+ * - --tertiary-button-text-color
+ * - --color-border-light
+ * - --font-xs
+ * - --color-text-light
+ */
+button {
+  background: none;
+  border: none;
+}
+
+.button,
+button {
+  display: inline-block;
+  text-align: center;
+  padding: var(--space-2xs-xs) var(--space-s-m);
+  transition:
+    transform 0.5s ease-in-out,
+    background-color 0.5s ease-in-out;
+  font-weight: 500;
+  letter-spacing: var(--default-letter-spacing);
+  background: rgb(218 30 40 / 80%);
+  backdrop-filter: var(--glass-backdrop-filter);
+  isolation: isolate;
+  box-shadow: var(--glass-box-shadow);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: #f4f4f4; /* Default button text color - override global anchor color */
+
+  &:hover {
+    transform: scale(1.05);
+    background-color: transparent; /* Override global anchor hover */
+  }
+
+  &.primary {
+    color: var(--primary-button-text-color);
+    background: var(--primary-button-color);
+  }
+
+  &.secondary {
+    color: var(--secondary-button-text-color);
+    background: var(--secondary-button-color);
+  }
+
+  &.tertiary {
+    background: var(--tertiary-button-color);
+    color: var(--tertiary-button-text-color);
+    border: 1px solid var(--color-border-light);
+  }
+
+  &.small {
+    padding: 0.5rem 1.5rem;
+    font-size: var(--font-xs);
+  }
+
+  &.none {
+    background: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-text-light);
+    outline-offset: 2px;
+
+    /* Ensure focus is visible on glass background */
+    box-shadow:
+      var(--glass-box-shadow),
+      0 0 0 4px rgb(255 255 255 / 30%);
+  }
+}

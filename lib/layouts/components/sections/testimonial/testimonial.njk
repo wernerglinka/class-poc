@@ -1,0 +1,26 @@
+{% from "components/_partials/ctas/ctas.njk" import ctas %} {% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/image/image.njk" import image %}
+
+<div class="content container {% if section.isReverse %}is-reverse{% endif %}">
+  <div class="quotee">
+    {% if section.quotee.portrait.src %}
+    <div class="portrait">{{ image(section.quotee.portrait)}}</div>
+    {% endif %}
+
+    <div class="name">{{ section.quotee.name }}</div>
+
+    {% if section.quotee.title %}
+    <div class="title">{{ section.quotee.title }}</div>
+    {% endif %} {% if section.quotee.company %}
+    <div class="company">{{ section.quotee.company }}</div>
+    {% endif %} {% if section.quotee.logo %}
+    <div class="logo">
+      <img src="{{ section.quotee.logo }}" alt="Logo of {{ section.quotee.company }}" />
+    </div>
+    {% endif %}
+  </div>
+
+  <blockquote cite="{{ section.quote.cite }}">
+    <p>{{ section.quote.text }}</p>
+  </blockquote>
+</div>

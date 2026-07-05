@@ -1,0 +1,27 @@
+{
+  "name": "collection-card",
+  "type": "partial",
+  "styles": ["collection-card.css"],
+  "scripts": [],
+  "requires": ["icon", "text", "author-date"],
+  "validation": {
+    "required": ["link", "title"],
+    "properties": {
+      "link": { "type": "string" },
+      "pattern": { "type": "string" },
+      "thumbnail": { "type": "string" },
+      "title": { "type": "string" },
+      "excerpt": { "type": "string" },
+      "author": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        ]
+      },
+      "date": { "type": "string" }
+    }
+  }
+}

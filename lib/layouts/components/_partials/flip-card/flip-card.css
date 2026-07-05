@@ -1,0 +1,102 @@
+/**
+ * Flip Card Component Styles
+ *
+ * Design Tokens:
+ * - --space-s-l
+ * - --color-background
+ * - --color-border-light
+ * - --color-text
+ * - --font-xs
+ * - --font-h5
+ * - --font-p
+ * - --color-text-light
+ * - --color-border
+ * - --color-dark-background
+ * - --contrast-text-on-dark
+ */
+.flip-card,
+.flip-card-back {
+  position: absolute;
+  height: 100%;
+  padding: var(--space-s-l);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text);
+  backface-visibility: hidden;
+  transition:
+    transform 0.8s,
+    outline 0.2s ease;
+  transform-style: preserve-3d;
+
+  /* font sizes for card are constant for all viewport widths */
+  .lead-in {
+    font-size: var(--font-xs);
+  }
+
+  h3 {
+    font-size: var(--font-h5);
+  }
+
+  .prose {
+    font-size: var(--font-p);
+  }
+
+  .flip-icon {
+    position: absolute;
+    display: block;
+    top: 0;
+    right: var(--space-s-l);
+    width: var(--space-l);
+    height: var(--space-l);
+
+    svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--color-text-light);
+    }
+  }
+
+  .icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--space-xl);
+    height: var(--space-xl);
+    border-radius: var(--space-3xs);
+  }
+
+  svg {
+    width: var(--space-2xl);
+    height: var(--space-2xl);
+    stroke: var(--color-border);
+
+    g,
+    path {
+      fill: var(--color-background);
+    }
+  }
+}
+
+.flip-card-back {
+  background-color: var(--color-dark-background);
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--contrast-text-on-dark);
+  }
+}
+
+.flip-card-wrapper.flip .flip-card {
+  transform: rotateY(180deg);
+}
+
+.flip-card-wrapper.flip .flip-card-back {
+  transform: rotateY(0deg);
+}

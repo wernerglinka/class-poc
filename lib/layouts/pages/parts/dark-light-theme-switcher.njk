@@ -1,0 +1,8 @@
+{% from "components/_partials/icon/icon.njk" import icon %}
+
+{% macro darkLightThemeSwitcher() %}
+  <button class="theme-toggle js-theme-toggle none" aria-label="Toggle dark/light theme" title="Toggle dark/light theme">
+    <span class="light">{{ icon({ url: "#", icon: "moon" }) }}</span>
+    <span class="dark">{{ icon({ url: "#", icon: "sun" }) }}</span>
+  </button>
+{% endmacro %}

@@ -1,0 +1,69 @@
+/**
+ * Slider Pagination Component Styles
+ *
+ * Design Tokens:
+ * - --color-text
+ * - --color-border-light
+ * - --color-primary-light
+ * - --color-primary
+ * - --space-m
+ */
+.slider-pagination {
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  z-index: 1000; /* Above slide content */
+  bottom: -3rem;
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+
+  /* Pagination button styling */
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    color: var(--color-text);
+    background: var(--color-border-light);
+    border: none;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--color-primary-light, var(--color-primary));
+      transform: scale(1.1);
+    }
+
+    &.active {
+      background: var(--color-primary);
+      color: white;
+      cursor: default;
+    }
+
+    &:focus {
+      background: var(--color-primary-light, var(--color-primary));
+    }
+  }
+
+  &.is-tabs {
+    position: static;
+    transform: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: var(--space-m);
+
+    button {
+      width: auto;
+      border-radius: 0.5rem;
+      padding-inline: 2rem;
+    }
+  }
+}

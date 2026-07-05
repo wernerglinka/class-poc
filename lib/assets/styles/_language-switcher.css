@@ -1,0 +1,143 @@
+/**
+ * Language Switcher Component Styles
+ *
+ * Design Tokens:
+ * - --space-3xs, --space-2xs, --space-xs, --space-s, --space-m-l
+ * - --color-primary, --color-link-navigation
+ * - --color-background, --color-text
+ * - --font-size--1
+ * - --shadow-md
+ */
+
+.language-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  background: none;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: var(--space-m-l);
+  height: var(--space-m-l);
+  appearance: none;
+
+  /* Focus indicator */
+  &:focus {
+    outline: 2px solid var(--color-primary, #007acc);
+    outline-offset: 2px;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  a {
+    border-bottom: none;
+
+    svg {
+      width: 1.4em;
+      height: 1.4em;
+      vertical-align: middle;
+
+      * {
+        stroke: var(--color-link-navigation);
+        transition: stroke 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
+.current-lang {
+  display: none;
+}
+
+.language-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  min-width: 10rem;
+  margin: 0;
+  padding: var(--space-2xs) 0;
+  list-style: none;
+  background: var(--glass-background-light);
+  backdrop-filter: var(--glass-backdrop-filter);
+  border: var(--glass-border);
+  border-radius: var(--glass-border-radius);
+  box-shadow: var(--glass-box-shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.5rem);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  li {
+    margin: 0;
+    padding: 0;
+
+    &[aria-selected="true"] .language-option {
+      background: var(--color-primary-light, #e6f2ff);
+    }
+  }
+}
+
+a.language-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  padding: var(--space-2xs) var(--space-s);
+  background: transparent;
+  border: none;
+  border-bottom: none;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  font-size: var(--font-size--1);
+  color: var(--color-text);
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-hover, #f5f5f5);
+    border-bottom: none;
+  }
+
+  &:focus {
+    outline: none;
+    background: var(--color-hover, #f5f5f5);
+  }
+}
+
+.lang-code {
+  font-weight: 600;
+  min-width: 2rem;
+}
+
+.lang-label {
+  color: var(--color-text-muted, #666);
+}
+
+/* Dark theme adjustments - glass tokens auto-adjust via CSS custom properties */
+.dark-theme .language-option:hover,
+.dark-theme .language-option:focus {
+  background: rgb(255 255 255 / 10%);
+}
+
+.dark-theme .language-dropdown li[aria-selected="true"] .language-option {
+  background: rgb(255 255 255 / 15%);
+}

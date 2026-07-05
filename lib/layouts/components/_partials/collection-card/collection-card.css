@@ -1,0 +1,95 @@
+/**
+ * Collection Card Component Styles
+ *
+ * Design Tokens:
+ * - --color-text
+ * - --glass-background
+ * - --color-border-light
+ * - --space-2xs-xs
+ * - --glass-box-shadow
+ * - --space-s-m
+ * - --space-l-xl
+ * - --glass-background-light
+ * - --font-h5
+ * - --font-p
+ */
+.collection-card {
+  position: relative;
+  max-width: 30rem;
+  color: var(--color-text);
+  background-color: var(--glass-background);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--space-2xs-xs);
+  overflow: hidden;
+  box-shadow: var(--glass-box-shadow);
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    border: none;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &::after {
+      background: none;
+      display: none;
+    }
+  }
+
+  .image-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+
+  .text-wrapper {
+    position: relative;
+    flex-grow: 1;
+    margin-block-start: 10rem;
+    padding: var(--space-s-m) var(--space-s-m) var(--space-l-xl);
+    background-color: var(--glass-background-light);
+
+    .icon-wrapper {
+      position: absolute;
+      bottom: var(--space-s-m);
+      right: var(--space-s-m);
+      margin: 0;
+    }
+  }
+
+  .title {
+    font-size: var(--font-h5);
+    text-transform: uppercase;
+    color: var(--color-text);
+  }
+
+  .prose {
+    font-size: var(--font-p);
+    margin-block: var(--space-s-m) 0;
+  }
+
+  &.has-pattern {
+    .image-wrapper {
+      display: none;
+    }
+
+    .text-wrapper {
+      background: none;
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "organization": "Center for People and Craft",
+  "location": "519 Oak Grove St. Minneapolis, MN 55404",
+  "contactEmail": "info@peopleandcraft.org",
+  "scholarshipUrl": "https://docs.google.com/forms/d/e/1FAIpQLSdKDSty3VE39DAsAQriXwNe6jTqxB4p566Y7mWFR5IPgRXxmg/viewform",
+  "policiesUrl": "https://www.peopleandcraft.org/policies",
+  "accessibility": {
+    "title": "Accessibility",
+    "prose": "CENTER FOR PEOPLE AND CRAFT is committed to building a diverse, inclusive learning community where people of all backgrounds feel welcome and able to participate. As we launch our first workshop series, we are dedicating space in each class for reduced-tuition scholarships to support anyone facing financial barriers.\n\nAnyone with financial need is encouraged to apply for a half-tuition scholarship. To be considered, please submit a brief online application. Please note that CENTER FOR PEOPLE AND CRAFT is operating with limited financial resources and an entirely volunteer staff. Therefore, we cannot guarantee a spot for every applicant. Each class has one scholarship slot available. Applicants who are not selected in this current round are welcome to reapply. [Apply here](https://docs.google.com/forms/d/e/1FAIpQLSdKDSty3VE39DAsAQriXwNe6jTqxB4p566Y7mWFR5IPgRXxmg/viewform)"
+  },
+  "cancellationPolicy": {
+    "title": "Cancellation policy",
+    "prose": "CPC is able to provide refunds up to two weeks before the start date of the class for which the registration was submitted, though we do retain a $20 fee for return payment processing. If you need to cancel your class within the two week window, a refund is not guaranteed, but will be considered based on several factors.\n\nIf CPC needs to cancel a class due to low enrollment, teacher illness, or other factors, you will receive a full refund. [Read our full set of policies.](https://www.peopleandcraft.org/policies)"
+  }
+}

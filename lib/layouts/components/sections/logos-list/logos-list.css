@@ -1,0 +1,227 @@
+/**
+ * Logos List Section Styles
+ *
+ * Design Tokens:
+ * - --space-m-l
+ * - --single-list-width
+ * - --font-h5
+ * - --color-text
+ * - --color-primary
+ * - --font-p
+ * - --space-xl
+ * - --space-3xl
+ * - --space-s
+ * - --logo-list-height
+ * - --logo-animation-speed
+ */
+
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+.logos-list .content {
+  display: block;
+
+  .text,
+  .ctas {
+    max-width: clamp(45ch, 65ch, 80ch);
+    margin-inline: auto;
+  }
+
+  .text {
+    margin-bottom: var(--space-m-l);
+    text-align: center;
+  }
+
+  .ctas {
+    margin-top: var(--space-m-l);
+  }
+
+  .marquee-container {
+    width: 100%;
+    margin: 0 auto var(--space-xl) auto;
+    overflow: hidden;
+  }
+
+  /* when scrolling, add gradients for fade-out effect before and after the logos */
+  .mask:has(.play)::before,
+  .mask:has(.play)::after {
+    content: "";
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: var(--space-3xl);
+    height: 100%;
+    pointer-events: none;
+    background-image: linear-gradient(
+      to right,
+      rgb(255 255 255 / 100%) 0%,
+      rgb(255 255 255 / 95%) 20%,
+      rgb(255 255 255 / 80%) 40%,
+      rgb(255 255 255 / 40%) 60%,
+      rgb(255 255 255 / 10%) 80%,
+      transparent 100%
+    );
+  }
+
+  .mask:has(.play)::after {
+    left: auto;
+    right: 0;
+    background-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(255 255 255 / 10%) 20%,
+      rgb(255 255 255 / 40%) 40%,
+      rgb(255 255 255 / 80%) 60%,
+      rgb(255 255 255 / 95%) 80%,
+      rgb(255 255 255 / 100%) 100%
+    );
+  }
+
+  .hint {
+    font-style: italic;
+    font-size: var(--font-h5);
+  }
+
+  .marquee-container {
+    width: var(--single-list-width); /* important to set this to the width of one list */
+    max-width: 100%;
+    margin-inline: auto;
+
+    &:hover .marquee {
+      animation-play-state: paused;
+      transition-duration: 0.8s;
+    }
+  }
+
+  .marquee {
+    --logo-padding: var(--space-s);
+    --list-height: var(--logo-list-height, 10rem);
+    --animation-speed: var(--logo-animation-speed, 15s);
+
+    position: relative;
+    width: var(--single-list-width); /* important to set this to the width of one list */
+    display: flex;
+    gap: 0;
+    transform: translate3d(0, 0, 0);
+    animation: marquee var(--animation-speed) linear infinite;
+    animation-play-state: paused;
+
+    &.play {
+      animation-play-state: running;
+    }
+
+    /* Pause animation when reduced-motion is set */
+    @media (prefers-reduced-motion: reduce) {
+      animation-play-state: paused !important;
+    }
+  }
+
+  /* marquee content */
+  .logos {
+    display: flex;
+    width: var(--single-list-width);
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+
+    li {
+      .icon-wrapper {
+        width: 100%;
+      }
+
+      svg {
+        stroke: var(--color-text);
+        stroke-width: 1px;
+        fill: none;
+        width: 100%;
+        height: 100%;
+        transition: stroke 0.5s ease-in-out;
+
+        * {
+          fill: none;
+          stroke: var(--color-text);
+          stroke-width: 1px;
+        }
+      }
+
+      a:hover svg {
+        stroke: var(--color-primary);
+
+        * {
+          stroke: var(--color-primary);
+        }
+      }
+    }
+
+    a {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      border: none;
+      padding: 0 var(--logo-padding);
+    }
+
+    a:hover {
+      text-decoration: none;
+    }
+
+    img {
+      filter: grayscale(100%);
+      opacity: 0.5;
+      transition:
+        filter 0.5s ease-in-out,
+        opacity 0.5s ease-in-out;
+    }
+
+    img:hover {
+      filter: grayscale(0);
+      opacity: 1;
+    }
+
+    .logo-title {
+      font-size: var(--font-p);
+      text-align: center;
+    }
+  }
+
+  /* Reverse animation */
+  .is-reverse .logos-wrapper.play {
+    animation-direction: reverse;
+  }
+}
+
+/* Dark theme: change gradient masks to dark */
+.dark-theme .logos-list .content {
+  .mask:has(.play)::before {
+    background-image: linear-gradient(
+      to right,
+      rgb(26 26 26 / 100%) 0%,
+      rgb(26 26 26 / 95%) 20%,
+      rgb(26 26 26 / 80%) 40%,
+      rgb(26 26 26 / 40%) 60%,
+      rgb(26 26 26 / 10%) 80%,
+      transparent 100%
+    );
+  }
+
+  .mask:has(.play)::after {
+    background-image: linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(26 26 26 / 10%) 20%,
+      rgb(26 26 26 / 40%) 40%,
+      rgb(26 26 26 / 80%) 60%,
+      rgb(26 26 26 / 95%) 80%,
+      rgb(26 26 26 / 100%) 100%
+    );
+  }
+}

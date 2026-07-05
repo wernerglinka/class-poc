@@ -1,0 +1,29 @@
+{
+  "name": "slider-pagination",
+  "type": "partial",
+  "styles": ["slider-pagination.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "required": ["slides"],
+    "properties": {
+      "slides": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "isTabs": {
+        "type": "boolean"
+      }
+    }
+  }
+}

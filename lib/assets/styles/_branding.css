@@ -1,0 +1,38 @@
+/**
+ * Site Branding Component Styles
+ *
+ * Design Tokens:
+ * - --space-2xs
+ * - --space-l-xl
+ */
+
+.brand {
+  flex: 0 0 auto; /* for the media query less menu management */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0;
+
+  .home-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* could be a svg or an img */
+
+    svg {
+      width: var(--space-l-xl);
+      height: var(--space-l-xl);
+      transform: scale(1);
+      transition: transform 250ms ease;
+    }
+
+    img {
+      max-height: var(--space-l-xl);
+    }
+  }
+
+  &:hover svg {
+    transform: scale(1.05);
+  }
+}

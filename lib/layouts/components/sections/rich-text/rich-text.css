@@ -1,0 +1,76 @@
+/**
+ * Rich Text Section Styles
+ *
+ * Markdown code fences in rich-text prose are highlighted at build time by
+ * Shiki (via the mdToHTML filter), which emits a `.code-block` / `pre.shiki`
+ * with inline token colors. This file styles only the layout of that output;
+ * there is no syntax-color CSS (Shiki inlines it).
+ *
+ * Design Tokens:
+ * - --space-s
+ * - --space-s-m
+ * - --space-m-l
+ * - --space-2xs
+ * - --font-xs
+ */
+
+.rich-text {
+  /* Override commons.css .content flex layout for rich-text sections */
+  .content {
+    display: block; /* Override flex layout */
+  }
+
+  .text {
+    max-width: clamp(45ch, 65ch, 80ch); /* Fluid reading width */
+    margin-inline: auto; /* Center the text block */
+
+    h1,
+    h2,
+    h3,
+    .sub-title {
+      margin-bottom: var(--space-s);
+
+      & + div {
+        margin-top: 0;
+      }
+    }
+
+    /* Shiki code block emitted by mdToHTML for fenced markdown. */
+    .code-block {
+      position: relative;
+      margin: 2em 0;
+    }
+
+    .code-lang {
+      position: absolute;
+      top: var(--space-2xs);
+      right: var(--space-s);
+      font-size: var(--font-s);
+      font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    pre.shiki {
+      margin: 0;
+      padding: var(--space-s-m);
+      overflow-x: auto;
+      border-radius: var(--space-2xs);
+      font-size: 0.9rem;
+    }
+
+    .ctas {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-m-l);
+
+      * {
+        margin: 0;
+      }
+    }
+  }
+}

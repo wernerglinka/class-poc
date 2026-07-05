@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Albert Einstein",
+    "profession": "Theoretical Physicist",
+    "bio": "Albert Einstein was a German-born theoretical physicist who is best known for developing the theory of relativity. Einstein also made important contributions to quantum theory. He received the 1921 Nobel Prize in Physics for his services to theoretical physics, and especially for his discovery of the law of the photoelectric effect.",
+    "portrait": "/assets/images/authors/einstein.jpg",
+    "social": [
+      {
+        "platform": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Albert_Einstein",
+        "icon": "wikipedia"
+      },
+      {
+        "platform": "LinkedIn",
+        "url": "https://www.linkedin.com/in/albert-einstein-6b639a93/",
+        "icon": "linkedin"
+      },
+      {
+        "platform": "Bluesky",
+        "url": "https://bsky.app/profile/unseenhistory.bsky.social/post/3limq7xyx2k2j",
+        "icon": "bluesky"
+      }
+    ]
+  },
+  {
+    "name": "Isaac Newton",
+    "profession": "Mathematician and Physicist",
+    "bio": "Sir Isaac Newton was an English polymath active as a mathematician, physicist, astronomer, alchemist, theologian, and author. Newton was a key figure in the Scientific Revolution and the Enlightenment that followed. His book Philosophiæ Naturalis Principia Mathematica (Mathematical Principles of Natural Philosophy), first published in 1687, achieved the first great unification in physics and established classical mechanics.",
+    "portrait": "/assets/images/authors/newton.jpg",
+    "social": [
+      {
+        "platform": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Isaac_Newton",
+        "icon": "wikipedia"
+      }
+    ]
+  },
+  {
+    "name": "Marie Curie",
+    "profession": "Physicist and Chemist",
+    "bio": "Maria Salomea Skłodowska-Curie, known as Marie Curie, was a Polish and naturalised-French physicist and chemist who conducted pioneering research on radioactivity. She was the first woman to win a Nobel Prize, the first person to win a Nobel Prize twice, and the only person to win a Nobel Prize in two scientific fields.",
+    "portrait": "/assets/images/authors/curie.jpg",
+    "social": [
+      {
+        "platform": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Marie_Curie",
+        "icon": "wikipedia"
+      }
+    ]
+  },
+  {
+    "name": "Werner Heisenberg",
+    "profession": "Theoretical Physicist",
+    "bio": "Werner Karl Heisenberg was a German theoretical physicist, one of the main pioneers of the theory of quantum mechanics and a principal scientist in the German nuclear program during World War II. He published his Umdeutung paper in 1925, a major reinterpretation of old quantum theory.",
+    "portrait": "/assets/images/authors/heisenberg.jpg",
+    "social": [
+      {
+        "platform": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Werner_Heisenberg",
+        "icon": "wikipedia"
+      }
+    ]
+  },
+  {
+    "name": "Niels Bohr",
+    "profession": "Physicist",
+    "bio": "Niels Henrik David Bohr was a Danish theoretical physicist who made foundational contributions to understanding atomic structure and quantum theory, for which he received the Nobel Prize in Physics in 1922. Bohr was also a philosopher and a promoter of scientific research. Bohr developed the Bohr model of the atom, in which he proposed that energy levels of electrons are discrete and that the electrons revolve in stable orbits around the atomic nucleus but can jump from one energy level (or orbit) to another.",
+    "portrait": "/assets/images/authors/bohr.jpg",
+    "social": [
+      {
+        "platform": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Niels_Bohr",
+        "icon": "wikipedia"
+      }
+    ]
+  },
+  {
+    "name": "Stephen Hawking",
+    "profession": "Theoretical Physicist",
+    "bio": "Stephen William Hawking was an English theoretical physicist, cosmologist, and author who was director of research at the Centre for Theoretical Cosmology at the University of Cambridge. Between 1979 and 2009, he was the Lucasian Professor of Mathematics at Cambridge. Hawking's scientific works included a collaboration with Roger Penrose on gravitational singularity theorems in the framework of general relativity, and the theoretical prediction that black holes emit radiation, often called Hawking radiation.",
+    "portrait": "/assets/images/authors/hawking.jpg",
+    "social": [
+      {
+        "platform": "Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Stephen_Hawking",
+        "icon": "wikipedia"
+      }
+    ]
+  }
+]

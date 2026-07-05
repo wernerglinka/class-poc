@@ -1,0 +1,9 @@
+ctas:
+  - url: "/signup"
+    label: "Get Started"
+    isButton: true
+    buttonStyle: "primary"
+  - url: "/about"
+    label: "Learn More"
+    isButton: false
+    buttonStyle: "secondary"

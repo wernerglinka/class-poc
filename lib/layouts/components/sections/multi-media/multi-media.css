@@ -1,0 +1,118 @@
+/**
+ * Multi Media Section Styles
+ *
+ * Design Tokens:
+ * - --glass-background
+ * - --color-shadow
+ * - --glass-backdrop-filter
+ * - --glass-border
+ * - --glass-border-radius
+ * - --space-s-l
+ * - --space-s-m
+ * - --color-border-light
+ * - --color-text
+ * - --wrapper-max-width
+ * - --gutter
+ */
+
+.section-wrapper.multi-media {
+  .content {
+    --threshold: 50rem;
+
+    column-gap: 0;
+    container-type: inline-size;
+
+    .text {
+      background-color: var(--glass-background);
+      box-shadow: var(--color-shadow);
+      backdrop-filter: var(--glass-backdrop-filter);
+      border: var(--glass-border);
+      border-radius: var(--glass-border-radius);
+      padding: var(--space-s-l);
+      overflow: hidden;
+      position: relative;
+      top: var(--space-s-m);
+      left: -1rem;
+      z-index: 1;
+    }
+
+    .media {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border: 1px solid var(--color-border-light);
+      border-radius: var(--glass-border-radius);
+      position: relative;
+    }
+
+    .icon-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      svg {
+        width: 80%;
+        height: auto;
+        stroke: var(--color-text);
+      }
+    }
+
+    .custom-audio-player {
+      height: 100%;
+    }
+
+    /* When container is narrow enough that elements would wrap */
+    @container (max-width: 50rem) {
+      .text {
+        left: 0;
+      }
+    }
+
+    &.is-reverse {
+      .text {
+        left: 0;
+        top: var(--space-s-m);
+      }
+
+      .media {
+        top: calc(-1 * var(--space-s-m));
+        left: -1rem;
+      }
+
+      /* When container is narrow enough that elements would wrap */
+      @container (max-width: 50rem) {
+        .media {
+          left: 0;
+        }
+      }
+    }
+  }
+
+  &.with-background-image {
+    &.in-container .background-image {
+      border-radius: var(--glass-border-radius);
+    }
+
+    .multi-media.content {
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+      height: 100%;
+      width: 100%;
+      max-width: var(--wrapper-max-width, 85rem);
+      padding-left: var(--gutter);
+      padding-right: var(--gutter);
+
+      .text {
+        max-width: 50%;
+        top: auto;
+        bottom: calc(var(--space-s-m) * -1);
+      }
+
+      .image {
+        display: none;
+      }
+    }
+  }
+}

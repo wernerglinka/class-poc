@@ -1,0 +1,33 @@
+- sectionType: banner
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: false
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"
+  text:
+    leadIn: ""
+    title: "Banner Title"
+    titleTag: "h2"
+    subTitle: ""
+    prose: "Banner content goes here."
+  ctas:
+    - url: "/example"
+      label: "Call to Action"
+      isButton: true
+      buttonStyle: "primary"
+  image:
+    src: "/assets/images/banner-image.jpg"
+    alt: "Banner image description"
+    caption: ""

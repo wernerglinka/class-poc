@@ -1,0 +1,13 @@
+{# 
+  render-section is a nunjucks macro that uses the 'section.sectionType' parameter 
+  to compose the name of the target component macro.
+  Since Nunjucks doesn't support dynamic macro names, we have to use a helper 
+  function to do this. We also pass the required meta data through, e.g., crumbs, 
+  data, pageFiles, etc. 
+#}
+
+{% macro renderSection(section, crumbs, data, collections, previous, next, urlPath, collection) %}
+  {# include the target section component based on section.sectionType #}
+  {# the 'ignore missing' flag prevents errors if the target component doesn't exist #}
+  {% include "../sections/" + section.sectionType + "/" + section.sectionType + ".njk" ignore missing %}
+{% endmacro %}

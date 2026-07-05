@@ -1,0 +1,44 @@
+{% from "components/_partials/icon/icon.njk" import icon %}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/author-date/author-date.njk" import authorDate %}
+
+{#
+  This macro renders a card for items in collections lists.
+  It is different from the manual card component as it always links to an item.
+
+  props:
+    - link: URL for the card link
+    - pattern: background pattern for the card
+    - thumbnail: image URL for the card thumbnail
+    - title: title text for the card
+    - prose: excerpt or description text for the card
+    - author: author name for the card
+    - date: publication date for the card
+#}
+{% macro collectionCard(props) %}
+  <a href="/{{ props.link }}" aria-label="Read more: {{ props.title }}">
+    {% if props.thumbnail %}
+      <div class="image-wrapper">
+        <img src="{{ props.thumbnail }}" alt="{{ props.title }}"/>
+      </div>
+    {% endif %}
+
+    <div class="text-wrapper flow">
+      <h3 class="title">{{ props.title }}</h3>
+
+      {% if props.author | hasAuthor or props.date %}
+        {% set info = {
+          author: props.author,
+          date: props.date
+        } %}
+        <div class="author-date is-vertical">{{ authorDate(info) }}</div>
+      {% endif %}
+
+      <div class="prose">{{ props.description | safe }}</div>
+
+      {# right arrow icon #}
+      {% set iconProps = { icon: "arrow-right", url: '' } %}
+      {{ icon(iconProps) }}
+    </div>
+  </a>
+{% endmacro %}

@@ -1,0 +1,56 @@
+/**
+ * CTAs Component Styles
+ *
+ * Design Tokens:
+ * - --space-m-l
+ * - --font-s
+ * - --color-primary
+ */
+.ctas {
+  --flow-space: var(--space-m-l);
+}
+
+/* Special case for CTAs in banner */
+.cta-banner .ctas {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+
+  > * {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+}
+
+/* Base CTA styles */
+.cta {
+  font-size: var(--font-s);
+  text-decoration: none;
+  text-transform: uppercase;
+
+  & + .cta {
+    margin-left: var(--space-m-l);
+  }
+}
+
+/**
+ * Button CTAs inherit all styles from button.css
+ * No duplication - .button class provides all styling
+ */
+
+.cta.link {
+  display: inline-block;
+  font-size: var(--font-s);
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    border-bottom-color: currentcolor;
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-bottom-color: currentcolor;
+  }
+}

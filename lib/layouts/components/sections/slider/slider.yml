@@ -1,0 +1,56 @@
+- sectionType: slider
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: false
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"
+  config: ""
+  text:
+    leadIn: ""
+    title: "Slider Title"
+    titleTag: "h2"
+    subTitle: ""
+    prose: "Slider introduction content."
+  slides:
+    - text:
+        leadIn: ""
+        title: "Slide 1 Title"
+        titleTag: "h3"
+        subTitle: ""
+        prose: "First slide content."
+      ctas:
+        - url: "/slide1"
+          label: "Learn More"
+          isButton: true
+          buttonStyle: "primary"
+      image:
+        src: "/assets/images/slide1.jpg"
+        alt: "Slide 1 image"
+        caption: ""
+    - text:
+        leadIn: ""
+        title: "Slide 2 Title"
+        titleTag: "h3"
+        subTitle: ""
+        prose: "Second slide content."
+      ctas:
+        - url: "/slide2"
+          label: "Explore"
+          isButton: true
+          buttonStyle: "secondary"
+      image:
+        src: "/assets/images/slide2.jpg"
+        alt: "Slide 2 image"
+        caption: ""

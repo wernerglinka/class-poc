@@ -1,0 +1,104 @@
+/**
+ * Hero Section Styles
+ *
+ * Design Tokens:
+ * - --space-s-l
+ * - --glass-background
+ * - --glass-box-shadow
+ * - --space-2xs-xs
+ * - --space-m
+ * - --glass-background-light
+ * - --glass-border
+ * - --space-l
+ * - --space-3xs
+ * - --glass-background-dark
+ * - --color-text
+ */
+
+.hero.first-section {
+  /*
+    The text container should be 100% of the viewport width at 600px and smaller.
+    At 600px and larger, the text container should grow to 60% of the viewport width.
+    In this case 600px is about the point where the text starts to get too wide to read comfortably.
+    - Below 600px: calc((100vw - 600px) * 2) is negative, clamps to 0px, giving us 100% - 0px = 100%
+    - Above 600px: The calculation becomes positive and grows, making the width shrink from 100%
+    - The * N multiplier controls how fast the width shrinks
+    - It caps at 40% reduction (so minimum 60% width)
+
+    --hero-text-width: calc(100% - clamp(0px, calc((100vw - 600px) * N), 40%))
+  */
+  --hero-text-width: calc(100% - clamp(0px, calc((100vw - 600px) * 2), 40%));
+
+  .background-image {
+    background-size: cover;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-position: center center;
+  }
+
+  .text {
+    width: var(--hero-text-width);
+    padding: var(--space-s-l);
+    background: var(--glass-background);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--glass-box-shadow);
+    border-radius: var(--space-2xs-xs);
+    overflow: hidden;
+  }
+
+  .full-screen {
+    position: absolute;
+    bottom: var(--space-m);
+    left: 55%;
+    transform: translateX(-50%);
+    background: var(--glass-background-light);
+    border: var(--glass-border);
+    box-shadow: var(--glass-box-shadow);
+    backdrop-filter: blur(10px);
+    width: var(--space-l);
+    height: var(--space-l);
+    padding: var(--space-3xs);
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      stroke-width: 1px;
+    }
+
+    &:hover {
+      svg {
+        stroke-width: 2px;
+      }
+    }
+  }
+
+  /* Screen reader only text */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  &.is-reverse .text {
+    margin-left: auto;
+  }
+}
+
+/* Dark theme: adjust glass background to be darker and text to be lighter */
+.dark-theme .hero.first-section {
+  .text {
+    background: var(--glass-background-dark);
+    color: var(--color-text);
+  }
+}

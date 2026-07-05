@@ -1,0 +1,79 @@
+{
+  "name": "flip-card",
+  "type": "partial",
+  "styles": ["flip-card.css"],
+  "scripts": ["flip-card.js"],
+  "requires": ["ctas", "text", "icon", "commons"],
+  "validation": {
+    "required": ["front", "back"],
+    "properties": {
+      "front": {
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": "object",
+            "properties": {
+              "icon": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            }
+          },
+          "text": {
+            "type": "object"
+          },
+          "ctas": {
+            "type": "array"
+          }
+        }
+      },
+      "back": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "object"
+          },
+          "ctas": {
+            "type": "array"
+          }
+        }
+      }
+    }
+  },
+  "fields": {
+    "front": {
+      "icon": {
+        "widget": "text",
+        "label": "Front icon name (optional)",
+        "default": ""
+      },
+      "url": {
+        "widget": "text",
+        "label": "Front icon link URL (optional)",
+        "default": ""
+      },
+      "text": {
+        "$use": "text",
+        "titleTag": {
+          "default": "h3"
+        }
+      },
+      "ctas": {
+        "$use": "ctas"
+      }
+    },
+    "back": {
+      "text": {
+        "$use": "text",
+        "titleTag": {
+          "default": "h3"
+        }
+      },
+      "ctas": {
+        "$use": "ctas"
+      }
+    }
+  }
+}

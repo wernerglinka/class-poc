@@ -1,0 +1,331 @@
+/**
+ * Header Section Styles
+ *
+ * Modern CSS Layout Approach:
+ * - Uses cluster pattern (flex with gap) for horizontal layout
+ * - Container queries for component-level responsiveness
+ * - Fluid sizing with clamp() for search input
+ * - Design tokens for all spacing and colors
+ *
+ * Design Tokens:
+ * - --color-shadow
+ * - --gutter
+ * - --space-s
+ * - --space-m-l
+ * - --background-color-link-hover
+ * - --color-link-navigation
+ * - --color-border
+ * - --background-color-light
+ * - --color-text
+ * - --color-text-muted
+ */
+
+/* Header wrapper - contains top-message and header */
+.header-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+/* Top Message Bar */
+.top-message {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-s);
+  min-height: 2.5rem;
+  max-height: 10rem; /* Allow for text wrapping on small screens */
+  padding-block: var(--space-2xs);
+  padding-inline: var(--gutter);
+  padding-right: calc(var(--gutter) + 2rem); /* Room for close button */
+  background: var(--color-top-message-background);
+  color: var(--color-top-message-text);
+  font-size: var(--font-xs, 0.875rem);
+  overflow: hidden;
+  transition:
+    max-height 0.3s ease,
+    min-height 0.3s ease,
+    padding-block 0.3s ease;
+}
+
+.header-wrapper.is-dismissed .top-message {
+  min-height: 0;
+  max-height: 0;
+  padding-block: 0;
+}
+
+.top-message-text {
+  margin: 0;
+  text-align: center;
+
+  a {
+    color: var(--color-top-message-text);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+}
+
+.top-message-close {
+  position: absolute;
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: var(--color-top-message-text);
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    transform: none;
+    background: transparent;
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-top-message-text);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke: var(--color-top-message-text);
+    stroke-width: 2;
+  }
+}
+
+header {
+  position: relative;
+  width: 100%;
+  background: rgb(255 255 255 / 60%);
+  backdrop-filter: blur(var(--space-xs, 0.3125rem));
+
+  /* Fluid height: 3.25rem at 400px viewport, scales to 5rem at wider screens */
+  height: clamp(3.25rem, 3.25rem + 1.75vw, 5rem);
+
+  /* Container setup for responsive behavior */
+  container-name: header;
+  container-type: inline-size;
+
+  /* Cluster pattern: horizontal layout with flexible wrapping */
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-s);
+  padding-inline: var(--gutter);
+
+  /* Reset all button styles in header (including hamburger) */
+  button.hamburger-menu {
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+
+    &:hover,
+    &.active,
+    &:focus,
+    &:focus-visible {
+      transform: none;
+      background: transparent;
+      box-shadow: none;
+      outline: none;
+    }
+  }
+
+  .misc {
+    /* Cluster pattern for misc items */
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+
+    /* Collapse the wrapper when no optional switchers are enabled (no element children) */
+    &:not(:has(*)) {
+      display: none;
+    }
+
+    /* Reset button styles for header buttons - higher specificity than global button styles */
+    button.none,
+    button.theme-toggle,
+    button.search-icon-toggle,
+    button[type="submit"] {
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      border-radius: 0;
+      backdrop-filter: none;
+
+      &:hover {
+        transform: none;
+        background: transparent;
+      }
+
+      &:focus,
+      &:focus-visible {
+        outline: 2px solid var(--color-link-navigation);
+        outline-offset: 2px;
+        box-shadow: none;
+      }
+    }
+
+    .search-icon-toggle {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--space-m-l);
+      height: var(--space-m-l);
+      transition: opacity 0.3s ease;
+
+      svg {
+        stroke: var(--color-link-navigation);
+        stroke-width: 1px;
+      }
+
+      &.search-active {
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+
+    .icon-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: none;
+      width: var(--space-m-l);
+      height: var(--space-m-l);
+      background: transparent;
+      transition: background 0.3s ease;
+
+      &:hover {
+        background: var(--background-color-link-hover);
+      }
+
+      svg {
+        stroke: var(--color-link-navigation);
+        stroke-width: 1px;
+      }
+    }
+  }
+}
+
+.search-page header .misc .search-icon-toggle {
+  display: none;
+}
+
+/* Header search overlay - positioned below header */
+.header-search-overlay {
+  position: fixed;
+  /* Matches fluid header height */
+  top: clamp(3.25rem, 3.25rem + 1.75vw, 5rem);
+  left: 0;
+  right: 0;
+  z-index: 90;
+  background: rgb(255 255 255 / 60%);
+  backdrop-filter: blur(var(--space-xs, 0.3125rem));
+  padding: var(--space-s) var(--gutter);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    visibility 0s 0.3s,
+    top 0.3s ease;
+
+  /* Hidden by default */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-1rem);
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease,
+      top 0.3s ease;
+  }
+
+  .header-search-form {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    max-width: 40rem;
+    margin: 0 auto;
+    border: 1px solid var(--color-border, #ddd);
+    border-radius: var(--space-3xs, 0.25rem);
+    overflow: hidden;
+    background: var(--background-color-light, #fff);
+
+    .header-search-input {
+      flex: 1;
+      padding: var(--space-2xs-xs, 0.5rem);
+      border: none;
+      font-size: clamp(0.875rem, 0.8rem + 0.3vw, 1rem);
+      background: transparent;
+      color: var(--color-text);
+
+      &:focus {
+        outline: none;
+      }
+
+      &::placeholder {
+        color: var(--color-text-muted, #999);
+      }
+    }
+
+    button[type="submit"] {
+      padding: var(--space-2xs, 0.75rem);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: var(--background-color-link-hover, #f5f5f5);
+      }
+
+      svg {
+        stroke: var(--color-link-navigation);
+        stroke-width: 2px;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+  }
+}
+
+/* Adjust search overlay when top-message is present */
+.header-wrapper.has-top-message ~ .header-search-overlay {
+  top: calc(clamp(3.25rem, 3.25rem + 1.75vw, 5rem) + 2.5rem);
+}
+
+/* Adjust search overlay when top-message is dismissed */
+.header-wrapper.has-top-message.is-dismissed ~ .header-search-overlay {
+  top: clamp(3.25rem, 3.25rem + 1.75vw, 5rem);
+}
+
+/* Expose top-message height as CSS custom property for page content adjustment */
+:root:has(.header-wrapper.has-top-message:not(.is-dismissed)) {
+  --top-message-offset: 2.5rem;
+}
+
+:root:has(.header-wrapper.has-top-message.is-dismissed),
+:root:not(:has(.header-wrapper.has-top-message)) {
+  --top-message-offset: 0rem;
+}

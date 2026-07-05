@@ -1,0 +1,37 @@
+{#
+  Collection Links section
+  This section can be added to any page in a collection to show previous/next links
+  Only displays if the current page has previous or next items in the collection
+
+  Requires section.collectionName to specify which collection to use (e.g., 'blog', 'studio-notes')
+  Defaults to 'blog' if not specified
+
+  Navigation naming (matches Eleventy and Metalsmith conventions):
+  - previous: the item published before this one (earlier date)
+  - next: the item published after this one (later date)
+
+  Compatible with @metalsmith/collections v2.0
+#}
+
+{% set collectionName = section.collectionName | default('blog') %}
+{% set previousPost = collection[collectionName].previous[0] if collection and collection[collectionName] and collection[collectionName].previous.length %}
+{% set nextPost = collection[collectionName].next[0] if collection and collection[collectionName] and collection[collectionName].next.length %}
+
+{% if previousPost or nextPost %}
+  <nav class="collection-links container" aria-label="Collection navigation">
+
+    {% if nextPost %}
+      <a href="/{{ nextPost.permalink }}/" class="collection-link collection-link-next">
+        <span class="collection-link-label">« </span>
+        <span class="collection-link-title">{{ nextPost.card.title }}</span>
+      </a>
+    {% endif %}
+    {% if previousPost %}
+      <a href="/{{ previousPost.permalink }}/" class="collection-link collection-link-previous">
+        <span class="collection-link-title">{{ previousPost.card.title }}</span>
+        <span class="collection-link-label"> »</span>
+      </a>
+    {% endif %}
+
+  </nav>
+{% endif %}

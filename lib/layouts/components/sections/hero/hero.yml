@@ -1,0 +1,40 @@
+- sectionType: hero
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  isFullScreen: true
+  isReverse: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: true
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"
+  text:
+    leadIn: ""
+    title: "Hero Title"
+    titleTag: "h1"
+    subTitle: ""
+    prose: "Hero section content goes here."
+    isCentered: false
+  ctas:
+    - url: "/get-started"
+      label: "Get Started"
+      isButton: true
+      buttonStyle: "primary"
+    - url: "/learn-more"
+      label: "Learn More"
+      isButton: false
+      buttonStyle: "secondary"
+  image:
+    src: "/assets/images/hero-image.jpg"
+    alt: "Hero image description"
+    caption: ""

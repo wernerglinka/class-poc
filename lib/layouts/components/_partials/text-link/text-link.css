@@ -1,0 +1,32 @@
+/**
+ * Text Link Component Styles
+ *
+ * Design Tokens:
+ * - --font-s
+ * - --background-color-link-hover
+ * - --color-primary
+ */
+.text-link {
+  display: inline-block;
+  padding: 2px;
+  font-size: var(--font-s);
+  background-color: transparent;
+  transition: background-color 0.5s ease-in-out;
+
+  &::after {
+    content: "»";
+    display: inline-block;
+    margin-left: 0.25em;
+    padding-right: 2px;
+  }
+
+  &:hover {
+    background-color: var(--background-color-link-hover);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-bottom-color: currentcolor;
+  }
+}

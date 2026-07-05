@@ -1,0 +1,93 @@
+/*
+ * class-sessions
+ * Session list with volunteer host status and signup dialog.
+ */
+.class-sessions .class-sessions-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-s, 1rem);
+}
+
+.class-sessions .class-sessions-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-s, 1rem);
+  padding: var(--space-s, 1rem);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+}
+
+.class-sessions .session-date {
+  font-weight: 600;
+}
+
+/*
+ * Class-based hiding: global button styles set display and would win
+ * over the [hidden] attribute, so visibility is controlled by class.
+ */
+.class-sessions .is-hidden {
+  display: none !important;
+}
+
+/*
+ * The signup affordance is deliberately quiet: a plain text link, so
+ * hosting reads as an aside rather than a call to action.
+ */
+.class-sessions .host-needed-link {
+  margin-inline-start: auto;
+  font-style: italic;
+  color: var(--color-text-muted, #666);
+  text-decoration: underline;
+}
+
+.class-sessions .host-needed-link:hover,
+.class-sessions .host-needed-link:focus-visible {
+  color: inherit;
+}
+
+.class-sessions .session-thanks {
+  margin-inline-start: auto;
+  font-style: italic;
+}
+
+.class-sessions-dialog {
+  max-inline-size: 26rem;
+  inline-size: 90vw;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 6px;
+  padding: var(--space-m, 1.5rem);
+}
+
+.class-sessions-dialog::backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+.class-sessions-dialog form {
+  display: grid;
+  gap: var(--space-s, 1rem);
+}
+
+.class-sessions-dialog label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.class-sessions-dialog input {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+}
+
+.class-sessions-dialog .js-feedback {
+  min-block-size: 1.2em;
+  margin: 0;
+  color: var(--color-error, #a4262c);
+}
+
+.class-sessions-dialog .dialog-actions {
+  display: flex;
+  gap: var(--space-s, 1rem);
+  justify-content: flex-end;
+}

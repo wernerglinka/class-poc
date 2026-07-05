@@ -1,0 +1,88 @@
+{# 
+  build the container id, classes ands styles strings from the containerField 
+  properties containerFields: 
+    inContainer: if true adds 'in-container' to class list 
+    isAnimated: if true adds 'is-animated' to class list 
+    margin: 
+      top: if true adds 'add-top-margin' to class list 
+      bottom: if true adds 'add-bottom-margin' to class list 
+    padding: 
+      top: if true adds 'add-top-padding' to class list 
+      bottom: if true adds 'add-bottom-padding' to class list 
+    background: 
+      isDark: if true adds 'is-dark' to class list 
+      color: if color is set, adds 'background-color: {{color}}' to style list 
+      image: if image is set, adds a '.background-image' element'' 
+    imageScreen: if imageScreen is set adds 'has-dark-screen' or 'has-light-screen' to class list depending on imageScreen value 
+#} 
+
+{% macro buildContainerAttributes(section, isFirst) -%}
+  {%- set containerFields = section.containerFields -%}
+  {%- set classes = ['section-wrapper'] -%}
+  {%- set styles = [] -%}
+
+  {# Add section type to section wrapper classes #}
+  {% set classes = classes.concat([section.sectionType]) %}
+
+  {# Add first-section class to the first section for top padding #}
+  {%- if isFirst -%}
+    {%- set classes = classes.concat(['first-section']) -%}
+  {%- endif -%}
+
+  {# Build classes array #}
+  {%- if section.classes -%}
+    {%- set classes = classes.concat(section.classes.split(' ')) -%}
+  {%- endif -%} 
+  
+  {%- if section.isFullScreen -%} 
+    {%- set classes = classes.concat(['full-screen']) -%} 
+  {%- endif -%} 
+  
+  {%- if containerFields.inContainer -%} 
+    {%- set classes = classes.concat(['in-container']) -%} 
+  {%- endif -%} 
+  
+  {%- if containerFields.isAnimated -%} 
+    {%- set classes = classes.concat(['is-animated']) -%} 
+  {%- endif -%} 
+  
+  {%- if containerFields.noMargin -%} 
+    {%- if containerFields.noMargin.top -%} 
+      {%- set classes = classes.concat(['no-top-margin']) -%} 
+    {%- endif -%} 
+    {%- if containerFields.noMargin.bottom -%} 
+      {%- set classes = classes.concat(['no-bottom-margin']) -%}
+    {%- endif -%} 
+  {%- endif -%} 
+  
+  {%- if containerFields.noPadding -%} 
+    {%- if containerFields.noPadding.top -%} 
+      {%- set classes = classes.concat(['no-top-padding']) -%} 
+    {%- endif -%} 
+    {%- if containerFields.noPadding.bottom -%} 
+      {%- set classes = classes.concat(['no-bottom-padding']) -%} 
+    {%- endif -%} 
+  {%- endif -%} 
+  
+  {%- if containerFields.background.isDark -%} 
+    {%- set classes = classes.concat(['is-dark']) -%} 
+  {%- endif -%} 
+  
+  {# If a background image is set and imageScreen is set, add the appropriate class #} 
+  {%- if containerFields.background.image and containerFields.background.imageScreen != "none" -%} 
+    {%- if containerFields.background.imageScreen == "light" -%} 
+      {%- set classes = classes.concat(['has-light-screen']) -%} 
+    {%- endif -%} 
+    {%- if containerFields.background.imageScreen == "dark" -%} 
+      {%- set classes = classes.concat(['has-dark-screen']) -%} 
+    {%- endif -%} {%- endif -%} 
+    
+  {# Build styles array #} 
+  {%- if containerFields.background -%} 
+    {%- if containerFields.background.color -%} 
+      {%- set styles = styles.concat(['background-color: ' + containerFields.background.color]) -%} 
+    {%- endif -%} {%- endif -%} 
+  
+    {# Output the attributes #} 
+  {%- if classes.length > 0 -%}class="{{ classes | join(' ') }}"{% endif -%} 
+  {%- if styles.length > 0 -%} style="{{ styles | join('; ') }}"{% endif -%} {%- endmacro %}

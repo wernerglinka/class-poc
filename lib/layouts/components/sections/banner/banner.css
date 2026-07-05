@@ -1,0 +1,106 @@
+/**
+ * Banner Section Styles
+ *
+ * Design Tokens:
+ * - --space-s-l
+ * - --space-m-l
+ * - --glass-border-radius
+ * - --color-primary
+ * - --space-s
+ */
+
+.banner {
+  /* Use consistent threshold with other components */
+  --threshold: 50rem;
+
+  /* Design token integration */
+  --banner-padding: var(--space-s-l);
+  --banner-gap: var(--space-m-l);
+  --banner-border-radius: var(--glass-border-radius);
+  --transition-duration: 0.5s;
+  --transition-timing: ease-in-out;
+  --max-accordion-height: 1000px;
+
+  .content {
+    /* Fluid layout system similar to hero-slider */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--banner-gap);
+    max-width: var(--threshold);
+    margin: 0 auto;
+    text-align: center;
+
+    > * {
+      flex-grow: 1;
+      flex-basis: calc((var(--threshold) - 100%) * 999);
+      align-self: stretch;
+    }
+
+    &.is-reverse {
+      flex-direction: row-reverse;
+    }
+  }
+
+  .text {
+    padding: var(--banner-padding);
+  }
+
+  .image {
+    border-radius: var(--banner-border-radius);
+    overflow: hidden;
+  }
+}
+
+/*
+  Accordion Banner functionality
+  Applied via the `classes` field on adjacent sections:
+  - banner section:    classes: 'banner-accordion-header'
+  - following section: classes: 'banner-accordion-content is-closed'
+  Using banner- prefix to avoid conflicts with the accordion section.
+*/
+.banner-accordion-header {
+  cursor: pointer;
+  transition: all var(--transition-duration, 0.5s) var(--transition-timing, ease-in-out);
+  position: relative;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  /* Plus/minus indicators using design tokens */
+  h2::after,
+  h3::after {
+    content: "+";
+    color: var(--color-primary);
+    font-weight: normal;
+    margin-left: var(--space-s);
+  }
+
+  &.is-open {
+    h2::after,
+    h3::after {
+      content: "-";
+    }
+  }
+}
+
+.banner-accordion-content {
+  overflow: hidden;
+
+  /* Content sits on a non-banner wrapper, so the banner-scoped tokens are not
+     in scope here; fall back to literal values to keep the transition working. */
+  transition: all var(--transition-duration, 0.5s) var(--transition-timing, ease-in-out);
+
+  &.is-closed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  &:not(.is-closed) {
+    max-height: var(--max-accordion-height, 1000px);
+    padding-top: var(--space-s);
+    padding-bottom: var(--space-s);
+  }
+}

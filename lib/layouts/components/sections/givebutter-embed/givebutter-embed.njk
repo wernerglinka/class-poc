@@ -1,0 +1,18 @@
+{% from "components/_partials/text/text.njk" import text %}
+
+<div class="content container">
+  {% if section.text %}
+    <div class="text flow">
+      {{ text(section.text) }}
+    </div>
+  {% endif %}
+
+  <div class="givebutter-embed-frame">
+    <iframe
+      src="{{ section.embedUrl }}"
+      title="Class registration form"
+      loading="lazy"
+      allow="payment"
+    ></iframe>
+  </div>
+</div>

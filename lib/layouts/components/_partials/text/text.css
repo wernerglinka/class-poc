@@ -1,0 +1,125 @@
+/**
+ * Text Component Styles
+ *
+ * Design Tokens:
+ * - --flow-space
+ * - --space-xs-s
+ * - --space-2xs
+ * - --color-primary
+ * - --space-s
+ * - --color-text-inactive
+ * - --color-background-light
+ * - --color-dark-background
+ * - --color-text
+ * - --contrast-text-on-dark
+ * - --color-primary-light
+ */
+.is-centered {
+  text-align: center;
+  max-width: 100%;
+}
+
+.prose {
+  /* Ensure proper spacing for markdown content */
+  & > * + * {
+    margin-top: var(--flow-space, 1em);
+  }
+
+  /* Lists in prose content */
+  ul,
+  ol {
+    list-style: revert;
+    padding-left: 1.5em;
+    margin-top: var(--space-xs-s);
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  li {
+    margin-bottom: var(--space-2xs);
+  }
+
+  /* Blockquotes */
+  blockquote {
+    border-left: 4px solid var(--color-primary);
+    padding-left: var(--space-s);
+    margin-left: 0;
+    font-style: italic;
+    color: var(--color-text-inactive);
+  }
+
+  /* Code blocks and inline code */
+  code {
+    font-family: "Courier New", monospace;
+    font-size: 0.9em;
+    background-color: var(--color-background-light);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: var(--space-s);
+    background-color: var(--color-dark-background);
+    border-radius: 0.5rem;
+
+    code {
+      background: none;
+      padding: 0;
+      color: var(--color-text);
+
+      /* Block code inherits the pre's font; the inline-code 0.9em/Courier New
+         above must not apply here, or Shiki blocks in prose render smaller and
+         in a different font than the code section. */
+      font: inherit;
+    }
+  }
+
+  /* Images in prose */
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+  }
+
+  /* Strong and emphasis */
+  strong {
+    font-weight: 600;
+  }
+
+  em {
+    font-style: italic;
+  }
+}
+
+/* Dark theme adjustments */
+.is-dark .prose {
+  blockquote {
+    border-left-color: var(--color-primary-light, var(--color-primary));
+    color: var(--contrast-text-on-dark);
+  }
+
+  code {
+    background-color: rgb(255 255 255 / 10%);
+    color: var(--contrast-text-on-dark);
+  }
+
+  th {
+    background-color: rgb(255 255 255 / 10%);
+  }
+
+  th,
+  td {
+    border-color: rgb(255 255 255 / 20%);
+  }
+
+  hr {
+    background-color: rgb(255 255 255 / 20%);
+  }
+}

@@ -1,0 +1,51 @@
+{#
+  Collection List - Renders a paginated list of items from any collection
+  Dynamically displays collection items with automatic author/date detection
+
+  Required section properties:
+  - collectionName: string - name of the collection to display (e.g., 'blog', 'components')
+
+  Pagination params (populated by metalsmith-sectioned-blog-pagination):
+  - numberOfPages: number - total number of pagination pages
+  - pageNumber: number - current page number
+  - pageLength: number - items per page
+  - pageStart: number - starting index for current page
+#}
+{% from "components/_partials/author-date/author-date.njk" import authorDate %}
+{% from "components/_partials/collection-card/collection-card.njk" import collectionCard %}
+{% from "components/_partials/collection-pagination/collection-pagination.njk" import collectionPagination %}
+
+<div class="container">
+  {% set params = section.pagingParams %}
+  {% set collection = collections[section.collectionName] %}
+
+  {% if params.numberOfPages > 1 %}
+    {{ collectionPagination(params.numberOfPages, params.pageNumber, section.domainName) }}
+    {% set startPage = params.pageStart %}
+    {% set endPage = startPage + params.pageLength %}
+  {% else %}
+    {% set startPage = 0 %}
+    {% set endPage = collection.length %}
+  {% endif %}
+
+  <ul class="collection-list">
+    {% for item in collection %}
+      {% if loop.index > startPage and loop.index <= endPage %}
+        <li
+          class="collection-card{% if params.horizontal %} is-horizontal{% endif %}{% if item.card.pattern %} has-pattern{% endif %}"
+          {% if item.card.pattern %}style="background: var(--{{ item.card.pattern }})"{% endif %}
+        >
+          {# Merge item permalink into card props for linking #}
+          {% set item = item.card | merge({ link: item.permalink }) %}
+  
+          {{ collectionCard(item) }}
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+
+  {% if params.numberOfPages > 1 %}
+    {{ collectionPagination(params.numberOfPages, params.pageNumber, section.domainName) }}
+  {% endif %}
+
+</div>

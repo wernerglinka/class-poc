@@ -1,0 +1,11 @@
+{% macro lottie(lottieData) %}
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <lottie-player
+    src="{{ lottieData.src }}"
+    background="transparent"
+    speed="{{ lottieData.speed | default(1) }}"
+    {% if lottieData.control.loop %} loop {% endif %}
+    {% if lottieData.control.autoplay %} autoplay {% endif %}
+  ></lottie-player>
+{% endmacro %}

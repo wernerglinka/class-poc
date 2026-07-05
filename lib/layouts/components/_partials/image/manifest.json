@@ -1,0 +1,48 @@
+{
+  "name": "image",
+  "type": "partial",
+  "styles": ["image.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "required": ["src", "alt"],
+    "properties": {
+      "src": {
+        "type": "string"
+      },
+      "alt": {
+        "type": "string"
+      },
+      "caption": {
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      }
+    }
+  },
+  "fields": {
+    "src": {
+      "widget": "image",
+      "label": "Image",
+      "default": "",
+      "required": true
+    },
+    "alt": {
+      "widget": "text",
+      "label": "Alt text",
+      "default": "",
+      "required": true
+    },
+    "caption": {
+      "widget": "text",
+      "label": "Caption",
+      "default": ""
+    },
+    "url": {
+      "widget": "text",
+      "label": "Link URL (optional)",
+      "default": ""
+    }
+  }
+}

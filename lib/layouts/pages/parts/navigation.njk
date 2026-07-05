@@ -1,0 +1,38 @@
+{% macro navigation(mainMenu, urlPath) %}
+
+  <nav>
+
+    <ul class="main-menu">
+      {% for item in mainMenu %}
+        {# 
+          Check if this menu item is active or in the current path 
+          1. Exact matches get active class (disabled, with aria-current="page")
+          2. Path matches get active-path class (styled but still clickable)
+        #}
+        {% set isExactMatch = (urlPath == item.path) %}
+        {% set isInPath = false %}
+
+        {# Check if current page is within this menu item's section #}
+        {% if not isExactMatch and item.path != '/' and urlPath != '/' %}
+          {# Check if urlPath starts with the menu path (both should have trailing slashes) #}
+          {% if item.path in urlPath and urlPath != item.path %}
+            {% set isInPath = true %}
+          {% endif %}
+        {% endif %}
+
+        <li class="{% if isExactMatch %}active{% elif isInPath %}active-path{% endif %}">
+          <a href="{{ item.path }}"{% if isExactMatch %} class="active" aria-current="page"{% elif isInPath %} class="active-path"{% endif %}>
+            {{ item.title }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <button class="hamburger-menu" aria-label="Toggle menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+{% endmacro %}

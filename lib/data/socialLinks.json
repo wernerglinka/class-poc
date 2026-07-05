@@ -1,0 +1,57 @@
+[
+  {
+    "url": "https://www.linkedin.com/",
+    "icon": "linkedin",
+    "title": "LinkedIn"
+  },
+  {
+    "url": "https://github.com/",
+    "icon": "github",
+    "title": "GitHub"
+  },
+  {
+    "url": "https://twitter.com/",
+    "icon": "twitter",
+    "title": "Twitter"
+  },
+  {
+    "url": "https://www.behance.net/",
+    "icon": "behance",
+    "title": "Behance"
+  },
+  {
+    "url": "https://bsky.app/",
+    "icon": "bluesky",
+    "title": "Bluesky"
+  },
+  {
+    "url": "https://substack.com/",
+    "icon": "substack",
+    "title": "Substack"
+  },
+  {
+    "url": "https://www.facebook.com/",
+    "icon": "facebook",
+    "title": "Facebook"
+  },
+  {
+    "url": "https://www.instagram.com/",
+    "icon": "instagram",
+    "title": "Instagram"
+  },
+  {
+    "url": "https://www.youtube.com/",
+    "icon": "youtube",
+    "title": "YouTube"
+  },
+  {
+    "url": "https://dribbble.com/",
+    "icon": "dribbble",
+    "title": "Dribbble"
+  },
+  {
+    "url": "mailto:you@email.com",
+    "icon": "mail",
+    "title": "email"
+  }
+]

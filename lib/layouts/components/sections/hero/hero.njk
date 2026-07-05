@@ -1,0 +1,36 @@
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/image/image.njk" import image %}
+{% from "components/_partials/author-date/author-date.njk" import authorDate %}
+
+
+<div
+  class="container {% if section.isReverse %}is-reverse{% endif %}"
+  role="banner"
+  aria-label="{% if section.text.title %}{{ section.text.title }}{% else %}Hero section{% endif %}"
+>
+  {% if section.image | hasImage %}
+    <div class="image">{{ image(section.image)}}</div>
+  {% endif %}
+
+  {% if section.text or (section.ctas | hasCtas) %}
+    <div class="text flow">
+      {% if section.text %}
+        <div class="flow">{{ text(section.text)}}</div>
+      {% endif %}
+      {% if section.ctas | hasCtas %}
+        {{ ctas(section.ctas) }}
+      {% endif %}
+      {% if section.date or section.author %}
+        <div class="author-date">{{ authorDate({ date: section.date, author: section.author }) }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if section.isFullScreen %}
+    {# scroll to first section after the hero #}
+    <a class="full-screen" href="#first-section" aria-label="Scroll to next section">
+      {% include "icons/arrow-down.njk" %}
+      <span class="sr-only">Scroll to next section</span>
+    </a>
+  {% endif %}
+</div>

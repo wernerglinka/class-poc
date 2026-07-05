@@ -1,0 +1,37 @@
+[
+  {
+    "url": "https://theartunit.com/",
+    "logo": "/assets/images/art/art-unit.svg",
+    "title": "Art Unit"
+  },
+  {
+    "url": "https://designmuseum.org/",
+    "logo": "/assets/images/art/design-museum.svg",
+    "title": "Design Museum"
+  },
+  {
+    "url": "https://www.museumofflight.org/",
+    "logo": "/assets/images/art/museum-of-flight.svg",
+    "title": "Museum of Flight"
+  },
+  {
+    "url": "https://www.moma.org/",
+    "logo": "/assets/images/art/museum-of-modern-art.svg",
+    "title": "Museum of Modern Art"
+  },
+  {
+    "url": "https://nelson-atkins.org/",
+    "logo": "/assets/images/art/nelson-atkins-museum-of-art.svg",
+    "title": "Nelson Atkins Museum of Art"
+  },
+  {
+    "url": "https://new.smm.org/",
+    "logo": "/assets/images/art/science-museum-of-minnesota.svg",
+    "title": "Science Museum of Minnesota"
+  },
+  {
+    "url": "https://www.sfmoma.org/",
+    "logo": "/assets/images/art/sfmoma.svg",
+    "title": "SFMOMA"
+  }
+]

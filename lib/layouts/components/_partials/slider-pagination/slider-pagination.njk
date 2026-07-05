@@ -1,0 +1,21 @@
+{# Build the slider pagination #}
+{% macro sliderPagination(slides, isTabs) %}
+
+<ul class="slider-pagination {% if isTabs %}is-tabs{% endif %}" role="group" aria-label="Choose slide to display">
+  {% for slide in slides %}
+  <li>
+    <button
+      type="button"
+      class="slider-pagination-button {% if loop.index == 1 %}active{% endif %}"
+      aria-label="{% if slide.text.title %}Go to {{ slide.text.title }}{% else %}Go to slide {{ loop.index }}{% endif %}"
+      {% if loop.index == 1 %}aria-disabled="true"{% endif %}
+    >
+      <span aria-hidden="true"> {% if isTabs %}{{ slide.text.title }} {% else %}{{ loop.index }} {% endif %} </span>
+    </button>
+  </li>
+  {% endfor %}
+</ul>
+
+<!-- .slider-pagination -->
+
+{% endmacro %}

@@ -1,0 +1,26 @@
+{% from "components/_helpers/build-container-attributes.njk" import buildContainerAttributes %}
+{% from "components/_helpers/render-section.njk" import renderSection %}
+
+{# loop through all sections and render them #}
+{% for section in sections %}
+  {# don't render section is disabled in frontmatter #}
+  {% if not section.isDisabled %}
+
+    {# section wrapper may be article, aside, section or div depending on section.containerTag setting #}
+    <{{ section.containerTag }} id="{{ section.id }}"  {{ buildContainerAttributes(section, loop.first) }}>
+
+      {# if section has background add a background image #}
+      {% if section.containerFields.background.image %}
+        <div class="background-image" style="background-image: url({{ section.containerFields.background.image }})"></div>
+      {% endif %}
+
+      {# section content #}
+      {{ renderSection(section, navigation.breadcrumbs, data, collections, previous, next, urlPath, collection) }}
+
+      {% set containerTag = section.containerTag %}
+    </{{ containerTag }}>
+
+  {% endif %}
+{% else %}
+  <p class="error-message">There are no sections available</p>
+{% endfor %}

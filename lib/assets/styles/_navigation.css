@@ -1,0 +1,181 @@
+/**
+ * Navigation Component Styles
+ *
+ * Design Tokens:
+ * - --space-s
+ * - --color-link-navigation
+ * - --color-background
+ * - --color-shadow
+ * - --color-border-light
+ * - --transition-base
+ * - --color-primary
+ * - --color-link-inactive
+ * - --color-link-in-path
+ * - --color-background-dark
+ * - --color-border-dark
+ * - --color-shadow-dark
+ */
+
+/* Navigation uses the header container (already defined in header.css) */
+
+.hamburger-menu {
+  --hamburger-padding: 8px;
+  --hamburger-border-radius: 4px;
+  --hamburger-bar-width: 25px;
+  --hamburger-bar-height: 3px;
+  --hamburger-bar-spacing: 5px;
+  --hamburger-bar-radius: 2px;
+
+  display: none; /* Hidden on desktop */
+  /* background is reset in header.css */
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  position: relative;
+  padding: var(--hamburger-padding);
+  border-radius: var(--hamburger-border-radius);
+
+  span {
+    display: block;
+    width: var(--hamburger-bar-width);
+    height: var(--hamburger-bar-height);
+    background-color: var(--color-text);
+    margin: var(--hamburger-bar-spacing) 0;
+    transition: all var(--transition-base);
+    border-radius: var(--hamburger-bar-radius);
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  /* Hamburger to X animation when active */
+  &.active {
+    span {
+      background-color: var(--color-primary);
+    }
+
+    span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    span:nth-child(2) {
+      opacity: 0;
+    }
+
+    span:nth-child(3) {
+      transform: rotate(-45deg) translate(7px, -7px);
+    }
+  }
+}
+
+/**
+ * Main menu
+ */
+.main-menu {
+  display: flex;
+  justify-content: flex-end;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: var(--space-s);
+
+  /* Desktop menu links */
+  a {
+    color: var(--color-link-navigation);
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: outline 0.2s ease;
+  }
+}
+
+/* Mobile menu styles - activated when header container is narrow */
+@container header (max-width: 48rem) {
+  .hamburger-menu {
+    display: block;
+    margin-left: auto;
+  }
+
+  .main-menu {
+    display: flex; /* Always use flex layout */
+    position: absolute;
+    top: 105%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: var(--color-background);
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 5px 10px var(--color-shadow);
+
+    /* Hidden by default */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5rem);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease,
+      visibility 0s 0.3s;
+
+    /* Show menu when active */
+    &.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+
+      li {
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid var(--color-border-light);
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    /* Reset desktop hover effects for mobile */
+    a:hover {
+      transform: none;
+    }
+
+    /**
+     * Current page highlighting - Automated active link detection
+     * No need to manually add body classes anymore
+     */
+    li.active a,
+    a.active {
+      color: var(--color-link-inactive) !important;
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /**
+     * Path highlighting - When current page is within this menu section
+     * Example: /blog/my-post/ would make the /blog link have active-path class
+     */
+    li.active-path a,
+    a.active-path {
+      color: var(--color-link-in-path) !important;
+    }
+  }
+}
+
+/** Dark Theme styles variations */
+@container header (max-width: 48rem) {
+  .dark-theme .main-menu {
+    background-color: var(--color-background-dark);
+    box-shadow: 0 5px 10px var(--color-shadow-dark);
+  }
+
+  .dark-theme .main-menu li {
+    border-bottom-color: var(--color-border-dark);
+  }
+}

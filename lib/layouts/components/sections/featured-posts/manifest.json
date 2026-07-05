@@ -1,0 +1,40 @@
+{
+  "name": "featured-posts",
+  "description": "Featured blog posts section",
+  "type": "section",
+  "styles": ["featured-posts.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "required": ["sectionType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "featured-posts"
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.top": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.bottom": {
+        "type": "boolean"
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "default": "h2"
+      }
+    }
+  }
+}

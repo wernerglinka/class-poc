@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CPC Host Signup Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    fieldset { margin-bottom: 1.5rem; border: 1px solid #ccc; border-radius: 4px; }
+    label { display: block; margin: 0.5rem 0 0.15rem; }
+    input { width: 100%; padding: 0.4rem; box-sizing: border-box; }
+    button { margin-top: 0.75rem; padding: 0.5rem 1rem; cursor: pointer; }
+    .session { border: 1px solid #ddd; border-radius: 4px; padding: 0.75rem; margin: 0.5rem 0; }
+    .session.taken { background: #f3f3f3; color: #666; }
+    .result { margin-top: 0.75rem; padding: 0.5rem; border-radius: 4px; white-space: pre-wrap; }
+    .result.ok { background: #e6f4e6; }
+    .result.error { background: #fdeaea; }
+  </style>
+</head>
+<body>
+  <h1>CPC Host Signup Test</h1>
+  <p>Reference implementation of the class page signup flow: public GET
+  for availability, text/plain POST to claim a session. Open this file
+  directly in a browser; no server needed.</p>
+
+  <fieldset>
+    <legend>Endpoint</legend>
+    <label for="endpoint">Web app /exec URL</label>
+    <input id="endpoint" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+    <button id="load">Load sessions</button>
+  </fieldset>
+
+  <div id="sessions"></div>
+  <div id="result" class="result" hidden></div>
+
+  <script>
+    const endpointInput = document.querySelector('#endpoint');
+    const sessionsContainer = document.querySelector('#sessions');
+    const resultBox = document.querySelector('#result');
+
+    /**
+     * Fetch public availability from the web app.
+     * @param {string} endpoint - The /exec URL
+     * @returns {Promise<{sessionId: string, hostName: string}[]>} Sessions
+     */
+    const fetchAvailability = (endpoint) =>
+      fetch(endpoint).then((response) => response.json()).then((payload) => payload.sessions);
+
+    /**
+     * Claim a session. Content type MUST be text/plain: Apps Script
+     * cannot answer CORS preflights, and text/plain skips them.
+     * @param {string} endpoint - The /exec URL
+     * @param {{sessionId: string, hostName: string, hostEmail: string}} signup - Signup data
+     * @returns {Promise<{ok: boolean, error?: string}>} Web app response
+     */
+    const claimSession = (endpoint, signup) =>
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(signup)
+      }).then((response) => response.json());
+
+    /**
+     * Render one session card with its claim form.
+     * @param {{sessionId: string, hostName: string}} session - Session record
+     * @returns {HTMLElement} Card element
+     */
+    const renderSession = (session) => {
+      const card = document.createElement('div');
+      card.className = session.hosted ? 'session taken' : 'session';
+
+      if (session.hosted) {
+        card.innerHTML = `<strong>${session.sessionId}</strong><br>Hosted`;
+        return card;
+      }
+
+      card.innerHTML = `
+        <strong>${session.sessionId}</strong> — host needed
+        <label>Name <input type="text" data-field="hostName"></label>
+        <label>Email <input type="email" data-field="hostEmail"></label>
+        <label>Volunteer code <input type="text" data-field="volunteerCode"></label>
+        <button type="button">Sign up to host</button>
+      `;
+      card.querySelector('button').addEventListener('click', () => {
+        const signup = {
+          sessionId: session.sessionId,
+          hostName: card.querySelector('[data-field="hostName"]').value,
+          hostEmail: card.querySelector('[data-field="hostEmail"]').value,
+          volunteerCode: card.querySelector('[data-field="volunteerCode"]').value
+        };
+        claimSession(endpointInput.value.trim(), signup)
+          .then((response) => showResult(response))
+          .then(() => loadSessions());
+      });
+      return card;
+    };
+
+    /**
+     * Show the web app's response.
+     * @param {{ok: boolean, error?: string}} response - POST response
+     */
+    const showResult = (response) => {
+      resultBox.hidden = false;
+      resultBox.className = response.ok ? 'result ok' : 'result error';
+      resultBox.textContent = JSON.stringify(response);
+    };
+
+    /** Load and render current availability. */
+    const loadSessions = () =>
+      fetchAvailability(endpointInput.value.trim()).then((sessions) => {
+        sessionsContainer.replaceChildren(...sessions.map(renderSession));
+      });
+
+    document.querySelector('#load').addEventListener('click', loadSessions);
+  </script>
+</body>
+</html>

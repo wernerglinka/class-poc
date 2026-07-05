@@ -1,0 +1,30 @@
+- sectionType: testimonial
+  containerTag: aside
+  classes: ''
+  id: ''
+  isDisabled: false
+  isReverse: false
+  containerFields:
+    inContainer: false
+    isAnimated: true
+    noMargin:
+      top: true
+      bottom: false
+    noPadding:
+      top: true
+      bottom: true
+    background:
+      color: lightgray
+      image: ''
+      imageScreen: 'none' # light, dark, none
+  quote:
+    text: "You've got to be very careful if you don't know where you are going, because you might not get there."
+    cite: 'https://en.wikipedia.org/wiki/Yogi_Berra'
+  quotee:
+    portrait:
+      src: '/assets/images/yogi-berra-baseball-great.jpg'
+      alt: "Lawrence Peter 'Yogi' Berra"
+    name: 'Yogi Berra'
+    title: 'Baseball Great'
+    company: 'New York Yankees'
+    logo: '/assets/images/new-york-yankees-logo.svg'

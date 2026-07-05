@@ -1,0 +1,53 @@
+- sectionType: flip-cards
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: false
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"
+  text:
+    leadIn: ""
+    title: "Our Team"
+    titleTag: "h2"
+    subTitle: ""
+    prose: "Meet our amazing team members."
+  cards:
+    - front:
+        image:
+          src: "/assets/images/team-member-1.jpg"
+          alt: "Team member name"
+        title: "John Doe"
+        subtitle: "Lead Developer"
+      back:
+        title: "About John"
+        content: "John has 5+ years experience in web development."
+        ctas:
+          - url: "/team/john"
+            label: "View Profile"
+            isButton: true
+            buttonStyle: "primary"
+    - front:
+        image:
+          src: "/assets/images/team-member-2.jpg"
+          alt: "Team member name"
+        title: "Jane Smith"
+        subtitle: "Designer"
+      back:
+        title: "About Jane"
+        content: "Jane creates beautiful user experiences."
+        ctas:
+          - url: "/team/jane"
+            label: "View Profile"
+            isButton: true
+            buttonStyle: "primary"

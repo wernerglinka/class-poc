@@ -1,0 +1,10 @@
+{# Call To Actions macro may render multiple button and/or text links #}
+{% macro textLink(info) %}
+  <a 
+    class="text-link" 
+    href="{{info.url}}" 
+    {% if info.url | isExternal %}target="_blank" rel="noopener noreferrer" aria-label="{{ info.label }} (opens in new window)" {% endif %}
+  >
+    {{ info.label}}
+  </a>   
+{% endmacro %}

@@ -1,0 +1,27 @@
+{# Call To Actions macro may render multiple button and/or text links #}
+{% macro button(info) %}
+  {% if info.url %}
+    {# Render as anchor link when URL is provided #}
+    <a
+      class="button {{ info.buttonStyle }}{% if info.isSmall %} small{% endif %}"
+      href="{{info.url}}"
+      {% if info.url | isExternal %}target="_blank" rel="noopener noreferrer" aria-label="{{ info.label }} (opens in new window)" {% endif %}
+      {% if info.ariaLabel %}aria-label="{{ info.ariaLabel }}"{% endif %}
+    >
+      {% if info.icon %}{% include "icons/" + info.icon + ".njk" %}{% endif %}
+      {{ info.label}}
+    </a>
+  {% else %}
+    {# Render as button element when no URL (for JavaScript actions) #}
+    <button
+      class="{{ info.buttonStyle }}{% if info.isSmall %} small{% endif %}"
+      {% if info.type %}type="{{ info.type }}"{% else %}type="button"{% endif %}
+      {% if info.ariaLabel %}aria-label="{{ info.ariaLabel }}"{% endif %}
+      {% if info.dataAction %}data-action="{{ info.dataAction }}"{% endif %}
+      {% if info.disabled %}disabled{% endif %}
+    >
+      {% if info.icon %}{% include "icons/" + info.icon + ".njk" %}{% endif %}
+      {{ info.label}}
+    </button>
+  {% endif %}
+{% endmacro %}

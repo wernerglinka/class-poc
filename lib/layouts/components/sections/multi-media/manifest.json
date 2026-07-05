@@ -1,0 +1,112 @@
+{
+  "name": "multi-media",
+  "type": "section",
+  "styles": ["multi-media.css"],
+  "scripts": [],
+  "requires": ["ctas", "text", "image", "video", "audio", "icon", "lottie", "commons"],
+  "validation": {
+    "required": ["sectionType", "mediaType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "multi-media"
+      },
+      "mediaType": {
+        "type": "string",
+        "enum": ["image", "video", "audio", "icon", "lottie"]
+      },
+      "isReverse": {
+        "type": "boolean"
+      },
+      "isDisabled": {
+        "type": "boolean"
+      },
+      "containerTag": {
+        "type": "string",
+        "enum": ["section", "aside", "div", "article"]
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.top": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.background.isDark": {
+        "type": "boolean"
+      },
+      "containerFields.background.imageScreen": {
+        "type": "string",
+        "enum": ["light", "dark", "none"]
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "default": "h2"
+      },
+      "ctas": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "isButton": {
+              "type": "boolean"
+            },
+            "buttonStyle": {
+              "type": "string",
+              "enum": ["primary", "secondary", "tertiary", "inverted"]
+            },
+            "isSmall": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  "fields": {
+    "mediaType": {
+      "widget": "select",
+      "label": "Media type",
+      "enum": ["image", "video", "audio", "icon", "lottie"],
+      "default": "image"
+    },
+    "isReverse": {
+      "widget": "checkbox",
+      "label": "Reverse layout",
+      "default": false
+    },
+    "text": {
+      "$use": "text"
+    },
+    "image": {
+      "$use": "image"
+    },
+    "video": {
+      "$use": "video"
+    },
+    "audio": {
+      "$use": "audio"
+    },
+    "icon": {
+      "$use": "icon"
+    },
+    "lottie": {
+      "$use": "lottie"
+    },
+    "ctas": {
+      "$use": "ctas"
+    },
+    "$extends": ["commons"]
+  }
+}

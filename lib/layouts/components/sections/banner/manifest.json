@@ -1,0 +1,80 @@
+{
+  "name": "banner",
+  "type": "section",
+  "styles": ["banner.css"],
+  "scripts": ["banner.js"],
+  "requires": ["ctas", "text", "image", "commons"],
+  "validation": {
+    "required": ["sectionType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "banner"
+      },
+      "isReverse": {
+        "type": "boolean"
+      },
+      "isDisabled": {
+        "type": "boolean"
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.background.isDark": {
+        "type": "boolean"
+      },
+      "containerFields.background.imageScreen": {
+        "type": "string",
+        "enum": ["light", "dark", "none"]
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "default": "h2"
+      },
+      "ctas": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "isButton": {
+              "type": "boolean"
+            },
+            "buttonStyle": {
+              "type": "string",
+              "enum": ["primary", "secondary", "tertiary", "inverted"]
+            },
+            "isSmall": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  "fields": {
+    "isReverse": {
+      "widget": "checkbox",
+      "label": "Reverse layout (image on the right)",
+      "default": false
+    },
+    "text": {
+      "$use": "text"
+    },
+    "image": {
+      "$use": "image"
+    },
+    "ctas": {
+      "$use": "ctas"
+    },
+    "$extends": ["commons"]
+  }
+}

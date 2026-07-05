@@ -1,0 +1,64 @@
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/image/image.njk" import image %}
+{% from "components/_partials/icon/icon.njk" import icon %}
+
+{# Look up author data from data.author using the provided author name #}
+{% set authorData = null %}
+{% if section.name %}
+  {% for author in data.author %}
+    {% if author.name == section.name %}
+      {% set authorData = author %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% if authorData %}
+  <div class="content container {% if section.isReverse %}is-reverse{% endif %}">
+    <div class="author-profile">
+      {% if authorData.portrait %}
+        {% set props = {
+          src: authorData.portrait,
+          alt: authorData.name
+        } %}
+        <div class="portrait">{{ image(props)}}</div>
+      {% endif %}
+
+      {% set props = {
+        title: authorData.name,
+        titleTag: "h3",
+        subTitle: authorData.profession
+      } %}
+      {{ text(props) }}
+
+      {% if authorData.social %}
+        <ul class="social-links">
+          {% for link in authorData.social %}
+            {% set props = {
+              title: link.platform,
+              url: link.url,
+              icon: link.icon
+            } %}
+            <li style="width: {{ section.logoWidth }}px">
+              {% if link.icon %}
+                {{ icon(props) }}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+
+    <!-- author-profile -->
+
+    <div class="author-bio">
+      {% if authorData.bio %}
+        {% set props = {
+          prose: authorData.bio
+        } %}
+        {{ text(props) }}
+      {% endif %}
+    </div>
+
+    <!-- author-bio -->
+  </div>
+{% endif %}

@@ -1,0 +1,27 @@
+{# Text macro may render a lead-in, title, subTitle and prose #}
+{# NOTE: This file is excluded from Prettier formatting due to dynamic HTML tags #}
+{# See .prettierignore and CONTRIBUTING.md for details #}
+{% macro text(info) %}
+
+  {% if info.leadIn %}
+    <p class="lead-in">{{ info.leadIn }}</p>
+  {% endif %}
+
+  {% if info.title %}
+    {% set titleTag = info.titleTag or "h2" %}
+    <{{ titleTag }} class="title {% if info.isCentered %}is-centered{% endif %}">
+      {{ info.title}}
+    </{{ titleTag }}>
+  {% endif %}
+
+  {% if info.subTitle %}
+    <p class="sub-title">{{ info.subTitle }}</p>
+  {% endif %}
+
+  {% if info.prose %}
+    <div class="prose flow">
+      {{ info.prose | mdToHTML | safe }}
+    </div>
+  {% endif %}
+
+{% endmacro %}

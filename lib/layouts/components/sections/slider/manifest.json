@@ -1,0 +1,113 @@
+{
+  "name": "slider",
+  "type": "section",
+  "styles": ["slider.css"],
+  "scripts": ["slider.js"],
+  "requires": ["ctas", "text", "image", "commons", "slider-pagination"],
+  "validation": {
+    "required": ["sectionType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "slider"
+      },
+      "isDisabled": {
+        "type": "boolean"
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.top": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.background.isDark": {
+        "type": "boolean"
+      },
+      "config": {
+        "type": "string",
+        "enum": ["", "isTabs"]
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "default": "h2"
+      },
+      "slides": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "text.titleTag": {
+              "type": "string",
+              "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+              "default": "h3"
+            },
+            "ctas": {
+              "type": "array",
+              "items": {
+                "properties": {
+                  "isButton": {
+                    "type": "boolean"
+                  },
+                  "buttonStyle": {
+                    "type": "string",
+                    "enum": ["primary", "secondary", "tertiary", "inverted"]
+                  },
+                  "isSmall": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "fields": {
+    "config": {
+      "widget": "select",
+      "label": "Slider mode",
+      "enum": ["", "isTabs"],
+      "default": ""
+    },
+    "text": {
+      "$use": "text"
+    },
+    "slides": {
+      "widget": "array",
+      "label": "Slides",
+      "items": {
+        "image": {
+          "$use": "image"
+        },
+        "text": {
+          "$use": "text",
+          "titleTag": {
+            "default": "h3"
+          }
+        },
+        "ctas": {
+          "$use": "ctas"
+        },
+        "slideClasses": {
+          "widget": "text",
+          "label": "Slide CSS classes (optional)",
+          "default": ""
+        }
+      }
+    },
+    "$extends": ["commons"]
+  }
+}

@@ -1,0 +1,5 @@
+mediaType: image
+image:
+  src: '/assets/images/sample7.jpg'
+  alt: 'Example media section image'
+  caption: 'Images can include optional captions for additional context'

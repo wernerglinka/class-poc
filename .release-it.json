@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "before:init": ["npm run lint"],
+    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
+    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+  },
+  "git": {
+    "commitMessage": "Release ${version}",
+    "tagAnnotation": "Release ${version}"
+  },
+  "npm": {
+    "publish": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "metalsmith2025-structured-content-starter ${version}",
+    "tokenRef": "GH_TOKEN",
+    "autoGenerate": true
+  }
+}

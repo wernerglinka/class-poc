@@ -1,0 +1,33 @@
+{% from "pages/parts/branding.njk" import branding %}
+{% from "pages/parts/navigation.njk" import navigation %}
+{# feature-imports #}
+
+<div class="header-wrapper{% if topMessage %} has-top-message{% endif %}">
+  {% if topMessage %}
+    <div class="top-message">
+      <p class="top-message-text">
+        {{ topMessage.text | mdInline | safe }}
+        {% if topMessage.link %}
+          <a href="{{ topMessage.link.url }}">{{ topMessage.link.label }}</a>
+        {% endif %}
+      </p>
+      {% if topMessage.dismissible !== false %}
+        <button type="button" class="top-message-close" aria-label="Dismiss message">
+          {% include "icons/x.njk" %}
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <header>
+      {% set link = '/' %}
+      {% set img = { src: '/assets/images/cpc-logo.webp', alt: 'Center for People and Crafts' } %}
+
+      {{ branding( link, img ) }}
+
+      {{ navigation( mainMenu, urlPath )}}
+      <div class="misc">
+        {# feature-slot:header #}
+      </div>
+  </header>
+</div>

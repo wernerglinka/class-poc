@@ -1,0 +1,54 @@
+- sectionType: multi-media
+  containerTag: section
+  classes: ''
+  id: ''
+  isDisabled: false
+  isReverse: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: false
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ''
+      image: ''
+      imageScreen: 'none'
+  text:
+    leadIn: ''
+    title: 'Multi Media Section'
+    titleTag: 'h2'
+    subTitle: ''
+    prose: 'Multi media content goes here.'
+    isCentered: false
+  ctas:
+    - url: '/example'
+      label: 'Learn More'
+      isButton: true
+      buttonStyle: 'primary'
+  mediaType: image # may be 'audio', 'icon', lottie','image', or 'video'. Not used media types may be removed
+  image:
+    src: '/assets/images/sample.jpg'
+    alt: 'Image description'
+    caption: ''
+  video:
+    inSitu: true
+    src: 'youtube'
+    id: 'VIDEO_ID'
+    tn: '/assets/images/video-thumbnail.jpg'
+  audio:
+    bgImage: '/assets/images/audio-bg.jpg'
+    ogg: '/assets/audio/sample.ogg'
+    mpeg: '/assets/audio/sample.mp3'
+  icon:
+    icon: 'star'
+    title: 'Icon title'
+    url: ''
+  lottie:
+    src: '/assets/lotties/animation.json'
+    control:
+      autoplay: true
+      loop: true

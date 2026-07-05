@@ -1,0 +1,6 @@
+{
+  "registry": "https://nunjucks-components.com",
+  "componentsBasePath": "lib/layouts/components",
+  "sectionsDir": "sections",
+  "partialsDir": "_partials"
+}

@@ -1,0 +1,3 @@
+{% extends "pages/default.njk" %} {% block body %}
+<div class="container flow">{{ contents | string | mdToHTML | safe }}</div>
+{% endblock %}

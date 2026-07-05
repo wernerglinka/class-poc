@@ -1,0 +1,22 @@
+/**
+ * Collection Links Section Styles
+ *
+ * Design Tokens:
+ * - --space-l-2xl
+ */
+
+.collection-links {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-l-2xl);
+  flex-wrap: wrap;
+}
+
+.collection-link {
+  display: inline-block;
+  text-decoration: none;
+
+  &.collection-link-next {
+    text-align: right;
+  }
+}

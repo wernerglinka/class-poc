@@ -1,0 +1,76 @@
+{% macro collectionPagination(numberOfPages, pageNumber, domain) %}
+
+  {% set isFirst = pageNumber == 1 %}
+  {% set isLast = pageNumber == numberOfPages %}
+  {% set firstUrl = "/" + domain + "/" %}
+  {% set lastUrl = "/" + domain + "/" + numberOfPages + "/" if numberOfPages > 1 else 
+    "/" + domain + "/" %}
+  {% set prevUrl = "/" + domain + "/" + (pageNumber - 1) + "/" if pageNumber > 2 else "/" + domain + "/" %}
+  {% set nextUrl = "/" + domain + "/" + (
+  pageNumber + 1) + "/" %}
+
+  <nav class="pagination" aria-label="Blog pagination">
+    <ul class="blogs-pagination">
+
+      <!-- First page link -->
+      {% if isFirst %}
+        <li class="disabled">
+          <span aria-label="First page (current)">&laquo;</span></li>
+      {% else %}
+        <li>
+          <a href="{{ firstUrl }}" class="pagination-relative" aria-label="Go to first page">&laquo;</a>
+        </li>
+      {% endif %}
+
+      <!-- Previous page link -->
+      {% if isFirst %}
+        <li class="disabled">
+          <span aria-label="Previous page (unavailable)">&lsaquo;</span>
+        </li>
+      {% else %}
+        <li>
+          <a href="{{ prevUrl }}" aria-label="Go to previous page">&lsaquo;</a>
+        </li>
+      {% endif %}
+
+      <!-- Page numbers -->
+      {% for i in range(0, numberOfPages) -%}
+        {% set currentPage = i + 1 %}
+        {% set isActive = currentPage == pageNumber %}
+        <li {% if isActive %}class="active" {% endif %}>
+          {% if isActive %}
+            <span class="pagination-page current" aria-current="page" aria-label="Current page, page {{ currentPage }}">{{ currentPage }}</span>
+          {% else %}
+            {% if i == 0 %}
+              <a href="/{{ domain }}/" class="pagination-page" aria-label="Go to page {{ currentPage }}">{{ currentPage }}</a>
+            {% else %}
+              <a href="/{{ domain }}/{{ currentPage }}/" class="pagination-page" aria-label="Go to page {{ currentPage }}">{{ currentPage }}</a>
+            {% endif %}
+          {% endif %}
+        </li>
+      {%- endfor %}
+
+      <!-- Next page link -->
+      {% if isLast %}
+        <li class="disabled">
+          <span aria-label="Next page (unavailable)">&rsaquo;</span>
+        </li>
+      {% else %}
+        <li>
+          <a href="{{ nextUrl }}" aria-label="Go to next page">&rsaquo;</a>
+        </li>
+      {% endif %}
+
+      <!-- Last page link -->
+      {% if isLast %}
+        <li class="disabled">
+          <span class="pagination-relative disabled" aria-label="Last page (current)">&raquo;</span>
+        </li>
+      {% else %}
+        <li>
+          <a href="{{ lastUrl }}" class="pagination-relative" aria-label="Go to last page">&raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endmacro %}

@@ -1,0 +1,71 @@
+{% from "components/_partials/icon/icon.njk" import icon %}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+{% from "components/_partials/image/image.njk" import image %}
+
+{# 
+  This section is used to display a list of logos or icons in a horizontal scrolling list.
+  It can be configured to show all logos or a selection of logos based on the provided IDs.
+#}
+<div class="container content">
+  {# we need two copies to create the illusion of a continuous scroll #}
+{% set copies = 2 %}
+
+{# 
+  if scope is set to all we will show all logos that are available in 
+  data[section.logos.source] 
+#}
+{% if section.logos.scope === "all" %}
+  {% set logosList = data[section.logos.source] %}
+{% endif %}
+
+{# 
+  filter the whole list which is available in data[section.logos.source] with 
+  the list item ids which is available in section.selections. 
+#}
+{% if section.logos.scope === "selections" %}
+  {% set logosList = data[section.logos.source] | getSelections(section.logos.selections) %}
+{% endif %}
+
+{% set logoWidth = section.logos.logoWidth %}
+{% set logosListLength = logosList | length * logoWidth ~ "px" %}
+{% set isReverse = section.isReverse %}
+
+{# if there is text render the text block #}
+{% if section.text | hasText %}
+  <div class="text flow {% if section.hasCenteredContent %}is-centered{% endif %}">
+    {{ text(section.text)}}
+  </div>
+{% endif %}
+
+<div class="marquee-container {% if isReverse %}is-reverse{% endif %}" style="--single-list-width: {{ logosListLength }}">
+  <div class="mask">
+    <div class="marquee">
+      {% for i in range(0, copies) -%}
+        <ul class="logos js-logos-list">
+          {% for item in logosList %}
+            <li style="width: {{ logoWidth }}px;">
+              {% if item.src %}
+                {{ image(item) }}
+              {% endif %}
+              {% if item.icon %}
+                {{ icon(item) }}
+              {% endif %}
+
+              {% if section.logos.showTitle %}
+                <div class="logo-title">{{ item.alt }}</div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# if ctas render them #}
+{% if section.ctas | hasCtas %}
+  <div class="ctas flow {% if section.hasCenteredContent %}is-centered{% endif %}">
+    {{ ctas(section.ctas) }}
+  </div>
+{% endif %}

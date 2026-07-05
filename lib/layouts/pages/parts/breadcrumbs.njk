@@ -1,0 +1,15 @@
+{% macro breadcrumbs( breadcrumbs ) %} 
+  {% if breadcrumbs and breadcrumbs.length > 1 %}
+    <ul class="breadcrumbs" aria-label="Breadcrumb">
+      {% for crumb in breadcrumbs %}
+      <li>
+        {% if loop.last %}
+        <span aria-current="page">{{ crumb.title }}</span>
+        {% else %}
+        <a href="{{ crumb.path }}">{{ crumb.title }}</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}

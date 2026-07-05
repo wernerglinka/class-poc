@@ -1,0 +1,40 @@
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/image/image.njk" import image %}
+
+{# Process component download CTAs if specified #}
+{% set processedCtas = section.ctas %}
+{% if section.componentDownload and section.ctas %}
+  {% set downloadUrl = componentPackages | getDownloadUrl(section.componentDownload) %}
+  {% if downloadUrl %}
+    {% set processedCtas = [] %}
+    {% for cta in section.ctas %}
+      {% if cta.url == '__COMPONENT_DOWNLOAD__' %}
+        {% set processedCtas = (processedCtas.push({
+          url: downloadUrl,
+          label: cta.label,
+          isButton: cta.isButton,
+          buttonStyle: cta.buttonStyle
+        }), processedCtas) %}
+      {% else %}
+        {% set processedCtas = (processedCtas.push(cta), processedCtas) %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
+<div class="container content {% if section.isReverse %}is-reverse{% endif %}">
+  {% if section.image | hasImage %}
+    <div class="image">{{ image(section.image)}}</div>
+  {% endif %}
+  {% if section.text | length > 0 %}
+    <div class="text flow">
+      {% if section.text %}
+        {{ text(section.text)}}
+      {% endif %}
+      {% if processedCtas | hasCtas %}
+        {{ ctas(processedCtas) }}
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

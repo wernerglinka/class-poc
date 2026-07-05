@@ -1,0 +1,27 @@
+- sectionType: collection-list
+  containerTag: section
+  isDisabled: false
+  id: ''
+  classes: ''
+  containerFields:
+    inContainer: false
+    isAnimated: true
+    noMargin:
+      top: false
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      isDark: false
+      color: ''
+      image: ''
+      imageScreen: 'none'
+  collectionName: 'blog'  # Name of collection to display (blog, components, etc.)
+  hasPagingParams: true
+  pagingParams: # leave these empty, will be filled by section pagination plugin
+    numberOfBlogs: ''
+    numberOfPages: ''
+    pageLength: ''
+    pageStart: ''
+    pageNumber: ''

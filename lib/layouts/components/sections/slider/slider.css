@@ -1,0 +1,119 @@
+/**
+ * Slider Section Styles
+ *
+ * Design Tokens:
+ * - --space-2xl
+ * - --color-primary
+ * - --space-s-l
+ * - --space-xs-s
+ * - --color-background-light
+ */
+
+/*
+   Simple slider
+   Animation Behavior:
+   - Slide always slides in from the right side
+   - Old slide content stays in place while new slide covers it
+   - Creates consistent "slide over" effect across all screen sizes
+
+   State Management:
+   - Default state: Entire slide positioned off-screen right
+   - 'sliding-in' class: High z-index (100) for incoming slide
+   - 'is-visible' class: Slide animates to final position (translateX(0%))
+   - 'reset' class: Instant off-screen positioning without animation
+*/
+
+.slider {
+  .slider-wrapper {
+    position: relative;
+
+    /* Fluid height that adapts to content */
+    height: clamp(30rem, 35rem, 40rem);
+    margin-block-end: var(--space-2xl);
+    container-type: inline-size; /* Enable container queries */
+
+    &:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .slides {
+    padding: 0;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    list-style: none;
+    overflow: clip; /* clip instead of hidden prevents scrollIntoView() from scrolling this container */
+
+    li {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      transform: translateX(100%); /* inactive slide is off-screen to the right */
+      transition: transform 0.6s ease-in-out;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+      grid-template-rows: 1fr; /* Equal heights when side-by-side */
+
+      /* Container query to switch to equal heights when stacked */
+      @container (max-width: 40rem) {
+        grid-template-rows: 1fr 1fr; /* Equal heights when stacked */
+      }
+
+      .image {
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+        }
+      }
+
+      .slide-content {
+        padding: 0 var(--space-s-l);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: var(--space-xs-s);
+        background-color: var(--color-background-light);
+
+        .text {
+          padding: 0;
+        }
+      }
+
+      /*
+        Sliding In State - High Z-Index for Incoming Slide
+        Applied to the slide that's about to animate in.
+        Provides high z-index to ensure it appears above all other slides.
+      */
+      &.is-moving {
+        z-index: 100; /* High z-index to override natural HTML stacking */
+      }
+
+      /*
+        Visible Slide State - Final Position
+        Applied to the current active slide.
+        Entire slide animates from off-screen right to final position.
+      */
+      &.is-selected {
+        transform: translateX(0%); /* Final position: in view */
+      }
+
+      /*
+        Reset State - Instant Off-Screen Positioning
+        Applied temporarily to reset slides to off-screen without animation.
+        Without this when sliding in a slide with a lower stacking order
+        it would slide out above the incoming slide.
+      */
+      &.is-reset {
+        transform: translateX(100%) !important; /* Force off-screen instantly */
+        transition: none !important; /* No animation */
+      }
+    }
+  }
+}

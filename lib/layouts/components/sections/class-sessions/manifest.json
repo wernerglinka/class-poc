@@ -1,0 +1,48 @@
+{
+  "name": "class-sessions",
+  "type": "section",
+  "styles": ["class-sessions.css"],
+  "scripts": ["class-sessions.js"],
+  "requires": ["text", "commons"],
+  "validation": {
+    "required": ["sectionType", "endpoint", "sessions"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "class-sessions"
+      },
+      "endpoint": {
+        "type": "string",
+        "description": "Apps Script web app /exec URL for availability reads and signup writes"
+      },
+      "sessions": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "sessionId": { "type": "string" },
+            "dateDisplay": { "type": "string" },
+            "timeDisplay": { "type": "string" },
+            "hosted": { "type": "boolean" }
+          }
+        }
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "default": "h2"
+      }
+    }
+  },
+  "fields": {
+    "text": {
+      "$use": "text"
+    },
+    "$extends": ["commons"]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "name": "video",
+  "type": "partial",
+  "styles": ["video.css"],
+  "scripts": ["video.js"],
+  "requires": ["overlay", "image", "icon"],
+  "validation": {
+    "required": ["id", "tn"],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "src": {
+        "type": "string",
+        "enum": ["youtube", "vimeo", "cloudinary"],
+        "default": "youtube"
+      },
+      "tn": {
+        "type": "string"
+      },
+      "alt": {
+        "type": "string"
+      },
+      "cloudname": {
+        "type": "string"
+      },
+      "start": {
+        "type": "string"
+      },
+      "end": {
+        "type": "string"
+      },
+      "inSitu": {
+        "type": "boolean"
+      }
+    }
+  },
+  "fields": {
+    "id": {
+      "widget": "text",
+      "label": "Video ID",
+      "default": ""
+    },
+    "src": {
+      "widget": "select",
+      "label": "Source",
+      "enum": ["youtube", "vimeo", "cloudinary"],
+      "default": "youtube"
+    },
+    "tn": {
+      "widget": "image",
+      "label": "Thumbnail image",
+      "default": ""
+    },
+    "alt": {
+      "widget": "text",
+      "label": "Thumbnail alt text",
+      "default": ""
+    },
+    "cloudname": {
+      "widget": "text",
+      "label": "Cloudinary cloud name (optional)",
+      "default": ""
+    },
+    "start": {
+      "widget": "text",
+      "label": "Start time (optional)",
+      "default": ""
+    },
+    "end": {
+      "widget": "text",
+      "label": "End time (optional)",
+      "default": ""
+    },
+    "inSitu": {
+      "widget": "checkbox",
+      "label": "Play inline (in situ)",
+      "default": false
+    }
+  }
+}

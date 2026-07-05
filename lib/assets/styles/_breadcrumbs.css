@@ -1,0 +1,70 @@
+/**
+ * Breadcrumbs Component Styles
+ *
+ * Design Tokens:
+ * - --space-2xl-3xl
+ * - --wrapper-max-width
+ * - --gutter
+ * - --space-s
+ * - --space-s-l
+ * - --font-primary
+ * - --font-xs
+ * - --transition-fast
+ * - --color-primary
+ * - --transition-fade
+ * - --color-text-inactive
+ */
+
+.breadcrumbs {
+  position: absolute;
+  top: var(--space-2xl-3xl);
+
+  /* position into the middle of the page */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  width: 100%;
+  max-width: var(--wrapper-max-width, 85rem);
+  margin: 0 auto var(--space-s-l);
+  padding-left: var(--gutter);
+  display: flex;
+  gap: var(--space-s);
+  list-style: none;
+  font-family: var(--font-primary);
+
+  li {
+    font-size: var(--font-xs);
+    text-transform: uppercase;
+    transition: color var(--transition-fast);
+
+    /* Separator between items */
+    &::after {
+      content: "›"; /* Using a nicer character for separator */
+      margin-left: var(--space-s);
+      color: var(--color-primary);
+    }
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color var(--transition-fade);
+    }
+
+    /* Remove separator from last item */
+    &:last-child {
+      color: var(--color-text-inactive);
+      font-weight: 600;
+
+      &::after {
+        display: none;
+      }
+    }
+
+    /* Hover effect */
+    a:hover {
+      text-decoration: none;
+      border-bottom-color: var(--color-primary);
+    }
+  }
+}

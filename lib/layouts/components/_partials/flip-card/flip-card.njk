@@ -1,0 +1,34 @@
+{% from "components/_partials/icon/icon.njk" import icon %}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+
+{% macro flipCard(card) %}
+  <div class="flip-card flow" role="button" tabindex="0" aria-label="Interactive flip card: {{ card.front.text.title or 'Flip to see more content' }}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.classList.toggle('is-flipped')}" onclick="this.classList.toggle('is-flipped')">
+    {% if card.front.icon %}
+      {{ icon(card.front) }}
+    {% endif %}
+
+    <span class="flip-icon">{{ icon({icon:"rotate-cw", url: ''}) }}</span>
+
+    {% if card.front.text %}
+      <div class="text flow">{{ text(card.front.text) }}</div>
+    {% endif %}
+    {% if card.front.ctas %}
+      <div class="ctas">{{ ctas(card.front.ctas) }}</div>
+    {% endif %}
+  </div>
+
+  <!-- .flip-card -->
+
+  <div class="flip-card-back">
+    {% if card.back.text %}
+      <div class="text flow">{{ text(card.back.text) }}</div>
+    {% endif %}
+    {% if card.back.ctas %}
+      <div class="ctas">{{ ctas(card.back.ctas) }}</div>
+    {% endif %}
+  </div>
+
+  <!-- .flip-card-back -->
+
+{% endmacro %}

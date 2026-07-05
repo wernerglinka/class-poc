@@ -1,0 +1,195 @@
+/**
+ * Video Component Styles
+ *
+ * Design Tokens:
+ * - --color-background-light
+ * - --glass-background-light
+ * - --contrast-text-on-dark
+ * - --color-background
+ * - --color-text
+ * - --color-text-light
+ * - --color-primary
+ * - --space-xl
+ * - --space-m
+ */
+.video {
+  button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: none;
+    position: relative;
+    padding: 0;
+    overflow: hidden;
+    transform: none; /* Override button.css scale */
+
+    picture,
+    .responsive-wrapper {
+      transition: transform 0.5s ease-in-out;
+      will-change: transform;
+    }
+
+    .play-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 1;
+      margin: calc(var(--space-xl) * -0.5) 0 0 calc(var(--space-xl) * -0.5);
+      width: var(--space-xl);
+      height: var(--space-xl);
+      border-radius: 50%;
+      background-color: var(--color-text-light);
+      transition:
+        background-color 0.5s ease-in-out,
+        opacity 0.5s ease-in-out;
+      cursor: pointer;
+      opacity: 0.9;
+
+      &::after {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        display: block;
+        content: "";
+        width: 0;
+        height: 0;
+        margin-top: calc(var(--space-m) * -0.5);
+        margin-left: calc(var(--space-m) * -0.35);
+        border-width: calc(var(--space-m) * 0.5) calc(var(--space-m) * 0.75);
+        border-style: solid;
+        border-color: transparent transparent transparent var(--color-text);
+        transition:
+          border-color 0.5s ease-in-out,
+          opacity 0.5s ease-in-out;
+        opacity: 0.9;
+      }
+    }
+
+    &:hover {
+      transform: none; /* Ensure no scale on hover */
+
+      picture,
+      .responsive-wrapper {
+        transform: scale(1.05);
+      }
+
+      .play-button {
+        opacity: 0.7;
+
+        &::after {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+
+  &.in-situ {
+    position: relative;
+    background-color: var(--color-background-light);
+
+    .in-situ-video-wrapper {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .video-trigger {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      position: relative;
+      z-index: 1;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    /* Close button as direct child of video container */
+    > .close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      z-index: 10;
+      width: 3rem;
+      height: 3rem;
+      background-color: var(--glass-background-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+
+      .icon-wrapper {
+        width: 2rem !important;
+        border: none !important;
+      }
+
+      svg {
+        line {
+          transition: stroke 0.5s ease-in-out;
+        }
+      }
+
+      &:hover {
+        svg {
+          line {
+            transition: stroke 0.5s ease-in-out;
+            stroke: var(--color-primary);
+          }
+        }
+      }
+    }
+
+    &.video-playing {
+      .video-trigger {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .in-situ-video-wrapper {
+        opacity: 1;
+      }
+
+      > .close {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.in-situ-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.in-situ-video-link {
+  display: inline-block;
+  height: 1.4em;
+  width: 1.4em;
+  line-height: 1.3;
+  text-align: center;
+  padding-left: 0.1em;
+  font-size: 0.75em;
+  border: 1px solid blue;
+  border-radius: 0.7em;
+  margin: 0 0.5em;
+}
+
+.cld-video-player,
+.in-situ-video {
+  width: 100%;
+  height: 100%;
+}

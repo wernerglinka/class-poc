@@ -1,0 +1,21 @@
+- sectionType: blog-author
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  isReverse: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: true
+      bottom: true
+    noPadding:
+      top: true
+      bottom: true
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"
+  name: "Author Name"
+  logoWidth: 30

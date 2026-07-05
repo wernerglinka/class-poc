@@ -1,0 +1,19 @@
+- sectionType: collection-links
+  collectionName: 'blog'
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  containerFields:
+    inContainer: false
+    isAnimated: true
+    noMargin:
+      top: true
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"

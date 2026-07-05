@@ -1,0 +1,25 @@
+{# Call To Actions macro may render multiple button and/or text links #}
+{% from "components/_partials/button/button.njk" import button %}
+{% from "components/_partials/text-link/text-link.njk" import textLink %}
+
+{% macro ctas(info) %}
+  {% set validCtas = [] %}
+
+  {% for cta in info %}
+    {% if cta.url and cta.url != "" %}
+      {% set validCtas = (validCtas.push(cta), validCtas) %}
+    {% endif %}
+  {% endfor %}
+
+  {% if validCtas | length > 0 %}
+    <div class="ctas">
+      {% for cta in validCtas %}
+        {% if cta.isButton %}
+          {{ button(cta) }}
+        {% else %}
+          {{ textLink(cta) }}
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}

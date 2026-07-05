@@ -1,0 +1,18 @@
+{# Image macro may render an image with a caption #}
+{% macro image(info) %}
+
+  {% if info.url | hasUrl %}
+    <a href="{{ info.url }}" {% if info.url | isExternal %} target="_blank" rel="noopener noreferrer" aria-label="{{ info.alt }} (opens in new window)" {% endif %} >
+      <img src="{{ info.src }}" alt="{{ info.alt }}"/>
+      {% if info.caption %}
+        <p class="caption">{{ info.caption }}</p>
+      {% endif %}
+    </a>
+  {% else %}
+    <img src="{{ info.src }}" alt="{{ info.alt }}"/>
+    {% if info.caption %}
+      <p class="caption">{{ info.caption }}</p>
+    {% endif %}
+  {% endif %}
+  
+{% endmacro %}

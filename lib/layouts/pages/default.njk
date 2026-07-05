@@ -1,0 +1,29 @@
+{# feature-imports #}
+{% from "pages/parts/breadcrumbs.njk" import breadcrumbs %} {# feature:breadcrumbs #}
+
+<!doctype html>
+<html class="no-js" lang="">
+  {% include "pages/parts/head.njk" %}
+
+
+  <body class="{{ bodyClasses }}">
+    <span id="top"></span>
+    {% include "pages/parts/header.njk" %}
+    {# feature-slot:breadcrumbs #}
+    {{ breadcrumbs(navigation.breadcrumbs) }} {# feature:breadcrumbs #}
+
+    <main>
+      {% block body %}
+        {# will be replaced by page content #}
+      {% endblock %}
+    </main>
+
+    {% include "pages/parts/footer.njk" %}
+
+    <script src="/assets/main.js"></script>
+
+    <a class="to-top glass-background" href="#top">
+      {% include "icons/arrow-up.njk" %}
+    </a>
+  </body>
+</html>

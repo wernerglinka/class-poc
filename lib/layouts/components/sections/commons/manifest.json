@@ -1,0 +1,90 @@
+{
+  "name": "commons",
+  "type": "section",
+  "styles": ["commons.css"],
+  "scripts": [],
+  "requires": [],
+  "abstract": true,
+  "fields": {
+    "isDisabled": {
+      "widget": "checkbox",
+      "label": "Disable section (hide from build)",
+      "default": false
+    },
+    "containerTag": {
+      "widget": "select",
+      "label": "Container tag",
+      "enum": ["section", "article", "aside", "div"],
+      "default": "section"
+    },
+    "id": {
+      "widget": "text",
+      "label": "Section ID",
+      "default": ""
+    },
+    "classes": {
+      "widget": "text",
+      "label": "CSS classes",
+      "default": ""
+    },
+    "containerFields": {
+      "inContainer": {
+        "widget": "checkbox",
+        "label": "Constrain to container width",
+        "default": true
+      },
+      "isAnimated": {
+        "widget": "checkbox",
+        "label": "Animate on scroll",
+        "default": false
+      },
+      "noMargin": {
+        "top": {
+          "widget": "checkbox",
+          "label": "Remove top margin",
+          "default": false
+        },
+        "bottom": {
+          "widget": "checkbox",
+          "label": "Remove bottom margin",
+          "default": false
+        }
+      },
+      "noPadding": {
+        "top": {
+          "widget": "checkbox",
+          "label": "Remove top padding",
+          "default": false
+        },
+        "bottom": {
+          "widget": "checkbox",
+          "label": "Remove bottom padding",
+          "default": false
+        }
+      },
+      "background": {
+        "color": {
+          "widget": "text",
+          "label": "Background color",
+          "default": ""
+        },
+        "image": {
+          "widget": "image",
+          "label": "Background image",
+          "default": ""
+        },
+        "imageScreen": {
+          "widget": "select",
+          "label": "Background image screen",
+          "enum": ["light", "dark", "none"],
+          "default": "none"
+        },
+        "isDark": {
+          "widget": "checkbox",
+          "label": "Dark background (use light text)",
+          "default": false
+        }
+      }
+    }
+  }
+}

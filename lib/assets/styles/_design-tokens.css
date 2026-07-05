@@ -1,0 +1,161 @@
+/**
+ * Design Tokens
+ */
+
+@import "./_css-patterns.css";
+
+:root {
+  /* Colors */
+  --color-primary: #da1e28;
+  --color-secondary: #fa4d56;
+  --color-text: #161616;
+  --color-text-light: #f4f4f4;
+  --color-text-dark: #999;
+  --color-text-highlight: #ff832b;
+  --color-text-highlight-light: #fbc39b;
+  --color-text-inactive: #999;
+  --color-link-inactive: #666;
+  --color-link-in-path: #888;
+  --color-link-navigation: #161616;
+  --background-color-link-hover: rgb(0 0 0 / 5%);
+  --color-pagination-active: #666;
+  --color-background: #fff;
+  --color-background-light: #f4f4f4;
+  --color-highlight-background: #ffd4b5;
+  --color-dark-background: #323232;
+  --color-border-light: #e0e0e0;
+  --color-border: #393939;
+  --color-shadow: 0px 0px 20px 3px rgb(57 57 57 / 10%);
+  --color-surface-hover: rgb(0 0 0 / 3%);
+  --color-surface-focus: rgb(0 0 0 / 5%);
+  --color-icon-default: #161616;
+
+  /* Top Message Bar */
+  --color-top-message-background: #161616;
+  --color-top-message-text: #f4f4f4;
+
+  /* Button Colors */
+  --primary-button-color: rgb(218 30 40 / 80%);
+  --primary-button-text-color: #f4f4f4; /* Always light text on red */
+  --secondary-button-color: rgb(0 0 0 / 60%);
+  --secondary-button-text-color: #f4f4f4; /* Always light text on black */
+  --tertiary-button-color: rgb(255 255 255 / 80%);
+  --tertiary-button-text-color: #161616; /* Always dark text on white */
+
+  /* Glass Morphism */
+  --glass-background: rgb(255 255 255 / 15%);
+  --glass-background-light: rgb(255 255 255 / 85%);
+  --glass-background-dark: rgb(0 0 0 / 30%);
+  --glass-background-dark-card: rgb(0 0 0 / 70%);
+  --glass-backdrop-filter: blur(2px) saturate(180%);
+  --glass-border: 1px solid rgb(255 255 255 / 80%);
+  --glass-border-dark: 1px solid rgb(0 0 0 / 80%);
+  --glass-border-radius: 1rem;
+  --glass-box-shadow: 0 4px 16px rgb(0 0 0 / 20%), inset 0 4px 20px rgb(255 255 255 / 30%);
+
+  /* color constant regardless of theme */
+  --color-footer-text-light: #f4f4f4;
+
+  /* Screen colors - always use fixed values regardless of theme */
+  /* These provide overlay contrast for text on images */
+  --light-screen: rgb(255 255 255 / 90%); /* Lightens image for dark text */
+  --dark-screen: rgb(0 0 0 / 60%); /* Darkens image for light text */
+
+  /* Contrast colors - automatically select appropriate contrast based on context */
+  --contrast-text-on-light: var(--color-text);
+  --contrast-text-on-dark: var(--color-text-light);
+
+  /**
+   * Fluid typography is created with https://utopia.fyi/
+   * The whole typography is based on the Utopia type calculator.
+   * The calculator provides the whole fluid type sizes based on a 16px for
+   * very small screens and and 20px for very large screens. Also, using the
+   * font Montserrat for headers I didn't want the font size for large screens
+   * to be too large so I reduced the type scale for max viewport to 1.2.
+   * The result is a more balanced typography that looks good on all screen sizes.
+   */
+
+  /* @link https://utopia.fyi/space/calculator?c=320,18,1.2,1240,20,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6|8,s-l&g=s,l,xl,12 */
+  --font-xs: clamp(0.6944rem, 0.6118rem + 0.3307vw, 0.8681rem); /* 11px - 14px */
+  --font-s: clamp(0.8333rem, 0.7341rem + 0.3968vw, 1.0417rem); /* 13px - 17px */
+  --font-p: clamp(1rem, 0.881rem + 0.4762vw, 1.25rem); /* 16px - 20px */
+  --font-h5: clamp(1.2rem, 1.0571rem + 0.5714vw, 1.5rem); /* 19px - 24px */
+  --font-h4: clamp(1.44rem, 1.2686rem + 0.6857vw, 1.8rem); /* 23px - 29px */
+  --font-h3: clamp(1.728rem, 1.5223rem + 0.8229vw, 2.16rem); /* 28px - 34px */
+  --font-h2: clamp(2.0736rem, 1.8267rem + 0.9874vw, 2.592rem); /* 33px - 41px */
+  --font-h1: clamp(2.4883rem, 2.1921rem + 1.1849vw, 3.1104rem); /* 40px - 50px */
+  --font-xl: clamp(2.986rem, 2.6305rem + 1.4219vw, 3.7325rem); /* 48px - 60px */
+
+  /**
+   * Fluid spacing is created with utopia.fyi
+   * The whole spacing is based on the Utopia space calculator.
+   * Using the same base values from the fluid type calculator, it created the
+   * wholea related fluid space system.
+   */
+
+  /* @link https://utopia.fyi/space/calculator?c=320,18,1.2,1240,20,1.25,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
+
+  /* Spacing sizes */
+  --space-3xs: clamp(0.3125rem, 0.3125rem + 0vw, 0.3125rem); /* ~5px */
+  --space-2xs: clamp(0.5625rem, 0.5408rem + 0.1087vw, 0.625rem); /* ~9px */
+  --space-xs: clamp(0.875rem, 0.8533rem + 0.1087vw, 0.9375rem); /* ~14px */
+  --space-s: clamp(1.125rem, 1.0815rem + 0.2174vw, 1.25rem); /* ~18px */
+  --space-m: clamp(1.6875rem, 1.6223rem + 0.3261vw, 1.875rem); /* ~27px */
+  --space-l: clamp(2.25rem, 2.163rem + 0.4348vw, 2.5rem); /* ~36px */
+  --space-xl: clamp(3.375rem, 3.2446rem + 0.6522vw, 3.75rem); /* ~54px */
+  --space-2xl: clamp(4.5rem, 4.3261rem + 0.8696vw, 5rem); /* ~72px */
+  --space-3xl: clamp(6.75rem, 6.4891rem + 1.3043vw, 7.5rem); /* ~108px */
+  --space-4xl: clamp(9rem, 8.6522rem + 1.7391vw, 10rem); /* ~144px */
+
+  /**
+   * These two-step spacing pairs complement the individual spacing values
+   * defined above, providing more flexibility for creating harmonious spacing
+   * throughout the design.
+   *
+   * This can be read as follows:display:
+   * --space-3xs-2xs: Vary the space between 3xs and 2xs. For small screens use
+   * the 2x value, for large screens use the 3x value.
+   */
+  --space-3xs-2xs: clamp(0.3125rem, 0.2038rem + 0.5435vw, 0.625rem); /* 5px - 10px */
+  --space-2xs-xs: clamp(0.5625rem, 0.4321rem + 0.6522vw, 0.9375rem); /* 9px - 15px */
+  --space-xs-s: clamp(0.875rem, 0.7446rem + 0.6522vw, 1.25rem); /* 14px - 20px */
+  --space-s-m: clamp(1.125rem, 0.8641rem + 1.3043vw, 1.875rem); /* 18px - 30px */
+  --space-m-l: clamp(1.6875rem, 1.4049rem + 1.413vw, 2.5rem); /* 27px - 40px */
+  --space-l-xl: clamp(2.25rem, 1.7283rem + 2.6087vw, 3.75rem); /* 36px - 60px */
+  --space-xl-2xl: clamp(3.375rem, 2.8098rem + 2.8261vw, 5rem); /* 54px- 80px */
+  --space-2xl-3xl: clamp(4.5rem, 3.4565rem + 5.2174vw, 7.5rem); /* 72px - 120px */
+  --space-3xl-4xl: clamp(6.75rem, 5.6196rem + 5.6522vw, 10rem); /* 108px - 160px */
+
+  /* Custom pairs */
+  --space-s-l: clamp(1.125rem, 0.6467rem + 2.3913vw, 2.5rem); /* 18px - 40px */
+  --space-l-2xl: clamp(2rem, 0.5714rem + 5.7143vw, 5rem); /* 32px - 80px */
+
+  /* Typography */
+  --font-primary: "Open Sans", sans-serif;
+  --font-heading: "Montserrat", sans-serif;
+  --default-font-weight: 300;
+  --default-line-height: 1.5;
+  --smaller-line-height: 1;
+
+  /* Layout */
+  --header-height: 80px;
+  --container-width: 1024px;
+  --gutter: var(--space-s-l); /* Default spacing for grid/flex gaps */
+
+  /* Borders */
+  --default-border-width: 0.2rem;
+
+  /* Animation Timing Functions */
+  --transition-base: 400ms ease-in-out; /* Standard transition */
+
+  --transition-movement: 200ms linear; /* For position animations */
+  --transition-fade: 500ms ease; /* For opacity transitions */
+  --transition-bounce: 500ms cubic-bezier(0.5, 0.05, 0.2, 1.5); /* Bouncy animation */
+
+  /* Letter Spacing */
+  --tracking: -0.05ch; /* Standard letter spacing */
+  --tracking-s: -0.075ch; /* Tighter letter spacing */
+
+  /* Inline code background (Shiki inlines block-code colors, so no token vars). */
+  --code-bg: #fcfcfc;
+}

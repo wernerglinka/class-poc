@@ -1,0 +1,18 @@
+{
+  "name": "text-link",
+  "type": "partial",
+  "styles": ["text-link.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "required": ["url", "label"],
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string"
+      }
+    }
+  }
+}

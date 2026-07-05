@@ -1,0 +1,9 @@
+{% from "components/_partials/flip-card/flip-card.njk" import flipCard %}
+
+<div class="container content">
+  <ul class="flip-cards-list">
+    {% for card in section.cards %}
+    <li class="flip-card-wrapper">{{ flipCard(card) }}</li>
+    {% endfor %}
+  </ul>
+</div>

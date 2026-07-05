@@ -1,0 +1,14 @@
+{% macro icon(item, iconWidth) %}
+  {# Normalize the input to always get a valid icon object #}
+  {% set iconObj = item | normalizeIcon %}
+
+  {% if iconObj.url | hasUrl %}
+    <a class="icon-wrapper" href="{{ iconObj.url }}" {% if iconObj.url | isExternal %} target="_blank" rel="noopener noreferrer" aria-label="{{ iconObj.title }} (opens in new window)" {% endif %}>
+      {% include "icons/" + iconObj.icon + ".njk" ignore missing %}
+    </a>
+  {% else %}
+    <div class="icon-wrapper">
+      {% include "icons/" + iconObj.icon + ".njk" ignore missing %}
+    </div>
+  {% endif %}
+{% endmacro %}

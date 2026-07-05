@@ -1,0 +1,57 @@
+{% from "components/_partials/image/image.njk" import image %}
+{% from "components/_partials/icon/icon.njk" import icon %}
+
+{% macro audio(info) %}
+
+  <div class="custom-audio-player" data-audio-player>
+    {% if info.bgImage %}
+      {% set imageData = {
+        src: info.bgImage,
+        alt: info.alt
+      } %}
+      {{ image(imageData) }}
+    {% endif %}
+
+    <div class="audio-wrapper">
+      <!-- Hidden native audio element -->
+      <audio preload="metadata" aria-hidden="true">
+        {% if info.ogg %}<source src="{{info.ogg}}" type="audio/ogg"/>{% endif %}
+        {% if info.mpeg %}<source src="{{info.mpeg}}" type="audio/mpeg"/>{% endif %}
+        Your browser does not support the audio element.
+      </audio>
+
+      <!-- Custom controls -->
+      <div class="audio-controls">
+        <button class="play-pause-btn" type="button" aria-label="Play/Pause">
+          <span class="play-icon">{{ icon('play') }}</span>
+          <span class="pause-icon" style="display: none;">{{ icon('pause') }}</span>
+        </button>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+            <div class="progress-handle"></div>
+          </div>
+          <input type="range" class="progress-input" min="0" max="100" value="0" aria-label="Audio progress">
+        </div>
+
+        <div class="time-display">
+          <span class="current-time">0:00</span>
+          <span class="duration">0:00</span>
+        </div>
+
+        <div class="volume-container">
+          <button class="volume-btn" type="button" aria-label="Toggle mute">
+            <span class="volume-high">{{ icon('volume-2') }}</span>
+            <span class="volume-low" style="display: none;">{{ icon('volume-1') }}</span>
+            <span class="volume-mute" style="display: none;">{{ icon('volume-x') }}</span>
+          </button>
+          <div class="volume-slider">
+            <input type="range" class="volume-input" min="0" max="100" value="100" aria-label="Volume">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endmacro %}

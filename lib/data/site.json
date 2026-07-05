@@ -1,0 +1,34 @@
+{
+  "title": "Metalsmith2025 Structured Content Starter",
+  "description": "Starter to build Metalsmith websites with reusable structured content components.",
+  "url": "https://ms2025-structured-content-starter.netlify.app/",
+  "locale": "en_US",
+
+  "defaultImage": "/assets/images/metalsmith2025-starter-social.png",
+
+  "organization": {
+    "name": "Glinka",
+    "logo": "https://glinka.co/assets/images/wg-logo.svg",
+    "sameAs": [
+      "https://wernerglinka.substack.com/",
+      "https://bsky.app/profile/wernerglinka.bsky.social",
+      "https://www.linkedin.com/in/werner-glinka-2a427/"
+    ]
+  },
+
+  "social": {
+    "twitterCreator": "@author",
+    "locale": "en_US"
+  },
+
+  "sitemap": {
+    "changefreq": "weekly",
+    "priority": 0.8
+  },
+
+  "siteOwner": "Werner Glinka",
+  "validate": {
+    "google": "",
+    "ms": ""
+  }
+}

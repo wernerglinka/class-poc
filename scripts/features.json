@@ -1,0 +1,53 @@
+{
+  "theme-switcher": {
+    "label": "Dark/light theme switcher",
+    "default": false,
+    "afterEnable": "Add .dark-theme overrides for your design tokens to theme the whole page (see docs/theme-switcher.md).",
+    "edits": [
+      {
+        "file": "header",
+        "anchor": "feature-imports",
+        "code": "{% from \"pages/parts/dark-light-theme-switcher.njk\" import darkLightThemeSwitcher %}"
+      },
+      { "file": "header", "anchor": "feature-slot:header", "code": "{{ darkLightThemeSwitcher() }}" },
+      { "file": "css", "anchor": "feature-styles", "code": "@import url('./styles/_dark-light-theme-switcher.css');" },
+      {
+        "file": "js",
+        "anchor": "feature-scripts",
+        "code": "import '../layouts/pages/parts/dark-light-theme-switcher.js';"
+      }
+    ]
+  },
+  "language-switcher": {
+    "label": "Language switcher",
+    "default": false,
+    "afterEnable": "Create lib/data/languages.json before it shows anything (see docs/language-switcher.md).",
+    "edits": [
+      {
+        "file": "header",
+        "anchor": "feature-imports",
+        "code": "{% from \"pages/parts/language-switcher.njk\" import languageSwitcher %}"
+      },
+      {
+        "file": "header",
+        "anchor": "feature-slot:header",
+        "code": "{{ languageSwitcher(data.languages.available, data.languages.defaultLang, data.languages.fallbackUrl) }}"
+      },
+      { "file": "css", "anchor": "feature-styles", "code": "@import url('./styles/_language-switcher.css');" },
+      { "file": "js", "anchor": "feature-scripts", "code": "import '../layouts/pages/parts/language-switcher.js';" }
+    ]
+  },
+  "breadcrumbs": {
+    "label": "Breadcrumbs",
+    "default": true,
+    "edits": [
+      {
+        "file": "default",
+        "anchor": "feature-imports",
+        "code": "{% from \"pages/parts/breadcrumbs.njk\" import breadcrumbs %}"
+      },
+      { "file": "default", "anchor": "feature-slot:breadcrumbs", "code": "{{ breadcrumbs(navigation.breadcrumbs) }}" },
+      { "file": "css", "anchor": "feature-styles", "code": "@import url('./styles/_breadcrumbs.css');" }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "author-date",
+  "type": "partial",
+  "styles": ["author-date.css"],
+  "scripts": [],
+  "requires": [],
+  "validation": {
+    "required": [],
+    "properties": {
+      "author": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        ]
+      },
+      "date": {
+        "type": "string"
+      }
+    }
+  }
+}

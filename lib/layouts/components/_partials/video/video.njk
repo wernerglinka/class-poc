@@ -1,0 +1,54 @@
+{% from "components/_partials/image/image.njk" import image %}
+{% from "components/_partials/icon/icon.njk" import icon %}
+
+{% macro video(info) %}
+  {% if info.inSitu %}
+    <div class="video media in-situ">
+      <span class="close">
+        {% set item = {
+          url: '',
+          icon: 'x'
+        } %}
+        {{ icon(item) }}
+      </span>
+      
+      <div class="in-situ-video-wrapper js-in-situ-video-wrapper">
+        <div class="js-in-situ-video in-situ-video" 
+          data-videoid="{{ info.id }}" 
+          data-videosrc="{{ info.src or 'youtube' }}"
+          {% if info.cloudname %}data-cloudname="{{ info.cloudname }}"{% endif %}
+          {% if info.start %}data-starttime="{{ info.start }}"{% endif %}
+          {% if info.end %}data-endtime="{{ info.end }}"{% endif %}>
+        </div>
+      </div>
+    
+      <button class="video-trigger">
+        <div class="play-button"></div>
+        {% set imageData = {
+          src: info.tn,
+          alt: info.alt or "Video thumbnail - click to play"
+        } %}
+        {{ image(imageData) }}
+      </button>
+
+    </div>
+  {% else %}
+    <div class="video media">
+      <button class="js-modal-video" 
+        data-videoid="{{ info.id }}" 
+        data-videosrc="{{ info.src or 'youtube' }}"
+        {% if info.cloudname %}data-cloudname="{{ info.cloudname }}"{% endif %}
+        {% if info.start %}data-starttime="{{ info.start }}"{% endif %}
+        {% if info.end %}data-endtime="{{ info.end }}"{% endif %}
+      >
+        <div class="play-button"></div>
+        {% set imageData = {
+          src: info.tn,
+          alt: info.alt or "Video thumbnail - click to play"
+        } %}
+        {{ image(imageData) }}
+      </button>
+    </div>
+  {% endif %}
+  
+{% endmacro %}

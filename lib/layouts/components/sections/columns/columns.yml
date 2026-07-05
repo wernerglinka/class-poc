@@ -1,0 +1,44 @@
+- sectionType: columns
+  containerTag: section
+  classes: 'media-image hero-cta'
+  id: ''
+  isDisabled: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: true
+      bottom: false
+    noPadding:
+      top: true
+      bottom: true
+    background:
+      color: ''
+      image: ''
+  contentClasses: ''
+  columns:
+    - column:
+      columnClasses: 'image'
+      blocks:
+        - image:
+            src: '/assets/images/sample3.jpg'
+            alt: 'sample image'
+            caption: ''
+    - column:
+      columnClasses: 'text flow'
+      blocks:
+        - text:
+            leadIn: This is different
+            title: The Power of Composable Pages
+            titleTag: 'h2'
+            subTitle: ''
+            prose: |-
+              This is an example of a columns section. Rather then using a monolithic section, the columns section allows for multiple columns of content. Allowing the composition of custom layouts.
+    - column:
+      columnClasses: 'ctas align-center'
+      blocks:
+        - ctas:
+            - url: 'https://glinka.co/blog/building-flexible-page-layouts/'
+              label: 'Learn More'
+              isButton: true
+              buttonStyle: 'button'

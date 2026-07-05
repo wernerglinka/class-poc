@@ -1,0 +1,34 @@
+- sectionType: logos-list
+  containerTag: section
+  classes: ""
+  id: ""
+  isDisabled: false
+  containerFields:
+    inContainer: true
+    isAnimated: true
+    noMargin:
+      top: false
+      bottom: false
+    noPadding:
+      top: false
+      bottom: false
+    background:
+      color: ""
+      image: ""
+      imageScreen: "none"
+  text:
+    leadIn: ""
+    title: "Trusted By"
+    titleTag: "h2"
+    subTitle: ""
+    prose: "Companies that trust our services."
+  logos:
+    - name: "Company 1"
+      image: "/assets/images/logos/company1.svg"
+      url: "https://company1.com"
+    - name: "Company 2"
+      image: "/assets/images/logos/company2.svg"
+      url: "https://company2.com"
+    - name: "Company 3"
+      image: "/assets/images/logos/company3.svg"
+      url: "https://company3.com"

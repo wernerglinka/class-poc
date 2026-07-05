@@ -1,0 +1,42 @@
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+{% from "components/_partials/text/text.njk" import text %}
+{% from "components/_partials/audio/audio.njk" import audio %}
+{% from "components/_partials/icon/icon.njk" import icon %}
+{% from "components/_partials/image/image.njk" import image %}
+{% from "components/_partials/video/video.njk" import video %}
+{% from "components/_partials/lottie/lottie.njk" import lottie %}
+
+<div class="content {% if section.isReverse %}is-reverse{% endif %}">
+  {% if section.mediaType === "audio" %}
+    <div class="media">{{ audio(section.audio)}}</div>
+  {% endif %}
+
+  {% if section.mediaType === "image" %}
+    <div class="media">{{ image(section.image)}}</div>
+  {% endif %}
+
+  {% if section.mediaType === "video"%}
+    {% set videoData = section.video %}
+    {{ video(videoData) }}
+  {% endif %}
+
+  {% if section.mediaType === "icon"%}
+    <div class="media">{{ icon(section.icon) }}</div>
+  {% endif %}
+
+  {% if section.mediaType === "lottie"%}
+    <div class="media">{{ lottie(section.lottie) }}</div>
+  {% endif %}
+
+  {% if section.text | hasText %}
+    <div class="text flow">
+      {% if section.text %}
+        <div class="prose flow">{{ text(section.text)}}</div>
+      {% endif %}
+      {% if section.ctas | hasCtas %}
+        {{ ctas(section.ctas) }}
+      {% endif %}
+    </div><!-- .text -->
+  {% endif %}
+
+</div>

@@ -1,0 +1,49 @@
+{
+  "name": "collection-list",
+  "type": "section",
+  "styles": ["collection-list.css"],
+  "scripts": [],
+  "requires": ["commons"],
+  "context": ["collections"],
+  "requiredPlugins": ["metalsmith-sectioned-blog-pagination"],
+  "validation": {
+    "required": ["sectionType", "collectionName"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "collection-list"
+      },
+      "collectionName": {
+        "type": "string",
+        "description": "Name of the collection to display (e.g., 'blog', 'components')"
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.top": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.bottom": {
+        "type": "boolean"
+      }
+    }
+  },
+  "fields": {
+    "collectionName": {
+      "widget": "select",
+      "label": "Collection",
+      "source": { "collections": true },
+      "default": ""
+    },
+    "$extends": ["commons"]
+  }
+}

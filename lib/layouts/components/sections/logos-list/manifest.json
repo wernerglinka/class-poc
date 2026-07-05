@@ -1,0 +1,121 @@
+{
+  "name": "logos-list",
+  "type": "section",
+  "styles": ["logos-list.css"],
+  "scripts": ["logos-list.js"],
+  "requires": ["commons", "image", "icon", "text", "ctas"],
+  "validation": {
+    "required": ["sectionType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "logos-list"
+      },
+      "isDisabled": {
+        "type": "boolean"
+      },
+      "isReverse": {
+        "type": "boolean"
+      },
+      "hasCenteredContent": {
+        "type": "boolean"
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.top": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.background.isDark": {
+        "type": "boolean"
+      },
+      "text": {
+        "type": "object"
+      },
+      "logos.source": {
+        "type": "string"
+      },
+      "logos.scope": {
+        "type": "string",
+        "enum": ["all", "selections"]
+      },
+      "logos.logoWidth": {
+        "type": "number"
+      },
+      "logos.showTitle": {
+        "type": "boolean"
+      },
+      "logos.selections": {
+        "type": "array"
+      },
+      "ctas": {
+        "type": "array"
+      }
+    }
+  },
+  "fields": {
+    "isReverse": {
+      "widget": "checkbox",
+      "label": "Reverse scroll direction",
+      "default": false
+    },
+    "hasCenteredContent": {
+      "widget": "checkbox",
+      "label": "Center text and CTAs",
+      "default": false
+    },
+    "text": {
+      "$use": "text"
+    },
+    "logos": {
+      "source": {
+        "widget": "text",
+        "label": "Data source (file in lib/data)",
+        "default": ""
+      },
+      "scope": {
+        "widget": "select",
+        "label": "Scope",
+        "enum": ["all", "selections"],
+        "default": "all"
+      },
+      "selections": {
+        "widget": "array",
+        "label": "Selected IDs (when scope is selections)",
+        "items": {
+          "id": {
+            "widget": "text",
+            "label": "ID",
+            "default": ""
+          }
+        }
+      },
+      "logoWidth": {
+        "widget": "number",
+        "label": "Logo width (px)",
+        "default": 100
+      },
+      "showTitle": {
+        "widget": "checkbox",
+        "label": "Show logo titles",
+        "default": false
+      }
+    },
+    "ctas": {
+      "$use": "ctas"
+    },
+    "$extends": ["commons"]
+  }
+}

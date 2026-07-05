@@ -1,0 +1,43 @@
+/**
+ * Author Date Component Styles
+ *
+ * Design Tokens:
+ * - --font-xs
+ * - --color-text-inactive
+ * - --space-s
+ * - --space-2xs
+ */
+
+.author-date {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--font-xs);
+  color: var(--color-text-inactive);
+  margin-top: var(--space-s);
+
+  &::before {
+    content: "By ";
+    margin-right: 0.25em;
+  }
+
+  .author::after {
+    content: " | ";
+    margin: 0 var(--space-2xs);
+  }
+
+  &.is-vertical {
+    .author,
+    time {
+      display: block;
+    }
+
+    time {
+      flex: 0 0 100%;
+    }
+
+    .author::after {
+      content: "";
+      margin: 0;
+    }
+  }
+}

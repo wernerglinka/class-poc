@@ -1,0 +1,109 @@
+{
+  "name": "columns",
+  "type": "section",
+  "styles": ["columns.css"],
+  "scripts": [],
+  "requires": ["commons", "text", "image", "ctas"],
+  "validation": {
+    "required": ["sectionType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "columns"
+      },
+      "isReverse": {
+        "type": "boolean"
+      },
+      "isDisabled": {
+        "type": "boolean"
+      },
+      "containerFields.inContainer": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.top": {
+        "type": "boolean"
+      },
+      "containerFields.noMargin.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.top": {
+        "type": "boolean"
+      },
+      "containerFields.noPadding.bottom": {
+        "type": "boolean"
+      },
+      "containerFields.background.isDark": {
+        "type": "boolean"
+      },
+      "containerFields.background.imageScreen": {
+        "type": "string",
+        "enum": ["light", "dark", "none"]
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"],
+        "default": "h2"
+      },
+      "ctas": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "isButton": {
+              "type": "boolean"
+            },
+            "buttonStyle": {
+              "type": "string",
+              "enum": ["primary", "secondary", "tertiary", "inverted"]
+            },
+            "isSmall": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  },
+  "fields": {
+    "columnsDirection": {
+      "widget": "select",
+      "label": "Columns direction",
+      "enum": ["", "reverse"],
+      "default": ""
+    },
+    "contentClasses": {
+      "widget": "text",
+      "label": "Content CSS classes (optional)",
+      "default": ""
+    },
+    "columns": {
+      "widget": "array",
+      "label": "Columns",
+      "items": {
+        "columnClasses": {
+          "widget": "text",
+          "label": "Column CSS classes (optional)",
+          "default": ""
+        },
+        "blocks": {
+          "widget": "array",
+          "label": "Blocks",
+          "items": {
+            "text": {
+              "$use": "text"
+            },
+            "image": {
+              "$use": "image"
+            },
+            "ctas": {
+              "$use": "ctas"
+            }
+          }
+        }
+      }
+    },
+    "$extends": ["commons"]
+  }
+}

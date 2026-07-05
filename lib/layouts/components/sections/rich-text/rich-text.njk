@@ -1,0 +1,13 @@
+{% from "components/_partials/ctas/ctas.njk" import ctas %}
+{% from "components/_partials/text/text.njk" import text %}
+
+<div class="content container">
+  {% if section.text %}
+    <div class="text flow">
+      {{ text(section.text)}}
+      {% if section.ctas | hasCtas %}
+        {{ ctas(section.ctas) }}
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
