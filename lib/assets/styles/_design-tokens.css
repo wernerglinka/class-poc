@@ -6,7 +6,7 @@
 
 :root {
   /* Colors */
-  --color-primary: #da1e28;
+  --color-primary: #e94848;
   --color-secondary: #fa4d56;
   --color-text: #161616;
   --color-text-light: #f4f4f4;
@@ -20,7 +20,7 @@
   --background-color-link-hover: rgb(0 0 0 / 5%);
   --color-pagination-active: #666;
   --color-background: #fff;
-  --color-background-light: #f4f4f4;
+  --color-background-light: #fdebeb;
   --color-highlight-background: #ffd4b5;
   --color-dark-background: #323232;
   --color-border-light: #e0e0e0;

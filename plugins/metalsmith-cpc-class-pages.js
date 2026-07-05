@@ -674,7 +674,7 @@ export function buildPageFile(offering, cpcData, config) {
 export default function cpcClassPages(options = {}) {
   const config = { ...defaultOptions, ...options };
 
-  const plugin = function (files, metalsmith, done) {
+  const plugin = (files, metalsmith, done) => {
     const debug = metalsmith.debug(PLUGIN_NAME);
     const metadata = metalsmith.metadata();
     const offerings = metadata[config.metadataKey];

@@ -141,7 +141,7 @@ export default function cpcClasses(options = {}) {
    */
   let cache = null;
 
-  const plugin = async function (_files, metalsmith) {
+  const plugin = async (_files, metalsmith) => {
     const debug = metalsmith.debug(PLUGIN_NAME);
 
     if (cache !== null && Date.now() < cache.expiresAt) {
