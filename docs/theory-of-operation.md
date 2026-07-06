@@ -1,6 +1,6 @@
 # CPC Class System: Theory of Operation
 
-This document explains how the Center for People and Craft class system works and, more importantly, why it works that way. The companion `cpc-google-howto.md` covers hands-on procedures; this one covers the reasoning. Read this when you return to the project after months away and need to reload the mental model.
+This document explains how the Center for People and Craft class system works and why it works that way. The companion `cpc-google-howto.md` covers hands-on procedures; this one covers the reasoning. Read this when you return to the project after months away and need to reload the mental model.
 
 ## Purpose and constraints
 
@@ -82,7 +82,7 @@ Everything currently runs under the dev account `devoweb91@gmail.com`. Productio
 
 ## Component inventory
 
-On the Google side (in `google-scripts/`): `cpc-class-intake-prototype.gs` builds the form and spreadsheet, owns the submission trigger, and optionally emails the admin per submission; `cpc-web-app.gs` is the HTTP API: tiered `doGet` reads and the locked, code-gated `doPost` signup write. Script Properties hold `spreadsheetId`, `formId`, `buildToken`, and `volunteerCode`.
+On the Google side (in `google-scripts/`): `cpc-class-intake-prototype.gs` builds the form and spreadsheet, owns the submission trigger, runs the weekly spreadsheet backup, and optionally emails the admin per submission; `cpc-web-app.gs` is the HTTP API: tiered `doGet` reads and the locked, code-gated `doPost` signup write. Script Properties hold `spreadsheetId`, `formId`, `buildToken`, and `volunteerCode`.
 
 On the site side: `plugins/metalsmith-cpc-classes.js` (build-time data fetch into metadata) and `plugins/metalsmith-cpc-class-pages.js` (page generation, image resolution, collection cards), each with a `node --test` suite in `test/`. Generated pages are a hero plus three two-column `multi-media` sections; that component's `text` and `iframe`/`givebutter` media types carry the second text column and the registration embed, and the org boilerplate (accessibility, cancellation policy) renders as accordions under "What to expect". Three custom partials in the component library support this: `session-list` (live availability plus the volunteer signup dialog, rendered inside the details section), `givebutter-widget` (Givebutter's self-sizing registration widget, used when the pasted embed URL carries a widget element id and `givebutterAccountId` is set in `lib/data/cpc.json`), and `iframe` (the fixed-height fallback frame for plain campaign URLs). The `class-sessions` section remains as a thin standalone wrapper around `session-list`. `src/classes.md` is the hand-editable classes landing page. `lib/data/cpc.json` holds the org boilerplate.
 

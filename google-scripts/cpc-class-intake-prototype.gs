@@ -51,7 +51,8 @@
  *   programmatically, and a manual upload question would force
  *   respondents to sign in to Google.)
  * - The Sessions/Offerings sheets are the editable store. Corrections
- *   after submission happen there, never by resubmitting the form.
+ *   after submission happen there. A submitted form cannot be edited
+ *   or resubmitted; a second submission only creates a duplicate.
  * - ADDING a field mid-season does NOT require a rebuild: edit the
  *   live form, update the constants here, and run migrateSheets (see
  *   its docs below). Only renames and removals need the full rebuild.
@@ -239,9 +240,9 @@ function createIntakeForm() {
     .setDescription(
       'Submit one scheduled offering of a class. Multi-session classes ' +
         '(e.g. three Wednesdays) are ONE submission — fill in one date ' +
-        'picker per session. Corrections after submission are made in ' +
-        'the spreadsheet by the site admin, so email us rather than ' +
-        'resubmitting.'
+        'picker per session. Corrections after submission are made by ' +
+        'the site admin, so email us; please do not fill out the form ' +
+        'a second time.'
     )
     .setCollectEmail(false);
 
@@ -437,6 +438,99 @@ function syncSheetColumns(sheet, columns) {
   if (missingInSheet.length === 0 && unknownInSheet.length === 0) {
     Logger.log('%s: columns already in sync', sheet.getName());
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Backups                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Drive folder that receives the weekly spreadsheet copies. Created
+ * automatically on the first backup run.
+ */
+const BACKUP_FOLDER_NAME = 'CPC Class Data Backups';
+
+/**
+ * How many backup copies to keep. Older copies are trashed on each
+ * run, so the folder never grows past this count. Eight weekly
+ * copies is roughly two months of history.
+ */
+const BACKUP_RETENTION_COUNT = 8;
+
+/**
+ * One-time setup: install the weekly backup trigger (Mondays between
+ * 4 and 5 am, script time zone). Safe to run repeatedly; an existing
+ * backup trigger is replaced, never duplicated. Run it again after a
+ * full rebuild, because the rebuild procedure deletes all triggers.
+ *
+ * The first run prompts for Drive permission (the backup copies live
+ * in Drive); this is a one-time re-authorization.
+ */
+function installBackupTrigger() {
+  removeBackupTriggers();
+  ScriptApp.newTrigger('backupSpreadsheet')
+    .timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(4)
+    .create();
+  Logger.log('Weekly backup trigger installed (Mondays 4-5am, %s).', Session.getScriptTimeZone());
+}
+
+/**
+ * Delete any existing triggers pointing at backupSpreadsheet, so
+ * installBackupTrigger stays idempotent.
+ */
+function removeBackupTriggers() {
+  ScriptApp.getProjectTriggers()
+    .filter((trigger) => trigger.getHandlerFunction() === 'backupSpreadsheet')
+    .forEach((trigger) => ScriptApp.deleteTrigger(trigger));
+}
+
+/**
+ * Copy the live spreadsheet into the backup folder and prune old
+ * copies. Runs weekly via the installed trigger; can also be run by
+ * hand from the function dropdown before anything risky. Reads the
+ * spreadsheet ID from Script Properties at run time, so it follows a
+ * rebuilt spreadsheet automatically.
+ */
+function backupSpreadsheet() {
+  const spreadsheetId = PropertiesService.getScriptProperties().getProperty('spreadsheetId');
+  const backupFolder = findOrCreateBackupFolder();
+  const dateStamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+  DriveApp.getFileById(spreadsheetId).makeCopy(`${PROTOTYPE_NAME} backup ${dateStamp}`, backupFolder);
+  const removedCount = pruneOldBackups(backupFolder);
+  Logger.log('Backup created (%s); pruned %s old cop%s.', dateStamp, removedCount, removedCount === 1 ? 'y' : 'ies');
+}
+
+/**
+ * Find the backup folder in Drive, creating it on first use.
+ * @returns {GoogleAppsScript.Drive.Folder} The backup folder
+ */
+function findOrCreateBackupFolder() {
+  const matches = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
+  return matches.hasNext() ? matches.next() : DriveApp.createFolder(BACKUP_FOLDER_NAME);
+}
+
+/**
+ * Trash all but the newest BACKUP_RETENTION_COUNT files in the backup
+ * folder. Only touches files inside that folder.
+ * @param {GoogleAppsScript.Drive.Folder} backupFolder - Folder to prune
+ * @returns {number} How many old copies were trashed
+ */
+function pruneOldBackups(backupFolder) {
+  const files = [];
+  const iterator = backupFolder.getFiles();
+  while (iterator.hasNext()) {
+    files.push(iterator.next());
+  }
+
+  const expired = files
+    .sort((first, second) => second.getDateCreated() - first.getDateCreated())
+    .slice(BACKUP_RETENTION_COUNT);
+
+  expired.forEach((file) => file.setTrashed(true));
+  return expired.length;
 }
 
 /* ------------------------------------------------------------------ */

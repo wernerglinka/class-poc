@@ -28,7 +28,15 @@ Give the files simple, descriptive names before you attach them, for example `sp
 
 ## Step 2: Fill out the class form
 
-Open the form at https://docs.google.com/forms/d/e/1FAIpQLSeFzfjSMzB0UlBQr-wibNhaJaN7e6dwMJ5bbFzqnRRKrZMEPA/viewform?usp=header and work through it top to bottom. A few notes on specific questions:
+Open the form at https://docs.google.com/forms/d/e/1FAIpQLSeFzfjSMzB0UlBQr-wibNhaJaN7e6dwMJ5bbFzqnRRKrZMEPA/viewform?usp=header and work through it top to bottom. 
+
+
+
+![class intake form](images/class-form.jpg)
+
+A few notes on specific questions:
+
+
 
 **Session dates.** The form has six date pickers. A class that meets once uses only the first one. A class that meets three times uses the first three, one date per meeting. Leave the rest blank. Important: one class means ONE form submission, even if it meets several times. Please don't submit the form once per date.
 
@@ -42,11 +50,17 @@ Open the form at https://docs.google.com/forms/d/e/1FAIpQLSeFzfjSMzB0UlBQr-wibNh
 
 Then press Submit. You'll see a confirmation screen, and you're done.
 
+
+
+![class intake form confirmation](images/form-confirmation.jpg)
+
+
+
 ## What happens next
 
-Your class does not appear on the website immediately. A volunteer reviews every submission first, usually within a couple of days. Once it's approved, your class page and its listing appear automatically. Nobody has to build a page by hand, that's the whole point of the form.
+Your class does not appear on the website immediately. A volunteer reviews every submission first, usually within a couple of days. Once it's approved, your class page and its listing appear automatically.
 
-If something needs fixing after you submit (a typo, a changed date, a new price), **do not fill out the form again**. Submitting twice creates a duplicate class. Instead, email the webmaster with the correction, and they'll fix it directly. Same for cancellations or if a class fills up.
+> If something needs fixing after you submit (a typo, a changed date, a new price), **do not fill out another form again**. Submitting twice creates a duplicate class. Instead, **email the webmaster with the correction, and they'll fix it directly**. Same for cancellations or if a class fills up.
 
 ## Questions?
 

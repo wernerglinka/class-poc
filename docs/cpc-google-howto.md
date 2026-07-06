@@ -10,7 +10,9 @@ Everything runs under the dev Google account `devoweb91@gmail.com`. There are th
 2. **A Google Spreadsheet** with three tabs. *Form Responses 1* is the raw, untouched form output. *Offerings* holds one row per offering with all prose, fees, instructor info, and a stable `offeringId` like `staked-side-table-20260715`. *Sessions* holds one row per dated session with a `sessionId` like `staked-side-table-20260715-s2`, plus empty `hostName`, `hostEmail`, and `signedUpAt` columns that the volunteer signup flow fills later.
 3. **An Apps Script project** containing `cpc-class-intake-prototype.gs`. It builds the form and spreadsheet, and its `handleFormSubmit` trigger converts each raw form submission into the normalized Offerings and Sessions rows.
 
-The spreadsheet is the editable source of truth. If a submission has a typo, fix it in the Offerings or Sessions tab. Never ask a class owner to resubmit the form; that creates a duplicate offering with a `-2` suffix.
+A fourth, optional artifact is not created by the script: a small script bound to the spreadsheet that provides the review sidebar (see "The review sidebar" below).
+
+> The spreadsheet is the editable source of truth. If a submission has a typo, fix it in the Offerings or Sessions tab. A submitted form cannot be edited or resubmitted; all a class owner could do is fill out the form again, which creates a duplicate offering with a `-2` suffix. Never ask for that; make the correction in the spreadsheet.
 
 Org-wide boilerplate (accessibility text, cancellation policy, location, scholarship link) deliberately does not live in the spreadsheet. It belongs in the site repo config.
 
@@ -22,7 +24,13 @@ These are the recurring jobs. Everything below this section is setup work that h
 
 **Rotate the volunteer code.** In the Apps Script editor: gear icon (Project Settings) > Script Properties > edit the `volunteerCode` value > Save. Announce the new code in the next volunteer email. Takes effect immediately, no redeployment. Matching ignores case and surrounding spaces. If the property is missing entirely, all signups are rejected.
 
-**Fix a submission.** Edit the Offerings or Sessions row directly in the spreadsheet. Type dates as `2026-07-15` and times as `18:00` (the cells are plain text and stay that way). Never change `offeringId` or `sessionId` once a class page is live, and never ask a class owner to resubmit the form.
+**Fix a submission.** Edit the Offerings or Sessions row directly in the spreadsheet. Type dates as `2026-07-15` and times as `18:00` (the cells are plain text and stay that way). Never change `offeringId` or `sessionId` once a class page is live, and never ask a class owner to fill out the form a second time; that creates a duplicate offering, not a correction. **A viewer is available to review and edit class info. Click on Review and select Open row viewer.**
+
+
+
+![open row viewer](images/open-sidebar.jpg)
+
+
 
 **Mark a class full or cancelled.** Set its `status` column in Offerings (and per-session in Sessions if only one session is affected). Approval stays `yes`; status controls how the class renders, approval controls whether it exists at all.
 
@@ -49,8 +57,45 @@ A full rebuild is only for destructive schema changes: renaming or removing colu
 4. Trash the old form and old spreadsheet in Drive, then empty the Drive trash. The old and new files share the same name, and leaving both around is how the wrong one gets deleted later.
 5. Select `buildPrototype` in the function dropdown in the toolbar and click Run. Grant permissions if asked.
 6. Open the execution log. It prints three URLs: the spreadsheet, the form's edit view, and the form's live view. Save these somewhere.
+7. Re-install the review sidebar. It was bound to the old spreadsheet and died with it: open the new spreadsheet, Extensions > Apps Script, paste `Code.gs`, add the `ReviewSidebar` HTML file (see "The review sidebar" below).
+8. Run `installBackupTrigger` from the function dropdown. Step 3 deleted the weekly backup trigger along with everything else.
 
 Order matters in steps 3 through 5: triggers first, then old files, then rebuild. Running `buildPrototype` before cleaning up leaves you with two identically named forms and spreadsheets.
+
+### What a full rebuild changes, and what survives
+
+A rebuild replaces some pieces and leaves others alone. Knowing which is which prevents both missed steps and unnecessary ones.
+
+**Destroyed and replaced:** the spreadsheet (all offering, session, and host data is gone; a rebuild is only for the off-season), the form and therefore its public `/viewform` URL (class owners holding the old link get a dead page, so re-share the new link after republishing), the `spreadsheetId` and `formId` Script Properties (rewritten automatically by `buildPrototype`), the bound review sidebar script (step 7), and the weekly backup trigger (step 8; the backup folder and its copies survive).
+
+**Survives untouched:** the Apps Script project itself, the web app deployment and its `/exec` URL (the site config needs no change), the `buildToken` and `volunteerCode` Script Properties (no need to rerun `setupWebApp` or re-announce the code), and everything in the site repo.
+
+The web app does not strictly need a redeploy after a rebuild, because it looks up the spreadsheet ID from Script Properties at request time. But if the rebuild changed any script code, publish a new version (Manage deployments > pencil > New version) so the deployed snapshot matches the repo; it costs nothing and removes doubt.
+
+## Backups
+
+The spreadsheet is the only stateful thing in the whole system; the scripts, plugins, and docs all live in the site repo, and the form can be rebuilt from the script. So backing up means backing up the spreadsheet.
+
+**Automatic weekly backups** are built into the intake script. Run `installBackupTrigger` once from the function dropdown (it asks for Drive permission on first run, a one-time re-authorization). From then on, every Monday between 4 and 5 am the script copies the spreadsheet into a Drive folder named "CPC Class Data Backups," creating the folder if needed, and keeps the newest eight copies, trashing older ones. The copies are ordinary Sheets files named with their date; restoring means opening one and copying the needed rows (or the whole tabs) back. `backupSpreadsheet` can also be run by hand from the function dropdown before anything risky. The backup follows a rebuilt spreadsheet automatically, but the trigger itself is deleted by the rebuild procedure's clean-out step, so rerunning `installBackupTrigger` is part of the rebuild checklist.
+
+Before anything destructive (a rebuild, a bulk edit, emptying the Drive trash), also download a local copy: File > Download > Microsoft Excel (.xlsx). That one file preserves all three tabs, including host signups, and lives outside the Google account entirely, which matters if the account itself is ever the problem.
+
+Restoring after an accident: the first stop is built in. Sheets keeps full version history (File > Version history > See version history), which can roll back the whole spreadsheet or show what a specific edit changed. The downloaded `.xlsx` is the fallback for the disasters version history cannot fix, like the file itself being trashed and the trash emptied.
+
+## Where every value lives
+
+A map of the moving values, for when something needs rotating, or when someone wonders where a mystery string came from.
+
+| Value | Lives in | Also known to | Breaks what if changed carelessly |
+|---|---|---|---|
+| `/exec` web app URL | The deployment (Manage deployments) | Site build config, class page JS, `.web-app` note file | Build fetch and live signup both go dark if a new deployment replaces the old one |
+| `buildToken` | Script Properties | Site build environment (`CPC_SHEET_TOKEN` in `.env`) | Builds get the public payload instead of full data (classes vanish from the site) |
+| `volunteerCode` | Script Properties | Volunteer emails | Signups rejected until the new code is announced |
+| `spreadsheetId`, `formId` | Script Properties | Nothing else (managed by `buildPrototype`) | Everything; never edit these by hand |
+| Form `/viewform` URL | The form (changes on rebuild) | Class owners | Class owners can no longer submit |
+| Spreadsheet URL | Drive (changes on rebuild) | Reviewer bookmarks | Stale bookmarks open the trashed sheet, which still accepts edits until the trash is emptied |
+
+The Google account (`devoweb91@gmail.com` in development, the org's account in production) owns all of it: spreadsheet, form, script project, deployment, and triggers. Losing access to that account means losing the system, so its recovery options (recovery email, phone) deserve the same care as the data. This is one more reason production should run under the org's account rather than a personal one.
 
 ## Publishing the form
 
@@ -108,6 +153,18 @@ One browser quirk to remember when writing the signup JavaScript: Apps Script ca
 A second CORS trap, encountered and solved during testing: if browser fetches fail with "No 'Access-Control-Allow-Origin' header" while the URL works fine when opened directly, the deployment's "Who has access" is set to "Anyone with Google account" instead of "Anyone." Signed-in browser visits succeed, but cross-origin fetches get redirected to a login page without CORS headers. Fix it via Deploy > Manage deployments > pencil icon (the access field is hidden until edit mode) > Who has access: Anyone > Version: New version > Deploy. The incognito-window test tells the truth: the /exec URL must return JSON without a sign-in prompt.
 
 `signup-test.html` in the repo is a standalone test page for the whole browser-facing flow. Open it locally, paste the /exec URL, and it lists sessions and lets you claim one, exercising the same GET and text/plain POST the real class pages will use. It doubles as the reference implementation for the site's signup modal.
+
+## The review sidebar
+
+The `google-scripts/review-sidebar/` files add a "Review" menu to the spreadsheet that opens a sidebar showing the selected row as a labeled, editable record. Long prose fields (descriptions, materials) get roomy auto-growing text boxes instead of a cramped cell, which is the sane way to review and correct submissions in the Offerings tab.
+
+**It goes in its own script project, not the intake project.** The intake/web-app project is a standalone script, and the sidebar needs a container-bound one: the `onOpen` trigger that creates the menu only fires in bound scripts, and `SpreadsheetApp.getUi()` throws outside a bound context. Pasting the sidebar files into the intake project produces no error and no menu.
+
+To install: open the spreadsheet itself, then Extensions > Apps Script. That creates (or opens) the script bound to this spreadsheet. Paste `Code.gs` over the default file. Then click + next to Files, choose HTML, name it exactly `ReviewSidebar`, and paste the HTML file's contents. Save both, reload the spreadsheet, and the Review menu appears after a few seconds. The first use triggers the usual authorization flow, including the "Google hasn't verified this app" interstitial (Advanced > Go to project); each reviewer authorizes once.
+
+To operate: click any cell in a row, open Review > Open row viewer, and the sidebar shows that row with the column headers as field labels. Edit directly in the sidebar; a Save/Discard bar appears when anything differs from the sheet. Save writes only the changed cells and refreshes from the sheet. While unsaved edits exist, the sidebar deliberately stops following your cell selection so clicking around cannot wipe work in progress. Formula cells render read-only. Edits behave like typing into the cell, so the plain-text date and time cells stay plain text; use the same ISO forms as always (`2026-07-15`, `18:00`).
+
+Maintenance is nearly zero. Field labels come from the header row at read time, so adding columns (including via `migrateSheets`) requires no sidebar changes. The one thing that breaks it is a full rebuild: `buildPrototype` creates a brand-new spreadsheet, and the bound sidebar script dies with the old one. Re-install the two files into the new spreadsheet after every rebuild; it is a two-minute paste job, but it is not automatic.
 
 ## Still to build
 
