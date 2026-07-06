@@ -20,6 +20,7 @@ import cpcClassPages, {
   buildSessionItems,
   extractGivebutterSlug,
   extractGivebutterWidgetId,
+  extractInstructors,
   formatTime,
   imageFolderSlug,
   resolveImagePath,
@@ -50,8 +51,8 @@ const sampleOffering = {
   instructorName: 'Jacob Mathioudis-Goudey',
   instructorBio: 'Woodworker in Minneapolis.',
   instructorLinks: 'instagram.com/@jake.mg.furniture',
+  instructorPhoto: 'https://example.com/jacob.jpg',
   classImageUrl: 'https://example.com/table.jpg',
-  instructorPhotoUrl: 'https://example.com/jacob.jpg',
   givebutterUrl: 'https://givebutter.com/example',
   firstSessionDate: '2026-07-15',
   sessions: [
@@ -120,6 +121,13 @@ describe('buildDetailsProse', () => {
   it('omits a zero materials fee', () => {
     const prose = buildDetailsProse({ ...sampleOffering, materialsFee: '0' }, cpcData);
     assert.doesNotMatch(prose, /Materials fee/);
+  });
+
+  it('adds the age/ability note on its own line when present', () => {
+    const withNote = { ...sampleOffering, ageAbilityNote: 'Youth 14+ are welcome with a parent.' };
+    const prose = buildDetailsProse(withNote, cpcData);
+    assert.match(prose, /16\+, Advanced beginner<br>Youth 14\+ are welcome with a parent\.<\/li>/);
+    assert.doesNotMatch(buildDetailsProse(sampleOffering, cpcData), /<br>/, 'no stray break without a note');
   });
 
   it('returns empty when there are no details at all', () => {
@@ -248,16 +256,41 @@ describe('buildSections', () => {
     const instructor = sections[sections.length - 1];
     assert.equal(instructor.mediaType, 'image');
     assert.equal(instructor.image.src, 'https://example.com/jacob.jpg');
-    assert.equal(instructor.text.subTitle, 'Jacob Mathioudis-Goudey');
+    assert.equal(instructor.text.leadIn, 'Meet your instructor');
+    assert.equal(instructor.text.title, 'Jacob Mathioudis-Goudey');
     assert.equal(instructor.text.prose, 'Woodworker in Minneapolis.');
   });
 
   it('drops the photo when there is no instructor photo', () => {
-    const sections = buildSections({ ...sampleOffering, instructorPhotoUrl: '' }, cpcData);
+    const sections = buildSections({ ...sampleOffering, instructorPhoto: '' }, cpcData);
     const instructor = sections[sections.length - 1];
     assert.equal(instructor.mediaType, 'text');
     assert.equal(instructor.image, undefined);
-    assert.equal(instructor.text.subTitle, 'Jacob Mathioudis-Goudey');
+    assert.equal(instructor.text.title, 'Jacob Mathioudis-Goudey');
+  });
+
+  it('stacks one section per instructor with collapsed spacing', () => {
+    const twoInstructors = {
+      ...sampleOffering,
+      instructor2Name: 'Jane Doe',
+      instructor2Bio: 'Herbalist and educator.'
+    };
+    const sections = buildSections(twoInstructors, cpcData);
+    assert.equal(sections.length, 5);
+
+    const [first, second] = sections.slice(-2);
+    assert.equal(first.text.leadIn, 'Meet your instructors');
+    assert.equal(first.text.title, 'Jacob Mathioudis-Goudey');
+    assert.equal(second.text.leadIn, '');
+    assert.equal(second.text.title, 'Jane Doe');
+    assert.equal(second.mediaType, 'text', 'no photo means a single text column');
+    assert.equal(first.isReverse, false);
+    assert.equal(second.isReverse, true, 'every second section alternates image/text sides');
+
+    assert.deepEqual(first.containerFields.noMargin, { top: false, bottom: true });
+    assert.deepEqual(second.containerFields.noMargin, { top: true, bottom: false });
+    assert.deepEqual(first.containerFields.noPadding, { top: false, bottom: false }, 'padding stays default');
+    assert.deepEqual(second.containerFields.noPadding, { top: false, bottom: false }, 'padding stays default');
   });
 
   it('renders instructor links as CTA buttons, not prose', () => {
@@ -277,6 +310,50 @@ describe('buildSections', () => {
     const sections = buildSections({ ...sampleOffering, instructorLinks: '' }, cpcData);
     const instructor = sections[sections.length - 1];
     assert.deepEqual(instructor.ctas, []);
+  });
+});
+
+describe('extractInstructors', () => {
+  it('collects numbered instructors in form order', () => {
+    const instructors = extractInstructors({
+      ...sampleOffering,
+      instructor2Name: 'Jane Doe',
+      instructor2Bio: 'Herbalist.'
+    });
+    assert.equal(instructors.length, 2);
+    assert.deepEqual(
+      instructors.map((instructor) => instructor.name),
+      ['Jacob Mathioudis-Goudey', 'Jane Doe']
+    );
+  });
+
+  it('ignores field sets beyond the current form capacity', () => {
+    const instructors = extractInstructors({
+      ...sampleOffering,
+      instructor2Name: 'Jane Doe',
+      instructor3Name: 'Kim Lee'
+    });
+    assert.deepEqual(
+      instructors.map((instructor) => instructor.name),
+      ['Jacob Mathioudis-Goudey', 'Jane Doe'],
+      'a third set only counts after INSTRUCTOR_FIELD_COUNT is raised'
+    );
+  });
+
+  it('reads instructor 1 from the unnumbered fields', () => {
+    const instructors = extractInstructors({
+      instructorName: 'Solo Teacher',
+      instructorBio: 'The only one.',
+      instructorLinks: '',
+      instructorPhoto: 'solo.jpg'
+    });
+    assert.deepEqual(instructors, [
+      { name: 'Solo Teacher', bio: 'The only one.', links: '', photoUrl: 'solo.jpg' }
+    ]);
+  });
+
+  it('returns empty when no instructor fields are filled', () => {
+    assert.deepEqual(extractInstructors({ classTitle: 'X' }), []);
   });
 });
 
@@ -328,8 +405,7 @@ describe('image resolution', () => {
       ...sampleOffering,
       classImage: 'side-table.jpg',
       instructorPhoto: 'missing.jpg',
-      classImageUrl: undefined,
-      instructorPhotoUrl: undefined
+      classImageUrl: undefined
     };
     const warnings = [];
     const resolved = resolveOfferingImages(
@@ -338,7 +414,7 @@ describe('image resolution', () => {
       (message) => warnings.push(message)
     );
     assert.equal(resolved.classImageUrl, '/assets/images/classes/example/side-table.jpg');
-    assert.equal(resolved.instructorPhotoUrl, '');
+    assert.equal(resolved.instructors[0].photoUrl, '');
     assert.equal(warnings.length, 1);
     assert.match(warnings[0], /missing\.jpg/);
   });
@@ -352,6 +428,7 @@ describe('image resolution', () => {
       () => {}
     );
     assert.equal(resolved.classImageUrl, 'https://example.com/table.jpg');
+    assert.equal(resolved.instructors[0].photoUrl, 'https://example.com/jacob.jpg');
   });
 });
 

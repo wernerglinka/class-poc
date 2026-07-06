@@ -16,7 +16,8 @@
  * class details with the session/volunteer list, what to expect
  * beside the Givebutter registration embed with the org boilerplate
  * (accessibility, cancellation policy, from lib/data/cpc.json) as
- * disclosures beneath, and instructor photo beside the bio.
+ * disclosures beneath, and one photo-beside-bio section per
+ * instructor (up to three, stacked with collapsed spacing).
  *
  * @author Werner Glinka <werner@glinka.co>
  */
@@ -161,7 +162,11 @@ export function buildDetailsProse(offering, cpcData) {
     .filter((part) => part !== '')
     .join(', ');
   if (ageAndAbility !== '') {
-    items.push(`<strong>Age / Ability level:</strong> ${ageAndAbility}`);
+    // The note can be several sentences (grip strength, injuries,
+    // youth policy), so it gets its own line rather than the
+    // parenthetical treatment of the materials fee note.
+    const note = String(offering.ageAbilityNote ?? '').trim();
+    items.push(`<strong>Age / Ability level:</strong> ${ageAndAbility}${note !== '' ? `<br>${note}` : ''}`);
   }
 
   if (items.length === 0) {
@@ -169,6 +174,44 @@ export function buildDetailsProse(offering, cpcData) {
   }
 
   return `<ul class="class-details-list">\n${items.map((item) => `  <li>${item}</li>`).join('\n')}\n</ul>`;
+}
+
+/**
+ * Instructors per offering the intake form currently takes: most
+ * classes have one, some two. Instructor 1 uses the original
+ * unnumbered sheet fields (instructorName, instructorBio, ...);
+ * additional instructors add numbered prefixes (instructor2Name,
+ * ...). If the form ever grows a third set, name it instructor3Name
+ * etc. and bump this constant - nothing else changes.
+ */
+const INSTRUCTOR_FIELD_COUNT = 2;
+
+/**
+ * Collect an offering's instructors from the sheet fields: the
+ * unnumbered set for instructor 1, then the instructor2... and
+ * instructor3... sets. An instructor exists when any of its fields
+ * is non-empty.
+ * @param {Object} offering - Offering record
+ * @returns {{name: string, bio: string, links: string, photoUrl: string}[]} Instructors in form order
+ */
+export function extractInstructors(offering) {
+  const field = (name) => String(offering[name] ?? '').trim();
+
+  const instructors = [];
+  for (let index = 1; index <= INSTRUCTOR_FIELD_COUNT; index += 1) {
+    const prefix = index === 1 ? 'instructor' : `instructor${index}`;
+    const instructor = {
+      name: field(`${prefix}Name`),
+      bio: field(`${prefix}Bio`),
+      links: field(`${prefix}Links`),
+      photoUrl: field(`${prefix}Photo`) || (index === 1 ? field('instructorPhotoUrl') : '')
+    };
+    if (Object.values(instructor).some((value) => value !== '')) {
+      instructors.push(instructor);
+    }
+  }
+
+  return instructors;
 }
 
 /**
@@ -339,11 +382,12 @@ export function resolveImagePath(imageValue, folderSlug) {
 /**
  * Resolve an offering's image fields to site paths and drop any local
  * image whose file has not arrived in the repo yet, so pages never
- * ship broken image references.
- * @param {Object} offering - Offering record (classImage, instructorPhoto)
+ * ship broken image references. Also attaches the extracted
+ * instructors array with each photo resolved the same way.
+ * @param {Object} offering - Offering record (classImage, instructorPhotoN)
  * @param {Function} fileExists - (sitePath) => boolean for local paths
  * @param {Function} warn - Called with a message per missing file
- * @returns {Object} Offering with classImageUrl/instructorPhotoUrl set
+ * @returns {Object} Offering with classImageUrl and instructors set
  */
 export function resolveOfferingImages(offering, fileExists, warn) {
   const folderSlug = imageFolderSlug(offering);
@@ -360,7 +404,10 @@ export function resolveOfferingImages(offering, fileExists, warn) {
   return {
     ...offering,
     classImageUrl: verify(offering.classImage ?? offering.classImageUrl),
-    instructorPhotoUrl: verify(offering.instructorPhoto ?? offering.instructorPhotoUrl)
+    instructors: extractInstructors(offering).map((instructor) => ({
+      ...instructor,
+      photoUrl: verify(instructor.photoUrl)
+    }))
   };
 }
 
@@ -450,7 +497,8 @@ const multiMediaSection = ({
   sessions,
   endpoint,
   sessionsTitle,
-  disclosures
+  disclosures,
+  container = {}
 }) => ({
   sectionType: 'multi-media',
   containerTag: 'section',
@@ -458,7 +506,7 @@ const multiMediaSection = ({
   id,
   isDisabled: false,
   isReverse,
-  containerFields: containerDefaults(),
+  containerFields: containerDefaults(container),
   mediaType,
   text,
   ctas,
@@ -579,23 +627,37 @@ const heroSection = (offering) => ({
 });
 
 /**
- * Build the instructor section: photo on the left, bio on the right,
- * or a single text column when there is no photo.
+ * Build one section per instructor: photo on the left, bio on the
+ * right, alternating sides per section (or a single text column when
+ * there is no photo). The first section carries the heading (plural
+ * when there is more than one); stacked sections drop the margins
+ * between them (first: bottom only, middle: both, last: top only) so
+ * the group reads as one block.
  * @param {Object} offering - Offering record
- * @returns {Object} Section object
+ * @returns {Object[]} Section objects, one per instructor
  */
-const instructorSection = (offering) =>
-  multiMediaSection({
-    classes: 'class-instructor',
-    mediaType: offering.instructorPhotoUrl !== '' ? 'image' : 'text',
-    ...(offering.instructorPhotoUrl !== ''
-      ? { image: { src: offering.instructorPhotoUrl, alt: offering.instructorName, caption: '' } }
-      : {}),
-    text: textBlock('Meet your instructor', offering.instructorBio, {
-      subTitle: offering.instructorName
-    }),
-    ctas: buildInstructorCtas(offering.instructorLinks)
-  });
+const instructorSections = (offering) => {
+  const instructors = offering.instructors ?? extractInstructors(offering);
+  const lastIndex = instructors.length - 1;
+
+  return instructors.map((instructor, index) =>
+    multiMediaSection({
+      classes: 'class-instructor',
+      mediaType: instructor.photoUrl !== '' ? 'image' : 'text',
+      isReverse: index % 2 === 1,
+      ...(instructor.photoUrl !== ''
+        ? { image: { src: instructor.photoUrl, alt: instructor.name, caption: '' } }
+        : {}),
+      text: textBlock(instructor.name, instructor.bio, {
+        leadIn: index === 0 ? (lastIndex > 0 ? 'Meet your instructors' : 'Meet your instructor') : ''
+      }),
+      ctas: buildInstructorCtas(instructor.links),
+      container: {
+        noMargin: { top: index > 0, bottom: index < lastIndex }
+      }
+    })
+  );
+};
 
 /**
  * Build the full sections array for one offering.
@@ -613,7 +675,7 @@ export function buildSections(offering, cpcData, apiUrl = '') {
   // the section carries the org's policy disclosures.
   sections.push(registrationSection(offering, cpcData, buildGivebutterEmbedUrl(offering.givebutterUrl)));
 
-  sections.push(instructorSection(offering));
+  sections.push(...instructorSections(offering));
 
   return sections;
 }
@@ -626,6 +688,8 @@ export function buildSections(offering, cpcData, apiUrl = '') {
  * @returns {Object} Card object
  */
 export function buildCard(offering) {
+  const instructors = offering.instructors ?? extractInstructors(offering);
+
   return {
     title: offering.classTitle,
     description: offering.shortSummary,
@@ -633,7 +697,7 @@ export function buildCard(offering) {
     // midnight; a bare ISO date parses as UTC and renders a day early
     // in US timezones.
     date: offering.firstSessionDate !== '' ? `${offering.firstSessionDate}T00:00:00` : '',
-    author: offering.instructorName !== '' ? [offering.instructorName] : [],
+    author: instructors.map((instructor) => instructor.name).filter((name) => name !== ''),
     thumbnail: offering.classImageUrl
   };
 }

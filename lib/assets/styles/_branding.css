@@ -29,6 +29,10 @@
 
     img {
       max-height: var(--space-l-xl);
+      /* Guard the aspect ratio: responsive-image styles set widths
+         elsewhere, and a width without a proportional height squashes
+         the square logo into a banner. */
+      width: auto;
     }
   }
 

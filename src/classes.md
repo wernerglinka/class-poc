@@ -16,7 +16,7 @@ seo:
 sections:
   - sectionType: hero
     containerTag: section
-    classes: 'first-section'
+    classes: 'first-section class-hero'
     id: ''
     isDisabled: false
     isFullScreen: false
@@ -31,17 +31,25 @@ sections:
         top: false
         bottom: false
       background:
-        isDark: false
+        isDark: true
         color: ''
-        image: ''
-        imageScreen: 'none'
+        image: '/assets/images/classes/landing.jpg'
+        imageScreen: 'dark'
     text:
       leadIn: ''
       title: Upcoming classes
       titleTag: 'h1'
       subTitle: ''
       prose: 'Hands-on classes in traditional handcraft, foodways, herbalism, music, and movement. All classes meet at our Loring Park workshop.'
-    ctas: []
+    ctas:
+      - url: 'https://docs.google.com/forms/d/1r37unV6t3LHnRRlfFbiXtFdwQMJKIw7GS-0B8EINazs/viewform?edit_requested=true'
+        label: 'Scholarships'
+        isButton: true
+        buttonStyle: 'primary'
+      - url: '/gift-certificates'
+        label: 'Give a Gift Card'
+        isButton: true
+        buttonStyle: 'primary'
     image:
       src: ''
       alt: ''

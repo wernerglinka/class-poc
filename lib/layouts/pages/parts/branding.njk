@@ -1,7 +1,11 @@
 {% macro branding(link, img) %}
 
+{# data-no-responsive keeps the logo out of the responsive-image
+   rewrite: a chrome logo needs no srcset, and the generated picture
+   sizing distorted the square logo and could push the nav out of the
+   header row at wide viewports. #}
 <div class="brand">
-  <a class="home-link" href="{{ link }}"><img src="{{ img.src }}" alt="{{ img.alt }}"></a>
+  <a class="home-link" href="{{ link }}"><img src="{{ img.src }}" alt="{{ img.alt }}" data-no-responsive></a>
 </div>
 
 {% endmacro %}

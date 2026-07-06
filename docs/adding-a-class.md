@@ -13,6 +13,7 @@ Have this information ready before you open the form, and the whole thing goes q
 - Minimum age and ability level
 - A short bio of yourself and any links you want shown (your website, Instagram)
 - One photo of your class or your work, and one photo of yourself
+- If the class is taught by two instructors: the second instructor's name, bio, links, and photo
 - If registration is already set up on Givebutter: the campaign link
 
 Don't worry about getting every word perfect. Small corrections can be made after you submit (see the last section).
@@ -27,7 +28,7 @@ Give the files simple, descriptive names before you attach them, for example `sp
 
 ## Step 2: Fill out the class form
 
-Open the form at **[form link goes here]** and work through it top to bottom. A few notes on specific questions:
+Open the form at https://docs.google.com/forms/d/e/1FAIpQLSeFzfjSMzB0UlBQr-wibNhaJaN7e6dwMJ5bbFzqnRRKrZMEPA/viewform?usp=header and work through it top to bottom. A few notes on specific questions:
 
 **Session dates.** The form has six date pickers. A class that meets once uses only the first one. A class that meets three times uses the first three, one date per meeting. Leave the rest blank. Important: one class means ONE form submission, even if it meets several times. Please don't submit the form once per date.
 
