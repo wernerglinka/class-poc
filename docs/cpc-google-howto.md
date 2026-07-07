@@ -10,7 +10,7 @@ Everything runs under the dev Google account `devoweb91@gmail.com`. There are th
 2. **A Google Spreadsheet** with three tabs. *Form Responses 1* is the raw, untouched form output. *Offerings* holds one row per offering with all prose, fees, instructor info, and a stable `offeringId` like `staked-side-table-20260715`. *Sessions* holds one row per dated session with a `sessionId` like `staked-side-table-20260715-s2`, plus empty `hostName`, `hostEmail`, and `signedUpAt` columns that the volunteer signup flow fills later.
 3. **An Apps Script project** containing `cpc-class-intake-prototype.gs`. It builds the form and spreadsheet, and its `handleFormSubmit` trigger converts each raw form submission into the normalized Offerings and Sessions rows.
 
-A fourth, optional artifact is not created by the script: a small script bound to the spreadsheet that provides the review sidebar (see "The review sidebar" below).
+A fourth artifact is not created by the script: a small script project bound to the spreadsheet. It provides the review sidebar (see "The review sidebar" below) and the submission notification email (see "Submission notification emails" below).
 
 > The spreadsheet is the editable source of truth. If a submission has a typo, fix it in the Offerings or Sessions tab. A submitted form cannot be edited or resubmitted; all a class owner could do is fill out the form again, which creates a duplicate offering with a `-2` suffix. Never ask for that; make the correction in the spreadsheet.
 
@@ -38,6 +38,8 @@ These are the recurring jobs. Everything below this section is setup work that h
 
 **Add class images.** When an instructor emails images, commit them to the site repo at `/assets/images/classes/<givebutter-campaign-slug>/` with exactly the file names the instructor entered in the form. The build warns about any image it can't find.
 
+**Change notification recipients.** Open the spreadsheet, Extensions > Apps Script (the bound "Sheet review" project), then Project Settings (gear icon) > Script Properties > edit the `notifyRecipients` value: a comma-separated list of email addresses, e.g. `ann@example.org, bob@example.org`. Save. No code changes, no redeployment; takes effect on the next submission. With the property missing or empty, no email is sent (a warning appears on the Executions page). ⚠️ **Pending setup step: the property currently holds a placeholder (`werner@glinka.co`); replace it with the real reviewer addresses (up to about four) once they are known.**
+
 ## Adding a field mid-season (no rebuild, no data loss)
 
 Adding a question to the form while classes are live does NOT require a rebuild. The trigger writes rows by column name, not position, so live sheets can grow new columns safely.
@@ -57,7 +59,7 @@ A full rebuild is only for destructive schema changes: renaming or removing colu
 4. Trash the old form and old spreadsheet in Drive, then empty the Drive trash. The old and new files share the same name, and leaving both around is how the wrong one gets deleted later.
 5. Select `buildPrototype` in the function dropdown in the toolbar and click Run. Grant permissions if asked.
 6. Open the execution log. It prints three URLs: the spreadsheet, the form's edit view, and the form's live view. Save these somewhere.
-7. Re-install the review sidebar. It was bound to the old spreadsheet and died with it: open the new spreadsheet, Extensions > Apps Script, paste `Code.gs`, add the `ReviewSidebar` HTML file (see "The review sidebar" below).
+7. Re-install the bound project. It was bound to the old spreadsheet and died with it: open the new spreadsheet, Extensions > Apps Script, paste `Code.gs`, add the `ReviewSidebar` HTML file (see "The review sidebar" below), add `ClassIntakeTrigger.gs` and its installable trigger, and re-add the notification note question to the form (see "Submission notification emails" below).
 8. Run `installBackupTrigger` from the function dropdown. Step 3 deleted the weekly backup trigger along with everything else.
 
 Order matters in steps 3 through 5: triggers first, then old files, then rebuild. Running `buildPrototype` before cleaning up leaves you with two identically named forms and spreadsheets.
@@ -92,6 +94,7 @@ A map of the moving values, for when something needs rotating, or when someone w
 | `buildToken` | Script Properties | Site build environment (`CPC_SHEET_TOKEN` in `.env`) | Builds get the public payload instead of full data (classes vanish from the site) |
 | `volunteerCode` | Script Properties | Volunteer emails | Signups rejected until the new code is announced |
 | `spreadsheetId`, `formId` | Script Properties | Nothing else (managed by `buildPrototype`) | Everything; never edit these by hand |
+| `notifyRecipients` | Script Properties of the bound "Sheet review" project (not the intake project) | Nothing else | Submission notification emails stop (silently, apart from an Executions-page warning) |
 | Form `/viewform` URL | The form (changes on rebuild) | Class owners | Class owners can no longer submit |
 | Spreadsheet URL | Drive (changes on rebuild) | Reviewer bookmarks | Stale bookmarks open the trashed sheet, which still accepts edits until the trash is emptied |
 
@@ -122,7 +125,7 @@ The `offeringId` and `sessionId` columns are referenced by the website and by vo
 
 The `status` column starts as `open`. Set it to whatever the site build understands (for example `full` or `cancelled`) to change how the class renders. A submission whose dates could not be parsed arrives with status `needs-review`; fix the Sessions rows by hand and flip the status.
 
-**Every new submission requires approval before it can appear anywhere.** The `approved` column in Offerings arrives empty, and the web app excludes unapproved offerings from both the build payload and the public availability payload; the form is publicly reachable, so this is the spam gate. Review the submission and type `yes` in the `approved` cell to publish it (case does not matter). Anything else, or an empty cell, keeps it invisible to the website. To get notified of new submissions by email, set `ADMIN_NOTIFICATION_EMAIL` near the top of `cpc-class-intake-prototype.gs` to the reviewer's address and save; leave it empty to disable.
+**Every new submission requires approval before it can appear anywhere.** The `approved` column in Offerings arrives empty, and the web app excludes unapproved offerings from both the build payload and the public availability payload; the form is publicly reachable, so this is the spam gate. Review the submission and type `yes` in the `approved` cell to publish it (case does not matter). Anything else, or an empty cell, keeps it invisible to the website. New-submission email notifications are handled by the bound project's `ClassIntakeTrigger.gs` (see "Submission notification emails" below). The intake script's older `ADMIN_NOTIFICATION_EMAIL` constant must stay empty; setting it would send a second, redundant email per submission.
 
 ## Known pitfalls
 
@@ -166,8 +169,23 @@ To operate: click any cell in a row, open Review > Open row viewer, and the side
 
 Maintenance is nearly zero. Field labels come from the header row at read time, so adding columns (including via `migrateSheets`) requires no sidebar changes. The one thing that breaks it is a full rebuild: `buildPrototype` creates a brand-new spreadsheet, and the bound sidebar script dies with the old one. Re-install the two files into the new spreadsheet after every rebuild; it is a two-minute paste job, but it is not automatic.
 
+## Submission notification emails
+
+Every form submission triggers a notification email to a short list of reviewers. The email contains all submitted facts in column order, the offering ID (same slug convention as the Offerings tab), and, when the class owner filled it in, their optional message from the form's last question ("Note for the announcement email"). That question is optional and feeds only the email; the offerings pipeline ignores it.
+
+The mechanism lives in the spreadsheet-bound "Sheet review" project, in `ClassIntakeTrigger.gs` (repo copy in `google-scripts/review-sidebar/`), wired to an installable "On form submit" trigger. It writes nothing to the sheet; the intake project's `handleFormSubmit` remains the only writer. Recipients live in the bound project's `notifyRecipients` Script Property as a comma-separated list, so an admin can change them from Project Settings without touching code (see "Change notification recipients" under Routine tasks). Note this is the bound project's Script Properties, not the intake project's, which has its own. ⚠️ **The property still holds a placeholder address; set the real reviewer emails once they are known.**
+
+The email is sent from the Google account that owns the trigger, so the trigger should be installed by the org account in production. Quota is generous for this use: 100 recipients/day on a consumer Gmail account, 1,500/day on Workspace.
+
+Two rebuild caveats, both consequences of `buildPrototype` creating a brand-new form and spreadsheet:
+
+1. The bound project dies with the old spreadsheet, exactly like the review sidebar, taking its Script Properties with it. After a rebuild, paste `ClassIntakeTrigger.gs` into the new bound project, re-create the `notifyRecipients` Script Property (Project Settings > Script Properties), and re-create the installable trigger (Triggers > Add Trigger > function `onFormSubmit`, event source "From spreadsheet", event type "On form submit"; a simple trigger cannot send email).
+2. The "Note for the announcement email" question was added to the live form by hand and is not part of `createIntakeForm`, so a rebuilt form will not have it. Re-add it manually (Paragraph type, optional, at the end of the form), or fold it into the intake script's form builder before the next rebuild.
+
 ## Still to build
 
 The Metalsmith plugin that fetches the token-gated GET at build time, and the class page signup JavaScript that does the public GET on load and the POST on submit.
+
+The real recipient list for submission notification emails: replace the placeholder in the bound project's `notifyRecipients` Script Property once the reviewer addresses are known (see "Submission notification emails").
 
 For production, rerun the whole build under the org's own Google account rather than the dev account. The procedure is identical, including the web app deployment.

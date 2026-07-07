@@ -23,6 +23,9 @@
     container-type: inline-size;
 
     .text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       background-color: var(--glass-background);
       box-shadow: var(--color-shadow);
       backdrop-filter: var(--glass-backdrop-filter);
@@ -52,7 +55,6 @@
       some breathing room against the offset glass card next to it.
     */
     .media.is-text {
-      display: block;
       border: none;
       overflow: visible;
       padding: var(--space-s-m);
