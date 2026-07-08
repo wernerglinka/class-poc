@@ -1,0 +1,361 @@
+<!--
+  CPC Class Intake — edit modal dialog.
+
+  Rendered by openEditModal() in edit-modal.gs. The form is built entirely
+  from the payload injected below, so this file never needs to change when
+  columns are added or reordered.
+
+  Validation is advisory: hints appear next to fields whose values look
+  wrong for their type, but Submit is never blocked. The reviewer decides.
+-->
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    color: #202124;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  form {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px 20px;
+    align-content: start;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .field--wide {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-weight: 600;
+    color: #5f6368;
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    padding: 6px 8px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: -1px;
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  input[readonly] {
+    background: #f1f3f4;
+    color: #5f6368;
+  }
+
+  .field.has-warning input,
+  .field.has-warning textarea {
+    border-color: #f29900;
+  }
+
+  .hint {
+    color: #b06000;
+    min-height: 1em;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid #dadce0;
+    background: #fff;
+  }
+
+  .warning-summary {
+    color: #b06000;
+    margin-right: auto;
+  }
+
+  .status-message {
+    color: #d93025;
+  }
+
+  button {
+    font: inherit;
+    padding: 8px 24px;
+    border-radius: 4px;
+    border: 1px solid #dadce0;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  button.primary {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+</style>
+
+<form id="edit-form" novalidate></form>
+
+<footer>
+  <span class="warning-summary" id="warning-summary"></span>
+  <span class="status-message" id="status-message"></span>
+  <button type="button" id="cancel-button">Cancel</button>
+  <button type="button" class="primary" id="submit-button">Submit</button>
+</footer>
+
+<script>
+  // Server-rendered JSON; "<" is escaped in edit-modal.gs so this cannot
+  // terminate the script block early.
+  const payload = <?!= payloadJson ?>;
+
+  /**
+   * Advisory validators by field type. Each returns null when the value
+   * looks right, or a hint string when it does not. Empty values are
+   * never flagged — many fields are legitimately blank.
+   */
+  const VALIDATORS = {
+    number: (value) =>
+      /^\d+(\.\d+)?$/.test(value) ? null : 'Expected a number only, e.g. 64',
+    date: (value) => (isPlausibleDate(value) ? null : 'Expected a date like 7/10/2026'),
+    time: (value) =>
+      /^\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?$/i.test(value.trim())
+        ? null
+        : 'Expected a time like 1:00 PM',
+    email: (value) =>
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+        ? null
+        : 'Does not look like an email address',
+    url: (value) =>
+      /^https?:\/\/\S+$/.test(value.trim())
+        ? null
+        : 'Expected a full URL starting with https://',
+  };
+
+  const WIDE_TYPES = ['textarea'];
+
+  /**
+   * Check that a string parses as a real calendar date.
+   * Accepts M/D/YYYY and YYYY-MM-DD.
+   *
+   * @param {string} value - Raw field value
+   * @returns {boolean} True when the value is a plausible date
+   */
+  function isPlausibleDate(value) {
+    const trimmed = value.trim();
+    const isUsFormat = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed);
+    const isIsoFormat = /^\d{4}-\d{2}-\d{2}$/.test(trimmed);
+    if (!isUsFormat && !isIsoFormat) {
+      return false;
+    }
+    return !Number.isNaN(new Date(trimmed).getTime());
+  }
+
+  /**
+   * Run the validator for a field type against a value.
+   *
+   * @param {string} type - Field type from the config
+   * @param {string} value - Current input value
+   * @returns {string|null} Hint text, or null when the value is fine
+   */
+  function validate(type, value) {
+    if (value.trim() === '' || !VALIDATORS[type]) {
+      return null;
+    }
+    return VALIDATORS[type](value);
+  }
+
+  /**
+   * Build the DOM for one field.
+   *
+   * @param {Object} field - Field descriptor from the payload
+   * @param {number} index - Field position, used for element ids
+   * @returns {HTMLElement} Wrapper element containing label, input, hint
+   */
+  function createFieldElement(field, index) {
+    const wrapper = document.createElement('div');
+    wrapper.className = WIDE_TYPES.includes(field.type) ? 'field field--wide' : 'field';
+
+    const label = document.createElement('label');
+    label.textContent = field.label;
+    label.htmlFor = `field-${index}`;
+
+    const input = createInputElement(field, index);
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+
+    input.addEventListener('blur', () => refreshFieldState(wrapper, input, hint, field.type));
+
+    wrapper.append(label, input, hint);
+    refreshFieldState(wrapper, input, hint, field.type);
+    return wrapper;
+  }
+
+  /**
+   * Build the input or textarea for a field, including datalist suggestions.
+   *
+   * @param {Object} field - Field descriptor from the payload
+   * @param {number} index - Field position, used for element ids
+   * @returns {HTMLInputElement|HTMLTextAreaElement} Input element
+   */
+  function createInputElement(field, index) {
+    const input =
+      field.type === 'textarea'
+        ? document.createElement('textarea')
+        : document.createElement('input');
+
+    input.id = `field-${index}`;
+    input.value = field.value;
+    input.dataset.header = field.header;
+    input.dataset.initialValue = field.value;
+
+    if (field.type === 'readonly') {
+      input.readOnly = true;
+      input.tabIndex = -1;
+    }
+
+    if (field.options) {
+      const datalist = document.createElement('datalist');
+      datalist.id = `options-${index}`;
+      field.options.forEach((option) => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        datalist.append(optionElement);
+      });
+      input.setAttribute('list', datalist.id);
+      document.body.append(datalist);
+    }
+
+    return input;
+  }
+
+  /**
+   * Re-validate one field and update its warning state, then the summary.
+   *
+   * @param {HTMLElement} wrapper - Field wrapper element
+   * @param {HTMLInputElement|HTMLTextAreaElement} input - Input element
+   * @param {HTMLElement} hint - Hint element
+   * @param {string} type - Field type from the config
+   */
+  function refreshFieldState(wrapper, input, hint, type) {
+    const warning = validate(type, input.value);
+    hint.textContent = warning ?? '';
+    wrapper.classList.toggle('has-warning', warning !== null);
+    refreshWarningSummary();
+  }
+
+  /**
+   * Update the footer warning count.
+   */
+  function refreshWarningSummary() {
+    const count = document.querySelectorAll('.field.has-warning').length;
+    const summary = document.getElementById('warning-summary');
+    summary.textContent =
+      count === 0
+        ? ''
+        : `${count} field${count === 1 ? '' : 's'} flagged — you can still submit`;
+  }
+
+  /**
+   * Collect fields whose values differ from what was loaded.
+   *
+   * @returns {Object<string, string>} Header → new value, changed fields only
+   */
+  function collectChangedValues() {
+    const inputs = document.querySelectorAll('[data-header]');
+    return Array.from(inputs).reduce((changed, input) => {
+      if (input.readOnly || input.value === input.dataset.initialValue) {
+        return changed;
+      }
+      return { ...changed, [input.dataset.header]: input.value };
+    }, {});
+  }
+
+  /**
+   * Submit changed values to the server, then close the dialog.
+   */
+  function handleSubmit() {
+    const changedValues = collectChangedValues();
+
+    if (Object.keys(changedValues).length === 0) {
+      google.script.host.close();
+      return;
+    }
+
+    setBusy(true);
+    google.script.run
+      .withSuccessHandler(() => google.script.host.close())
+      .withFailureHandler((error) => {
+        setBusy(false);
+        document.getElementById('status-message').textContent = `Save failed: ${error.message}`;
+      })
+      .saveRow(payload.rowNumber, changedValues);
+  }
+
+  /**
+   * Toggle the footer buttons while a save is in flight.
+   *
+   * @param {boolean} busy - True while saving
+   */
+  function setBusy(busy) {
+    document.getElementById('submit-button').disabled = busy;
+    document.getElementById('cancel-button').disabled = busy;
+    document.getElementById('submit-button').textContent = busy ? 'Saving…' : 'Submit';
+  }
+
+  const TEXTAREA_MAX_HEIGHT = 420;
+
+  /**
+   * Grow each textarea to fit its existing content, up to a cap.
+   * Must run after the form is in the DOM — scrollHeight is 0 on
+   * detached nodes. The CSS min-height still applies as the floor,
+   * and manual resizing stays available.
+   */
+  function autoSizeTextareas() {
+    document.querySelectorAll('textarea').forEach((textarea) => {
+      textarea.style.height = `${Math.min(textarea.scrollHeight + 2, TEXTAREA_MAX_HEIGHT)}px`;
+    });
+  }
+
+  /**
+   * Render the form and wire up the footer buttons.
+   */
+  function initialize() {
+    const form = document.getElementById('edit-form');
+    payload.fields.forEach((field, index) => form.append(createFieldElement(field, index)));
+    autoSizeTextareas();
+
+    document.getElementById('submit-button').addEventListener('click', handleSubmit);
+    document
+      .getElementById('cancel-button')
+      .addEventListener('click', () => google.script.host.close());
+  }
+
+  initialize();
+</script>

@@ -1,0 +1,669 @@
+<!--
+  CPC Class Intake — edit modal dialog.
+
+  Rendered by showModal() in review.gs for both editing an existing
+  offering ("edit" mode) and creating one from scratch ("new" mode).
+  Offering fields render from the payload, sessions render as an
+  editable list joined from the Sessions sheet. Host columns are shown
+  read-only: volunteer signups belong to the web-app write path.
+
+  Validation is advisory: hints appear next to fields whose values look
+  wrong for their type, but Submit is never blocked. The two exceptions
+  are structural, not advisory: a new class needs a title (the offering
+  ID derives from it) and a new session needs a date.
+-->
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    color: #202124;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px 20px;
+    align-content: start;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .field--wide {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-weight: 600;
+    color: #5f6368;
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    padding: 6px 8px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+  }
+
+  input:focus,
+  textarea:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: -1px;
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  input[readonly] {
+    background: #f1f3f4;
+    color: #5f6368;
+  }
+
+  .has-warning input,
+  .has-warning textarea {
+    border-color: #f29900;
+  }
+
+  .hint {
+    color: #b06000;
+    min-height: 1em;
+  }
+
+  /* Sessions */
+  #sessions-section {
+    margin-top: 20px;
+    border-top: 1px solid #dadce0;
+    padding-top: 12px;
+  }
+
+  #sessions-section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #5f6368;
+    margin: 0 0 8px;
+  }
+
+  .session-row {
+    display: grid;
+    grid-template-columns: 130px 90px 90px 1fr 30px;
+    gap: 8px;
+    align-items: start;
+    padding: 4px 0;
+  }
+
+  .session-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .session-host {
+    align-self: center;
+    color: #5f6368;
+  }
+
+  .session-id {
+    color: #9aa0a6;
+    font-size: 11px;
+  }
+
+  .session-remove {
+    align-self: center;
+    border: none;
+    background: none;
+    color: #d93025;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  #add-session {
+    margin-top: 6px;
+    padding: 6px 14px;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid #dadce0;
+    background: #fff;
+  }
+
+  .warning-summary {
+    color: #b06000;
+    margin-right: auto;
+  }
+
+  .status-message {
+    color: #d93025;
+  }
+
+  button {
+    font: inherit;
+    padding: 8px 24px;
+    border-radius: 4px;
+    border: 1px solid #dadce0;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  button.primary {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #fff;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+</style>
+
+<main>
+  <form id="edit-form" novalidate></form>
+
+  <section id="sessions-section">
+    <h2>Sessions</h2>
+    <div id="sessions-list"></div>
+    <button type="button" id="add-session">Add session</button>
+  </section>
+</main>
+
+<footer>
+  <span class="warning-summary" id="warning-summary"></span>
+  <span class="status-message" id="status-message"></span>
+  <button type="button" id="cancel-button">Cancel</button>
+  <button type="button" class="primary" id="submit-button">Submit</button>
+</footer>
+
+<script>
+  // Server-rendered JSON; "<" is escaped in review.gs so this cannot
+  // terminate the script block early.
+  const payload = <?!= payloadJson ?>;
+
+  /** Sheet rows of existing sessions marked for removal. */
+  const removedSheetRows = new Set();
+
+  /**
+   * Advisory validators by field type. Each returns null when the
+   * value looks right, or a hint string when it does not. Empty values
+   * are never flagged — many fields are legitimately blank.
+   */
+  const VALIDATORS = {
+    number: (value) =>
+      /^\d+(\.\d+)?$/.test(value.trim()) ? null : 'Expected a number only, e.g. 64',
+    date: (value) => (isPlausibleDate(value) ? null : 'Expected a date like 2026-07-10'),
+    time: (value) =>
+      /^\d{1,2}:\d{2}(:\d{2})?\s*(am|pm)?$/i.test(value.trim())
+        ? null
+        : 'Expected a time like 18:00 or 6:00 PM',
+    email: (value) =>
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+        ? null
+        : 'Does not look like an email address',
+    url: (value) =>
+      /^https?:\/\/\S+$/.test(value.trim())
+        ? null
+        : 'Expected a full URL starting with https://'
+  };
+
+  const WIDE_TYPES = ['textarea'];
+
+  /**
+   * Check that a string parses as a real calendar date.
+   * Accepts YYYY-MM-DD (canonical) and M/D/YYYY (normalized on save).
+   *
+   * @param {string} value - Raw field value
+   * @returns {boolean} True when the value is a plausible date
+   */
+  function isPlausibleDate(value) {
+    const trimmed = value.trim();
+    const isIsoFormat = /^\d{4}-\d{2}-\d{2}$/.test(trimmed);
+    const isUsFormat = /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed);
+    if (!isIsoFormat && !isUsFormat) {
+      return false;
+    }
+    return !Number.isNaN(new Date(trimmed).getTime());
+  }
+
+  /**
+   * Run the validator for a field type against a value.
+   *
+   * @param {string} type - Field type
+   * @param {string} value - Current input value
+   * @returns {string|null} Hint text, or null when the value is fine
+   */
+  function validate(type, value) {
+    if (value.trim() === '' || !VALIDATORS[type]) {
+      return null;
+    }
+    return VALIDATORS[type](value);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Offering fields                                                   */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Build the DOM for one offering field.
+   *
+   * @param {Object} field - Field descriptor from the payload
+   * @param {number} index - Field position, used for element ids
+   * @returns {HTMLElement} Wrapper containing label, input, hint
+   */
+  function createFieldElement(field, index) {
+    const wrapper = document.createElement('div');
+    wrapper.className = WIDE_TYPES.includes(field.type) ? 'field field--wide' : 'field';
+
+    const label = document.createElement('label');
+    label.textContent = field.label;
+    label.htmlFor = `field-${index}`;
+
+    const input = createInputElement(field, index);
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+
+    input.addEventListener('blur', () => refreshWarning(wrapper, input, hint, field.type));
+
+    wrapper.append(label, input, hint);
+    refreshWarning(wrapper, input, hint, field.type);
+    return wrapper;
+  }
+
+  /**
+   * Build the input or textarea for a field, with datalist suggestions.
+   *
+   * @param {Object} field - Field descriptor from the payload
+   * @param {number} index - Field position, used for element ids
+   * @returns {HTMLInputElement|HTMLTextAreaElement} Input element
+   */
+  function createInputElement(field, index) {
+    const input =
+      field.type === 'textarea'
+        ? document.createElement('textarea')
+        : document.createElement('input');
+
+    input.id = `field-${index}`;
+    input.value = field.value;
+    input.dataset.column = field.column;
+    input.dataset.initialValue = field.value;
+
+    if (field.type === 'readonly') {
+      input.readOnly = true;
+      input.tabIndex = -1;
+    }
+
+    if (field.options) {
+      const datalist = document.createElement('datalist');
+      datalist.id = `options-${index}`;
+      field.options.forEach((option) => {
+        const optionElement = document.createElement('option');
+        optionElement.value = option;
+        datalist.append(optionElement);
+      });
+      input.setAttribute('list', datalist.id);
+      document.body.append(datalist);
+    }
+
+    return input;
+  }
+
+  /**
+   * Re-validate one input and update its warning, then the summary.
+   *
+   * @param {HTMLElement} wrapper - Element carrying the warning class
+   * @param {HTMLInputElement|HTMLTextAreaElement} input - Input element
+   * @param {HTMLElement} hint - Hint element
+   * @param {string} type - Field type
+   */
+  function refreshWarning(wrapper, input, hint, type) {
+    const warning = validate(type, input.value);
+    hint.textContent = warning ?? '';
+    wrapper.classList.toggle('has-warning', warning !== null);
+    refreshWarningSummary();
+  }
+
+  /**
+   * Update the footer warning count.
+   */
+  function refreshWarningSummary() {
+    const count = document.querySelectorAll('.has-warning').length;
+    const summary = document.getElementById('warning-summary');
+    summary.textContent =
+      count === 0
+        ? ''
+        : `${count} field${count === 1 ? '' : 's'} flagged — you can still submit`;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Sessions                                                          */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Build the DOM for one session row.
+   *
+   * @param {Object|null} session - Session from the payload, or null
+   *   for a freshly added row
+   * @returns {HTMLElement} The session row element
+   */
+  function createSessionRow(session) {
+    const row = document.createElement('div');
+    row.className = 'session-row';
+    row.dataset.sheetRow = session === null ? '' : String(session.sheetRow);
+
+    row.append(
+      createSessionInput('sessionDate', 'date', session?.sessionDate ?? '', session),
+      createSessionInput('startTime', 'time', session?.startTime ?? defaultTime('startTime'), session),
+      createSessionInput('endTime', 'time', session?.endTime ?? defaultTime('endTime'), session),
+      createHostCell(session),
+      createRemoveButton(row, session)
+    );
+
+    return row;
+  }
+
+  /**
+   * Build one editable session cell (date or time) with its hint.
+   *
+   * @param {string} name - Session field name
+   * @param {string} type - Validator type ("date" or "time")
+   * @param {string} value - Initial value
+   * @param {Object|null} session - Owning session, for placeholder text
+   * @returns {HTMLElement} The cell element
+   */
+  function createSessionInput(name, type, value, session) {
+    const cell = document.createElement('div');
+    cell.className = 'session-cell';
+
+    const input = document.createElement('input');
+    input.value = value;
+    input.placeholder = type === 'date' ? '2026-07-10' : '18:00';
+    input.dataset.sessionField = name;
+    input.dataset.initialValue = session === null ? '' : value;
+
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+    input.addEventListener('blur', () => refreshWarning(cell, input, hint, type));
+
+    cell.append(input, hint);
+    refreshWarning(cell, input, hint, type);
+    return cell;
+  }
+
+  /**
+   * Build the read-only host cell: volunteer info plus the session ID.
+   *
+   * @param {Object|null} session - Session from the payload
+   * @returns {HTMLElement} The host cell
+   */
+  function createHostCell(session) {
+    const cell = document.createElement('div');
+    cell.className = 'session-cell session-host';
+
+    const host = document.createElement('span');
+    host.textContent =
+      session === null
+        ? 'new session'
+        : session.hostName
+          ? `Host: ${session.hostName} <${session.hostEmail}>`
+          : 'Host slot open';
+
+    cell.append(host);
+
+    if (session !== null) {
+      const id = document.createElement('span');
+      id.className = 'session-id';
+      id.textContent = session.sessionId;
+      cell.append(id);
+    }
+
+    return cell;
+  }
+
+  /**
+   * Build the remove button for a session row. Removing an existing
+   * session with a signed-up host asks for confirmation.
+   *
+   * @param {HTMLElement} row - The session row element
+   * @param {Object|null} session - Session from the payload
+   * @returns {HTMLButtonElement} The remove button
+   */
+  function createRemoveButton(row, session) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'session-remove';
+    button.textContent = '✕';
+    button.title = 'Remove session';
+
+    button.addEventListener('click', () => {
+      const hasHost = session !== null && session.hostName !== '';
+      if (hasHost && !confirm(`This session has a volunteer host (${session.hostName}). Remove it anyway?`)) {
+        return;
+      }
+      if (session !== null) {
+        removedSheetRows.add(session.sheetRow);
+      }
+      row.remove();
+      refreshWarningSummary();
+    });
+
+    return button;
+  }
+
+  /**
+   * Suggest a default time for new session rows: whatever the last
+   * visible session uses, since sessions of one class usually share
+   * times.
+   *
+   * @param {string} name - "startTime" or "endTime"
+   * @returns {string} A time string, possibly empty
+   */
+  function defaultTime(name) {
+    const inputs = document.querySelectorAll(`[data-session-field="${name}"]`);
+    return inputs.length === 0 ? '' : inputs[inputs.length - 1].value;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Collect and submit                                                */
+  /* ---------------------------------------------------------------- */
+
+  /**
+   * Collect offering values to send: changed fields when editing,
+   * all non-empty editable fields when creating.
+   *
+   * @returns {Object<string, string>} Column → value
+   */
+  function collectOfferingValues() {
+    const inputs = document.querySelectorAll('#edit-form [data-column]');
+    return Array.from(inputs).reduce((collected, input) => {
+      if (input.readOnly) {
+        return collected;
+      }
+      const include =
+        payload.mode === 'new'
+          ? input.value.trim() !== ''
+          : input.value !== input.dataset.initialValue;
+      return include ? { ...collected, [input.dataset.column]: input.value } : collected;
+    }, {});
+  }
+
+  /**
+   * Read the three editable values out of one session row.
+   *
+   * @param {HTMLElement} row - Session row element
+   * @returns {Object<string, string>} Field name → value
+   */
+  function readSessionRowValues(row) {
+    return Array.from(row.querySelectorAll('[data-session-field]')).reduce(
+      (values, input) => ({ ...values, [input.dataset.sessionField]: input.value }),
+      {}
+    );
+  }
+
+  /**
+   * Collect session changes: updates to existing rows, additions, and
+   * removals.
+   *
+   * @returns {{updated: Object[], added: Object[], removed: number[]}} Changes
+   */
+  function collectSessionChanges() {
+    const rows = Array.from(document.querySelectorAll('.session-row'));
+
+    const updated = rows
+      .filter((row) => row.dataset.sheetRow !== '')
+      .filter((row) =>
+        Array.from(row.querySelectorAll('[data-session-field]')).some(
+          (input) => input.value !== input.dataset.initialValue
+        )
+      )
+      .map((row) => ({ sheetRow: Number(row.dataset.sheetRow), ...readSessionRowValues(row) }));
+
+    const added = rows
+      .filter((row) => row.dataset.sheetRow === '')
+      .map(readSessionRowValues)
+      .filter((values) => values.sessionDate.trim() !== '');
+
+    return { updated: updated, added: added, removed: [...removedSheetRows] };
+  }
+
+  /**
+   * Structural checks that do block submission: a new class needs a
+   * title, and an added session row with any content needs a date.
+   *
+   * @returns {string|null} Blocking message, or null when fine
+   */
+  function findBlockingProblem() {
+    if (payload.mode === 'new') {
+      const titleInput = document.querySelector('[data-column="classTitle"]');
+      if (titleInput !== null && titleInput.value.trim() === '') {
+        titleInput.focus();
+        return 'Class title is required — the offering ID derives from it.';
+      }
+    }
+
+    const incompleteNewSession = Array.from(document.querySelectorAll('.session-row'))
+      .filter((row) => row.dataset.sheetRow === '')
+      .map(readSessionRowValues)
+      .some(
+        (values) =>
+          values.sessionDate.trim() === '' &&
+          (values.startTime.trim() !== '' || values.endTime.trim() !== '')
+      );
+
+    return incompleteNewSession ? 'A new session row is missing its date.' : null;
+  }
+
+  /**
+   * Submit changes to the server, then close the dialog.
+   */
+  function handleSubmit() {
+    const problem = findBlockingProblem();
+    if (problem !== null) {
+      document.getElementById('status-message').textContent = problem;
+      return;
+    }
+
+    const request = {
+      mode: payload.mode,
+      rowNumber: payload.rowNumber,
+      offeringId: payload.offeringId,
+      offering: collectOfferingValues(),
+      sessions: collectSessionChanges()
+    };
+
+    const nothingChanged =
+      payload.mode === 'edit' &&
+      Object.keys(request.offering).length === 0 &&
+      request.sessions.updated.length === 0 &&
+      request.sessions.added.length === 0 &&
+      request.sessions.removed.length === 0;
+
+    if (nothingChanged) {
+      google.script.host.close();
+      return;
+    }
+
+    setBusy(true);
+    google.script.run
+      .withSuccessHandler(() => google.script.host.close())
+      .withFailureHandler((error) => {
+        setBusy(false);
+        document.getElementById('status-message').textContent = `Save failed: ${error.message}`;
+      })
+      .saveOffering(request);
+  }
+
+  /**
+   * Toggle the footer buttons while a save is in flight.
+   *
+   * @param {boolean} busy - True while saving
+   */
+  function setBusy(busy) {
+    document.getElementById('submit-button').disabled = busy;
+    document.getElementById('cancel-button').disabled = busy;
+    document.getElementById('submit-button').textContent = busy ? 'Saving…' : 'Submit';
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Initialize                                                        */
+  /* ---------------------------------------------------------------- */
+
+  const TEXTAREA_MAX_HEIGHT = 420;
+
+  /**
+   * Grow each textarea to fit its existing content, up to a cap.
+   * Must run after the form is in the DOM — scrollHeight is 0 on
+   * detached nodes. The CSS min-height stays the floor, and manual
+   * resizing stays available.
+   */
+  function autoSizeTextareas() {
+    document.querySelectorAll('textarea').forEach((textarea) => {
+      textarea.style.height = `${Math.min(textarea.scrollHeight + 2, TEXTAREA_MAX_HEIGHT)}px`;
+    });
+  }
+
+  /**
+   * Render the form and sessions, wire up the buttons.
+   */
+  function initialize() {
+    const form = document.getElementById('edit-form');
+    payload.fields.forEach((field, index) => form.append(createFieldElement(field, index)));
+
+    const sessionsList = document.getElementById('sessions-list');
+    payload.sessions.forEach((session) => sessionsList.append(createSessionRow(session)));
+
+    autoSizeTextareas();
+
+    document
+      .getElementById('add-session')
+      .addEventListener('click', () => sessionsList.append(createSessionRow(null)));
+    document.getElementById('submit-button').addEventListener('click', handleSubmit);
+    document
+      .getElementById('cancel-button')
+      .addEventListener('click', () => google.script.host.close());
+  }
+
+  initialize();
+</script>
