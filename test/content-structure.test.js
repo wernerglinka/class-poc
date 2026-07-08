@@ -24,7 +24,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -289,7 +289,9 @@ describe('Content Structure', () => {
     const blogDir = join(srcDir, 'blog');
 
     it('should have valid blog post structure', () => {
-      if (!statSync(blogDir).isDirectory()) {
+      // statSync throws on a missing path, so check existence first;
+      // this project has no blog, making this test a deliberate no-op.
+      if (!existsSync(blogDir) || !statSync(blogDir).isDirectory()) {
         return; // Skip if no blog directory
       }
 

@@ -36,7 +36,7 @@ These are the recurring jobs. Everything below this section is setup work that h
 
 **Clear a host signup** (volunteer backs out). In the Sessions tab, clear that row's `hostName`, `hostEmail`, and `signedUpAt` cells. The slot immediately shows "(host needed)" again on the live page.
 
-**Add class images.** When an instructor emails images, commit them to the site repo at `/assets/images/classes/<givebutter-campaign-slug>/` with exactly the file names the instructor entered in the form. The build warns about any image it can't find.
+**Add class images.** When an instructor emails images, look up the offering's `imageFolder` cell in the Offerings sheet (auto-filled from the class title; edit it there if it's unwieldy or collides) and commit the files to the site repo at `/assets/images/classes/<imageFolder>/` with exactly the file names the instructor entered in the form. The build warns about any image it can't find.
 
 **Change notification recipients.** Open the spreadsheet, Extensions > Apps Script (the bound "Sheet review" project), then Project Settings (gear icon) > Script Properties > edit the `notifyRecipients` value: a comma-separated list of email addresses, e.g. `ann@example.org, bob@example.org`. Save. No code changes, no redeployment; takes effect on the next submission. With the property missing or empty, no email is sent (a warning appears on the Executions page). ⚠️ **Pending setup step: the property currently holds a placeholder (`werner@glinka.co`); replace it with the real reviewer addresses (up to about four) once they are known.**
 
@@ -129,7 +129,7 @@ The `status` column starts as `open`. Set it to whatever the site build understa
 
 ## Known pitfalls
 
-Images travel outside the Google pipeline entirely, by design. Instructors email their image files to the webmaster and enter only the file names in the form ("side-table.jpg"). The webmaster commits the files to the site repo at `/assets/images/classes/<givebutter-campaign-slug>/` (for an offering without a Givebutter campaign yet, the folder is the slugified class title, e.g. `staked-side-table`). The build resolves the file names against that folder and prints a warning for any image that has not arrived, omitting it from the page rather than shipping a broken reference. The Forms API cannot create file-upload questions, and a manual upload question would force instructors to sign in to Google.
+Images travel outside the Google pipeline entirely, by design. Instructors email their image files to the webmaster and enter only the file names in the form ("side-table.jpg"). The webmaster commits the files to the site repo at `/assets/images/classes/<imageFolder>/`, where `<imageFolder>` is the offering's `imageFolder` cell in the Offerings sheet (auto-filled with the slugified class title, webmaster-editable). Givebutter slugs are deliberately not used as folder names; they proved non-unique in practice. The build resolves the file names against that folder and prints a warning for any image that has not arrived, omitting it from the page rather than shipping a broken reference. The Forms API cannot create file-upload questions, and a manual upload question would force instructors to sign in to Google.
 
 Trashed Google files remain reachable by ID until the trash is emptied. A "deleted" spreadsheet can still silently receive trigger writes, which makes debugging confusing. Empty the trash after cleanup.
 

@@ -98,6 +98,7 @@ const OFFERING_COLUMNS = [
   'instructorLinks',
   'classImage',
   'instructorPhoto',
+  'imageFolder',
   'givebutterUrl',
   'submitterName',
   'submitterEmail',
@@ -384,6 +385,13 @@ function buildOfferingRecord(offeringId, status, answers) {
     instructorLinks: answers.instructorLinks,
     classImage: answers.classImage,
     instructorPhoto: answers.instructorPhoto,
+    // Repo folder for this offering's images:
+    // /assets/images/classes/<imageFolder>/. Stamped from the class
+    // title; the webmaster edits this cell to shorten it or resolve a
+    // collision. Deliberately not a form question (folder naming is
+    // the webmaster's concern), and deliberately not the Givebutter
+    // slug (proved non-unique in practice).
+    imageFolder: slugify(answers.classTitle),
     givebutterUrl: answers.givebutterUrl,
     submitterName: answers.submitterName,
     submitterEmail: answers.submitterEmail,
@@ -481,4 +489,62 @@ function readColumnValues(sheet, columnIndex) {
     .getRange(2, columnIndex, lastRow - 1, 1)
     .getValues()
     .map((row) => String(row[0]));
+}
+
+/* ------------------------------------------------------------------ */
+/* Live schema migration (additive changes without data loss)          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Bring the live spreadsheet's columns up to date with the column
+ * constants above, WITHOUT touching existing data. Run this after
+ * adding a field mid-season instead of rebuilding:
+ *
+ * 1. Add the new question to the live form in the Forms editor (skip
+ *    this step for sheet-only columns like imageFolder).
+ * 2. Add the field to QUESTIONS, OFFERING_COLUMNS (or
+ *    SESSION_COLUMNS), and buildOfferingRecord above; also add it to
+ *    the form builder so future rebuilds match.
+ * 3. Save, then run this function once. It appends any missing
+ *    columns to the live sheets. Existing rows keep all their data
+ *    (including host signups) and show empty cells in the new column.
+ *
+ * Because appendObjectRow writes by header name, column order never
+ * matters. Renaming or removing columns is NOT handled here; those
+ * are destructive changes and still require the full rebuild, ideally
+ * off-season.
+ */
+function migrateSheets() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  syncSheetColumns(spreadsheet.getSheetByName('Offerings'), OFFERING_COLUMNS);
+  syncSheetColumns(spreadsheet.getSheetByName('Sessions'), SESSION_COLUMNS);
+}
+
+/**
+ * Append columns that exist in the column constants but not yet in
+ * the live sheet, and log anything unexpected the other way around.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Live sheet
+ * @param {string[]} columns - Expected column names
+ */
+function syncSheetColumns(sheet, columns) {
+  const headers = readHeaderColumns(sheet);
+
+  const missingInSheet = columns.filter((columnName) => !headers.includes(columnName));
+  missingInSheet.forEach((columnName) => {
+    sheet.getRange(1, sheet.getLastColumn() + 1).setValue(columnName).setFontWeight('bold');
+    Logger.log('%s: added column "%s"', sheet.getName(), columnName);
+  });
+
+  const unknownInSheet = headers.filter((header) => !columns.includes(header));
+  unknownInSheet.forEach((header) => {
+    Logger.log(
+      '%s: column "%s" exists in the sheet but not in the script; left untouched (rename/removal needs a rebuild)',
+      sheet.getName(),
+      header
+    );
+  });
+
+  if (missingInSheet.length === 0 && unknownInSheet.length === 0) {
+    Logger.log('%s: columns already in sync', sheet.getName());
+  }
 }

@@ -384,10 +384,28 @@ describe('image resolution', () => {
     assert.equal(extractGivebutterSlug('not a url'), '');
   });
 
-  it('prefers the campaign slug for the image folder, falling back to the title slug', () => {
-    assert.equal(imageFolderSlug(sampleOffering), 'example');
-    assert.equal(imageFolderSlug({ ...sampleOffering, givebutterUrl: '' }), 'staked-side-table');
+  it('prefers the sheet imageFolder column, falling back to the title slug', () => {
+    assert.equal(imageFolderSlug({ ...sampleOffering, imageFolder: 'summer-herbs' }), 'summer-herbs');
+    assert.equal(
+      imageFolderSlug({ ...sampleOffering, imageFolder: 'Summer Herbs ' }),
+      'summer-herbs',
+      'webmaster-entered folder names are slugified defensively'
+    );
+    assert.equal(imageFolderSlug(sampleOffering), 'staked-side-table', 'title slug when column empty');
+    assert.equal(
+      imageFolderSlug({ ...sampleOffering, imageFolder: undefined }),
+      'staked-side-table',
+      'rows predating the column fall back to the title slug'
+    );
     assert.equal(slugify('Appliqué as Adornment'), 'applique-as-adornment');
+  });
+
+  it('never derives the image folder from the Givebutter URL', () => {
+    // Givebutter slugs are non-unique in practice; the folder must not
+    // change when the campaign URL does.
+    const withCampaign = imageFolderSlug(sampleOffering);
+    const withoutCampaign = imageFolderSlug({ ...sampleOffering, givebutterUrl: '' });
+    assert.equal(withCampaign, withoutCampaign);
   });
 
   it('resolves bare file names into the class image folder', () => {
@@ -413,7 +431,7 @@ describe('image resolution', () => {
       (sitePath) => sitePath.endsWith('side-table.jpg'),
       (message) => warnings.push(message)
     );
-    assert.equal(resolved.classImageUrl, '/assets/images/classes/example/side-table.jpg');
+    assert.equal(resolved.classImageUrl, '/assets/images/classes/staked-side-table/side-table.jpg');
     assert.equal(resolved.instructors[0].photoUrl, '');
     assert.equal(warnings.length, 1);
     assert.match(warnings[0], /missing\.jpg/);

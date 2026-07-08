@@ -347,15 +347,20 @@ export function extractGivebutterWidgetId(givebutterUrl) {
 }
 
 /**
- * The image folder for an offering: the Givebutter campaign slug when
- * one exists (the canonical identifier across systems), otherwise the
- * slugified class title.
+ * The image folder for an offering. Preference order: the sheet's
+ * imageFolder column (stamped by the intake trigger from the class
+ * title, editable by the webmaster to shorten it or resolve a
+ * collision), then the slugified class title for rows predating that
+ * column. Givebutter slugs are deliberately NOT used here: they
+ * proved non-unique in practice (campaigns get copied casually), and
+ * the only unique part of a Givebutter URL is a random widget id,
+ * which would make meaningless folder names.
  * @param {Object} offering - Offering record
  * @returns {string} Folder slug
  */
 export function imageFolderSlug(offering) {
-  const campaignSlug = extractGivebutterSlug(offering.givebutterUrl);
-  return campaignSlug !== '' ? campaignSlug : slugify(offering.classTitle);
+  const explicitFolder = slugify(offering.imageFolder ?? '');
+  return explicitFolder !== '' ? explicitFolder : slugify(offering.classTitle);
 }
 
 /**
