@@ -49,7 +49,14 @@ const QUESTIONS = {
   instructorLinks: 'Instructor links (website, Instagram, ...)',
   classImage: 'Class image file name',
   instructorPhoto: 'Instructor photo file name',
-  givebutterUrl: 'Givebutter registration URL'
+  registrationUrl: 'Online registration URL',
+  instructor2Name: 'Second instructor name',
+  instructor2Bio: 'Second instructor bio',
+  instructor2Links: 'Second instructor links (website, Instagram, ...)',
+  instructor2Photo: 'Second instructor photo file name',
+  ageAbilityNote: 'Age & ability notes',
+  whatToBring: 'What to bring',
+  accessibilityNote: 'Accessibility note'
 };
 
 /** Maximum sessions per offering (must match the form's date pickers). */
@@ -79,6 +86,32 @@ const ABILITY_CHOICES = [
   'All levels'
 ];
 
+/**
+ * How a class is scheduled. "sessions" (the default) means dated rows
+ * in the Sessions sheet; "recurring" means an open-ended weekly class
+ * whose schedule lives entirely on the offering row (recurringDay,
+ * recurringStart, recurringEnd, recurringExceptions) with NO Sessions
+ * rows and no volunteer host UI.
+ */
+const SCHEDULE_TYPE_CHOICES = ['sessions', 'recurring'];
+
+/**
+ * How students register. "online-registration" requires a
+ * registrationUrl; "walk-in" renders fee text and no register button.
+ */
+const REGISTRATION_TYPE_CHOICES = ['online-registration', 'walk-in'];
+
+/** Day-of-week choices for recurring classes. */
+const RECURRING_DAY_CHOICES = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday'
+];
+
 const OFFERING_COLUMNS = [
   'offeringId',
   'status',
@@ -99,10 +132,23 @@ const OFFERING_COLUMNS = [
   'classImage',
   'instructorPhoto',
   'imageFolder',
-  'givebutterUrl',
+  'registrationUrl',
   'submitterName',
   'submitterEmail',
-  'submittedAt'
+  'submittedAt',
+  'instructor2Name',
+  'instructor2Bio',
+  'instructor2Links',
+  'instructor2Photo',
+  'ageAbilityNote',
+  'scheduleType',
+  'recurringDay',
+  'recurringStart',
+  'recurringEnd',
+  'recurringExceptions',
+  'registrationType',
+  'whatToBring',
+  'accessibilityNote'
 ];
 
 const SESSION_COLUMNS = [
@@ -310,13 +356,20 @@ function parseTimeAnswer(rawValue) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Build a stable, human-readable offering ID: title slug plus first
- * session date, e.g. "staked-side-table-20260715".
+ * Build a stable, human-readable offering ID. Dated offerings get the
+ * title slug plus first session date ("staked-side-table-20260715");
+ * recurring offerings, which have no sessions, get the slug alone
+ * ("yoga-for-the-people"); a dated offering whose dates failed to
+ * parse gets "-undated" so the gap stays visible.
  * @param {string} classTitle - Class title
  * @param {string|undefined} firstSessionDate - First ISO session date, if any
+ * @param {string} [scheduleType] - "sessions" (default) or "recurring"
  * @returns {string} Offering ID
  */
-function createOfferingId(classTitle, firstSessionDate) {
+function createOfferingId(classTitle, firstSessionDate, scheduleType) {
+  if (scheduleType === 'recurring') {
+    return slugify(classTitle);
+  }
   const datePart =
     firstSessionDate !== undefined && firstSessionDate !== null && firstSessionDate !== ''
       ? firstSessionDate.replace(/-/g, '')
@@ -330,10 +383,11 @@ function createOfferingId(classTitle, firstSessionDate) {
  * @param {string} classTitle - Class title
  * @param {string|undefined} firstSessionDate - First ISO session date, if any
  * @param {string[]} existingIds - Offering IDs already in the sheet
+ * @param {string} [scheduleType] - "sessions" (default) or "recurring"
  * @returns {string} Unique offering ID
  */
-function createUniqueOfferingId(classTitle, firstSessionDate, existingIds) {
-  const baseId = createOfferingId(classTitle, firstSessionDate);
+function createUniqueOfferingId(classTitle, firstSessionDate, existingIds, scheduleType) {
+  const baseId = createOfferingId(classTitle, firstSessionDate, scheduleType);
   if (!existingIds.includes(baseId)) {
     return baseId;
   }
@@ -392,10 +446,25 @@ function buildOfferingRecord(offeringId, status, answers) {
     // the webmaster's concern), and deliberately not the Givebutter
     // slug (proved non-unique in practice).
     imageFolder: slugify(answers.classTitle),
-    givebutterUrl: answers.givebutterUrl,
+    registrationUrl: answers.registrationUrl,
     submitterName: answers.submitterName,
     submitterEmail: answers.submitterEmail,
-    submittedAt: new Date().toISOString()
+    submittedAt: new Date().toISOString(),
+    instructor2Name: answers.instructor2Name,
+    instructor2Bio: answers.instructor2Bio,
+    instructor2Links: answers.instructor2Links,
+    instructor2Photo: answers.instructor2Photo,
+    ageAbilityNote: answers.ageAbilityNote,
+    // Form submissions are always dated, online-registration classes;
+    // recurring and walk-in classes are staff-entered via the modal.
+    scheduleType: 'sessions',
+    recurringDay: '',
+    recurringStart: '',
+    recurringEnd: '',
+    recurringExceptions: '',
+    registrationType: 'online-registration',
+    whatToBring: answers.whatToBring,
+    accessibilityNote: answers.accessibilityNote
   };
 }
 

@@ -46,10 +46,34 @@ const FIELD_CONFIG = {
   instructorLinks: { type: 'textarea', label: 'Instructor links' },
   classImage: { type: 'text', label: 'Class image file name' },
   instructorPhoto: { type: 'text', label: 'Instructor photo file name' },
-  givebutterUrl: { type: 'url', label: 'Givebutter registration URL' },
+  registrationUrl: { type: 'url', label: 'Online registration URL' },
   submitterName: { type: 'text', label: 'Submitter name' },
   submitterEmail: { type: 'email', label: 'Submitter email' },
-  submittedAt: { type: 'readonly', label: 'Submitted at' }
+  submittedAt: { type: 'readonly', label: 'Submitted at' },
+  instructor2Name: { type: 'text', label: 'Second instructor name' },
+  instructor2Bio: { type: 'textarea', label: 'Second instructor bio' },
+  instructor2Links: { type: 'textarea', label: 'Second instructor links' },
+  instructor2Photo: { type: 'text', label: 'Second instructor photo file name' },
+  ageAbilityNote: { type: 'textarea', label: 'Age & ability notes' },
+  scheduleType: {
+    type: 'text',
+    label: 'Schedule type ("recurring" = weekly class, no session dates)',
+    options: SCHEDULE_TYPE_CHOICES
+  },
+  recurringDay: { type: 'text', label: 'Recurring: day of week', options: RECURRING_DAY_CHOICES },
+  recurringStart: { type: 'text', label: 'Recurring: start time (e.g. 12:00)' },
+  recurringEnd: { type: 'text', label: 'Recurring: end time (e.g. 13:00)' },
+  recurringExceptions: {
+    type: 'text',
+    label: 'Recurring: skip dates (comma-separated, e.g. 2026-07-03)'
+  },
+  registrationType: {
+    type: 'text',
+    label: 'Registration type ("walk-in" = no online registration)',
+    options: REGISTRATION_TYPE_CHOICES
+  },
+  whatToBring: { type: 'textarea', label: 'What to bring' },
+  accessibilityNote: { type: 'textarea', label: 'Accessibility note (class-specific)' }
 };
 
 /* ------------------------------------------------------------------ */
@@ -272,18 +296,25 @@ function createOfferingFromModal(request) {
     .filter((session) => session.sessionDate !== '')
     .sort((first, second) => first.sessionDate.localeCompare(second.sessionDate));
 
+  // A recurring class legitimately has no sessions: its ID is the bare
+  // title slug and its status is "open". A dated class without parseable
+  // sessions still lands as "needs-review".
+  const scheduleType = String(request.offering.scheduleType ?? '').trim();
+  const isRecurring = scheduleType === 'recurring';
+
   const existingIds = readColumnValues(offeringsSheet, 1);
   const offeringId = createUniqueOfferingId(
     classTitle,
     sessions.length > 0 ? sessions[0].sessionDate : undefined,
-    existingIds
+    existingIds,
+    scheduleType
   );
 
   appendObjectRow(offeringsSheet, {
     ...request.offering,
     offeringId: offeringId,
     classTitle: classTitle,
-    status: sessions.length > 0 ? 'open' : 'needs-review',
+    status: sessions.length > 0 || isRecurring ? 'open' : 'needs-review',
     approved: request.offering.approved ?? '',
     submittedAt: new Date().toISOString()
   });
@@ -492,12 +523,15 @@ function highlightExpiredClasses() {
 
   const headers = readHeaderColumns(offeringsSheet);
   const idIndex = headers.indexOf('offeringId');
+  const scheduleTypeIndex = headers.indexOf('scheduleType');
   const dataRange = offeringsSheet.getRange(2, 1, lastRow - 1, headers.length);
   const rows = dataRange.getDisplayValues();
 
   const backgrounds = rows.map((row) => {
+    // Recurring classes have no session dates and never expire.
+    const isRecurring = scheduleTypeIndex !== -1 && row[scheduleTypeIndex].trim() === 'recurring';
     const latestDate = latestSessionDates[row[idIndex]];
-    const expired = latestDate !== undefined && latestDate < todayIso;
+    const expired = !isRecurring && latestDate !== undefined && latestDate < todayIso;
     return headers.map(() => (expired ? EXPIRED_BACKGROUND : null));
   });
 

@@ -60,8 +60,7 @@ export function validateOptions(options) {
  */
 export function findFirstSessionDate(offering) {
   return offering.sessions.reduce(
-    (earliest, session) =>
-      earliest === '' || session.sessionDate < earliest ? session.sessionDate : earliest,
+    (earliest, session) => (earliest === '' || session.sessionDate < earliest ? session.sessionDate : earliest),
     ''
   );
 }

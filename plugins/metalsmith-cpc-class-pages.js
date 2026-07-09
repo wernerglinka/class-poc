@@ -88,6 +88,65 @@ const parseIsoDate = (isoDate) => new Date(`${isoDate}T00:00:00`);
 const formatDate = (isoDate, formatOptions) => parseIsoDate(isoDate).toLocaleDateString('en-US', formatOptions);
 
 /**
+ * The offering's schedule type, defaulting legacy rows (empty cell)
+ * to dated sessions.
+ * @param {Object} offering - Offering record
+ * @returns {string} "recurring" or "sessions"
+ */
+export function normalizeScheduleType(offering) {
+  return String(offering.scheduleType ?? '').trim() === 'recurring' ? 'recurring' : 'sessions';
+}
+
+/**
+ * The offering's registration type, defaulting legacy rows (empty
+ * cell) to online registration.
+ * @param {Object} offering - Offering record
+ * @returns {string} "walk-in" or "online-registration"
+ */
+export function normalizeRegistrationType(offering) {
+  return String(offering.registrationType ?? '').trim() === 'walk-in' ? 'walk-in' : 'online-registration';
+}
+
+/**
+ * Build the schedule line for a recurring offering, e.g.
+ * "Every Friday, 12:00 PM - 1:00 PM".
+ * @param {Object} offering - Offering record (recurringDay/Start/End)
+ * @returns {string} Schedule line, or '' when the day is missing
+ */
+export function buildRecurringScheduleLine(offering) {
+  const day = String(offering.recurringDay ?? '').trim();
+  if (day === '') {
+    return '';
+  }
+  const start = String(offering.recurringStart ?? '').trim();
+  const end = String(offering.recurringEnd ?? '').trim();
+  const times = start !== '' && end !== '' ? `, ${formatTime(start)} - ${formatTime(end)}` : '';
+  return `Every ${day}${times}`;
+}
+
+/**
+ * Format a recurring offering's skip dates for display, e.g.
+ * "No class on July 3 or September 4". Unparseable entries are
+ * dropped rather than rendered raw.
+ * @param {string} recurringExceptions - Comma-separated ISO dates
+ * @returns {string} Display sentence, or '' when there are none
+ */
+export function formatRecurringExceptions(recurringExceptions) {
+  const dates = String(recurringExceptions ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry))
+    .sort()
+    .map((isoDate) => formatDate(isoDate, { month: 'long', day: 'numeric' }));
+
+  if (dates.length === 0) {
+    return '';
+  }
+  const list = dates.length === 1 ? dates[0] : `${dates.slice(0, -1).join(', ')} or ${dates[dates.length - 1]}`;
+  return `No class on ${list}`;
+}
+
+/**
  * Build the human-readable schedule line for an offering, in the style
  * of the live CPC site. Single session: "Friday, July 10, 2026: 1:00 PM
  * - 4:00 PM". Multiple sessions on the same weekday: "Wednesdays, July
@@ -147,8 +206,26 @@ export function buildScheduleLine(sessions) {
 export function buildDetailsProse(offering, cpcData) {
   const items = [];
 
+  // Recurring classes carry their schedule on the offering row; dated
+  // classes render theirs through the session list instead.
+  if (normalizeScheduleType(offering) === 'recurring') {
+    const scheduleLine = buildRecurringScheduleLine(offering);
+    const exceptions = formatRecurringExceptions(offering.recurringExceptions);
+    if (scheduleLine !== '') {
+      items.push(`<strong>Schedule:</strong> ${scheduleLine}${exceptions !== '' ? `<br>${exceptions}` : ''}`);
+    }
+  }
+
   if (offering.tuition !== '') {
-    items.push(`<strong>Tuition: $${offering.tuition}</strong> per participant`);
+    // Walk-in classes phrase the fee as paid on site, not as tuition
+    // collected through registration.
+    items.push(
+      normalizeRegistrationType(offering) === 'walk-in'
+        ? `<strong>Class fee: $${offering.tuition}</strong>${
+            offering.materialsFeeNote !== '' ? ` (${offering.materialsFeeNote})` : ''
+          }`
+        : `<strong>Tuition: $${offering.tuition}</strong> per participant`
+    );
   }
   if (cpcData.scholarshipUrl) {
     items.push(`<a href="${cpcData.scholarshipUrl}"><strong>Apply for a scholarship</strong></a>`);
@@ -167,6 +244,11 @@ export function buildDetailsProse(offering, cpcData) {
     // parenthetical treatment of the materials fee note.
     const note = String(offering.ageAbilityNote ?? '').trim();
     items.push(`<strong>Age / Ability level:</strong> ${ageAndAbility}${note !== '' ? `<br>${note}` : ''}`);
+  }
+
+  const whatToBring = String(offering.whatToBring ?? '').trim();
+  if (whatToBring !== '') {
+    items.push(`<strong>What to bring:</strong> ${whatToBring}`);
   }
 
   if (items.length === 0) {
@@ -306,11 +388,11 @@ export function slugify(text) {
  * "https://givebutter.com/summer-herbs" and
  * "https://givebutter.com/embed/c/summer-herbs?..." both yield
  * "summer-herbs".
- * @param {string} givebutterUrl - Raw Givebutter field value
+ * @param {string} registrationUrl - Raw registration URL field value
  * @returns {string} Campaign slug, or '' when absent/unusable
  */
-export function extractGivebutterSlug(givebutterUrl) {
-  const trimmed = String(givebutterUrl ?? '').trim();
+export function extractGivebutterSlug(registrationUrl) {
+  const trimmed = String(registrationUrl ?? '').trim();
   if (trimmed === '') {
     return '';
   }
@@ -331,11 +413,11 @@ export function extractGivebutterSlug(givebutterUrl) {
  * embed dialog's URL carries it as the gba_gb.element.id query
  * parameter; with it (plus the org's account id) the page can render
  * Givebutter's self-sizing widget instead of a fixed-height iframe.
- * @param {string} givebutterUrl - Raw Givebutter field value
+ * @param {string} registrationUrl - Raw registration URL field value
  * @returns {string} Widget element id, or '' when absent/unusable
  */
-export function extractGivebutterWidgetId(givebutterUrl) {
-  const trimmed = String(givebutterUrl ?? '').trim();
+export function extractGivebutterWidgetId(registrationUrl) {
+  const trimmed = String(registrationUrl ?? '').trim();
   if (trimmed === '') {
     return '';
   }
@@ -425,11 +507,11 @@ export function resolveOfferingImages(offering, fileExists, warn) {
  * preserving the per-embed element id. A plain campaign URL
  * ("https://givebutter.com/summer-herbs") is converted to its embed
  * form as a fallback, without an element id.
- * @param {string} givebutterUrl - Raw Givebutter field value
+ * @param {string} registrationUrl - Raw registration URL field value
  * @returns {string} Embed URL, or '' when unusable
  */
-export function buildGivebutterEmbedUrl(givebutterUrl) {
-  const trimmed = String(givebutterUrl ?? '').trim();
+export function buildGivebutterEmbedUrl(registrationUrl) {
+  const trimmed = String(registrationUrl ?? '').trim();
   if (trimmed === '') {
     return '';
   }
@@ -566,9 +648,37 @@ const detailsSection = (offering, cpcData, apiUrl) =>
  * @returns {Object} Section object
  */
 const registrationSection = (offering, cpcData, embedUrl) => {
-  const widgetId = extractGivebutterWidgetId(offering.givebutterUrl);
+  const widgetId = extractGivebutterWidgetId(offering.registrationUrl);
   const accountId = cpcData.givebutterAccountId ?? '';
   const useWidget = widgetId !== '' && accountId !== '';
+  const isWalkIn = normalizeRegistrationType(offering) === 'walk-in';
+
+  // A class-specific accessibility note renders in addition to the
+  // org-wide accessibility boilerplate, never instead of it.
+  const accessibilityNote = String(offering.accessibilityNote ?? '').trim();
+  const disclosures = [
+    { title: cpcData.accessibility.title, prose: cpcData.accessibility.prose },
+    ...(accessibilityNote !== '' ? [{ title: 'Accessibility notes for this class', prose: accessibilityNote }] : []),
+    { title: cpcData.cancellationPolicy.title, prose: cpcData.cancellationPolicy.prose }
+  ];
+
+  // Walk-in classes have no registration embed; the media column
+  // carries a short how-to-join note instead (override the default
+  // wording with walkInNote in lib/data/cpc.json).
+  if (isWalkIn) {
+    const walkInProse =
+      cpcData.walkInNote ??
+      'No registration needed — this is a drop-in class. Just come a few minutes early; the fee is paid at class.';
+    return multiMediaSection({
+      classes: 'class-registration',
+      id: 'register',
+      mediaType: 'text',
+      isReverse: true,
+      mediaText: textBlock('How to join', walkInProse),
+      text: textBlock('What to expect', offering.whatToExpect),
+      disclosures
+    });
+  }
 
   return multiMediaSection({
     classes: 'class-registration',
@@ -576,10 +686,7 @@ const registrationSection = (offering, cpcData, embedUrl) => {
     mediaType: useWidget ? 'givebutter' : 'iframe',
     isReverse: true,
     text: textBlock('What to expect', offering.whatToExpect),
-    disclosures: [
-      { title: cpcData.accessibility.title, prose: cpcData.accessibility.prose },
-      { title: cpcData.cancellationPolicy.title, prose: cpcData.cancellationPolicy.prose }
-    ],
+    disclosures,
     ...(useWidget ? { givebutter: { accountId, widgetId } } : {}),
     ...(!useWidget && embedUrl !== ''
       ? { iframe: { src: embedUrl, title: 'Class registration form', allow: 'payment' } }
@@ -613,21 +720,26 @@ const heroSection = (offering) => ({
     leadIn: offering.category,
     title: offering.classTitle,
     titleTag: 'h1',
+    // Recurring classes lead with their standing schedule, like the
+    // live yoga page. Dated classes render dates in the session list.
     // subTitle: buildScheduleLine(offering.sessions),
+    subTitle: normalizeScheduleType(offering) === 'recurring' ? buildRecurringScheduleLine(offering) : '',
     prose: offering.shortSummary
   },
   // With an embed on the page the hero CTA scrolls to it; otherwise
-  // it links out to the Givebutter campaign page.
-  ctas: offering.givebutterUrl
-    ? [
-        {
-          url: buildGivebutterEmbedUrl(offering.givebutterUrl) !== '' ? '#register' : offering.givebutterUrl,
-          label: 'Register',
-          isButton: true,
-          buttonStyle: 'primary'
-        }
-      ]
-    : [],
+  // it links out to the registration campaign page. Walk-in classes
+  // get no register button at all.
+  ctas:
+    offering.registrationUrl && normalizeRegistrationType(offering) !== 'walk-in'
+      ? [
+          {
+            url: buildGivebutterEmbedUrl(offering.registrationUrl) !== '' ? '#register' : offering.registrationUrl,
+            label: 'Register',
+            isButton: true,
+            buttonStyle: 'primary'
+          }
+        ]
+      : [],
   image: { src: '', alt: '', caption: '' }
 });
 
@@ -650,9 +762,7 @@ const instructorSections = (offering) => {
       classes: 'class-instructor',
       mediaType: instructor.photoUrl !== '' ? 'image' : 'text',
       isReverse: index % 2 === 1,
-      ...(instructor.photoUrl !== ''
-        ? { image: { src: instructor.photoUrl, alt: instructor.name, caption: '' } }
-        : {}),
+      ...(instructor.photoUrl !== '' ? { image: { src: instructor.photoUrl, alt: instructor.name, caption: '' } } : {}),
       text: textBlock(instructor.name, instructor.bio, {
         leadIn: index === 0 ? (lastIndex > 0 ? 'Meet your instructors' : 'Meet your instructor') : ''
       }),
@@ -678,7 +788,7 @@ export function buildSections(offering, cpcData, apiUrl = '') {
 
   // Always present: even without an embed or what-to-expect prose,
   // the section carries the org's policy disclosures.
-  sections.push(registrationSection(offering, cpcData, buildGivebutterEmbedUrl(offering.givebutterUrl)));
+  sections.push(registrationSection(offering, cpcData, buildGivebutterEmbedUrl(offering.registrationUrl)));
 
   sections.push(...instructorSections(offering));
 
@@ -718,7 +828,11 @@ export function buildPageFile(offering, cpcData, config) {
   return {
     contents: Buffer.from(''),
     layout: config.layout,
-    bodyClasses: 'class-page',
+    // Styling/JS hooks (single-dash class naming, per site convention):
+    // registration-online-registration | registration-walk-in, and
+    // schedule-sessions | schedule-recurring. CSS gates the register
+    // CTA and walk-in note; page JS gates the availability fetch.
+    bodyClasses: `class-page registration-${normalizeRegistrationType(offering)} schedule-${normalizeScheduleType(offering)}`,
     hasHero: true,
     offering,
     card: buildCard(offering),

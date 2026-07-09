@@ -12,7 +12,7 @@ That third point is what makes a fully static site possible. Because Givebutter 
 
 ## The parts
 
-The system has five components. A Google Form is the intake surface where class owners submit offerings. A Google Spreadsheet is the single source of truth for class data. An Apps Script project (two files, both in the site repo) provides the automation: one file builds the form and spreadsheet and normalizes form submissions, the other exposes the data as a small HTTP API. The Metalsmith static site consumes that API at build time to generate class pages. Givebutter, entirely external, handles student registration; each offering row carries a Givebutter URL so class pages can link to the right registration flow.
+The system has five components. A Google Form is the intake surface where class owners submit offerings. A Google Spreadsheet is the single source of truth for class data. An Apps Script project (two files, both in the site repo) provides the automation: one file builds the form and spreadsheet and normalizes form submissions, the other exposes the data as a small HTTP API. The Metalsmith static site consumes that API at build time to generate class pages. Givebutter, entirely external, handles student registration; each offering row carries a registration URL (the `registrationUrl` column, today a Givebutter link) so class pages can link to the right registration flow.
 
 Two boundaries are worth internalizing because they prevent whole categories of bugs. Givebutter and the spreadsheet never overlap: Givebutter owns student capacity, the spreadsheet owns only volunteer hosting. Duplicating state across systems is how data drifts, so neither system knows the other exists beyond a URL. Similarly, org-wide boilerplate (the accessibility statement, cancellation policy, location directions, scholarship link) lives in the site repo as config, never in spreadsheet cells. It is identical on every class page, and prose repeated in data cells eventually diverges.
 
@@ -82,7 +82,7 @@ Everything currently runs under the dev account `devoweb91@gmail.com`. Productio
 
 ## Component inventory
 
-On the Google side (in `google-scripts/`): `cpc-class-intake-prototype.gs` builds the form and spreadsheet, owns the submission trigger, runs the weekly spreadsheet backup, and optionally emails the admin per submission; `cpc-web-app.gs` is the HTTP API: tiered `doGet` reads and the locked, code-gated `doPost` signup write. Script Properties hold `spreadsheetId`, `formId`, `buildToken`, and `volunteerCode`.
+On the Google side (in `google-scripts/`, one folder per Apps Script project): the standalone project (`intake/`) holds `cpc-class-builder.gs` (builds the form and spreadsheet, additive schema migration, weekly backups, test submitter) and `cpc-web-app.gs` (the HTTP API: tiered `doGet` reads and the locked, code-gated `doPost` signup write); its Script Properties hold `spreadsheetId`, `formId`, `buildToken`, and `volunteerCode`. The sheet-bound project (`sheet-review/`) owns every write to the normalized sheets: the `handleFormSubmit` intake trigger (`intake-pipeline.gs`), the Review menu and edit modal (`review.gs`, `edit-modal.html`), and the submission notification email (`ClassIntakeTrigger.gs`, with `notifyRecipients` in its own Script Properties).
 
 On the site side: `plugins/metalsmith-cpc-classes.js` (build-time data fetch into metadata) and `plugins/metalsmith-cpc-class-pages.js` (page generation, image resolution, collection cards), each with a `node --test` suite in `test/`. Generated pages are a hero plus three two-column `multi-media` sections; that component's `text` and `iframe`/`givebutter` media types carry the second text column and the registration embed, and the org boilerplate (accessibility, cancellation policy) renders as accordions under "What to expect". Three custom partials in the component library support this: `session-list` (live availability plus the volunteer signup dialog, rendered inside the details section), `givebutter-widget` (Givebutter's self-sizing registration widget, used when the pasted embed URL carries a widget element id and `givebutterAccountId` is set in `lib/data/cpc.json`), and `iframe` (the fixed-height fallback frame for plain campaign URLs). The `class-sessions` section remains as a thin standalone wrapper around `session-list`. `src/classes.md` is the hand-editable classes landing page. `lib/data/cpc.json` holds the org boilerplate.
 
@@ -93,3 +93,13 @@ Documentation: `cpc-google-howto.md` is the operational runbook (routine tasks f
 The full pipeline is built and verified end to end under the dev account: form submission through trigger normalization, approval gating, build-time fetch, generated class pages inside the site chrome, the classes landing page with collection cards, the embedded Givebutter registration form, live availability refresh, and the code-gated volunteer signup with its race protection. Verified with real submissions and real signups against the live web app.
 
 Remaining work: visual styling of the class pages and listing, testing the instructor guide on real volunteers, and eventually the production migration described above. Known deferred items: a dedicated `/hosting/` overview page for volunteers if they ask for one, and scheduled or webhook-triggered site builds so approved classes appear without a manual rebuild.
+
+Built 2026-07-09 (from the 2026-07-08/09 design sessions): recurring drop-in
+classes with no session rows (schedule on the offering row, no host UI, never
+expire), the walk-in versus online-registration distinction (no register
+button, how-to-join note, body-class hooks on generated pages), and the
+`whatToBring` / `accessibilityNote` / second-instructor / `ageAbilityNote`
+fields end to end. Still planned: the Givebutter replacement (the data model
+is already platform-neutral; the embed partial and URL helpers swap when CPC
+picks the platform). Full semantics live in `cpc-class-data-schema.md`; that
+document is the source of truth for the data model.

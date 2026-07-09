@@ -8,9 +8,11 @@ Everything runs under the dev Google account `devoweb91@gmail.com`. There are th
 
 1. **A Google Form** ("CPC Class Intake") that class owners fill out, one submission per offering. A multi-session class is one submission with multiple session date pickers filled in.
 2. **A Google Spreadsheet** with three tabs. *Form Responses 1* is the raw, untouched form output. *Offerings* holds one row per offering with all prose, fees, instructor info, and a stable `offeringId` like `staked-side-table-20260715`. *Sessions* holds one row per dated session with a `sessionId` like `staked-side-table-20260715-s2`, plus empty `hostName`, `hostEmail`, and `signedUpAt` columns that the volunteer signup flow fills later.
-3. **An Apps Script project** containing `cpc-class-intake-prototype.gs`. It builds the form and spreadsheet, and its `handleFormSubmit` trigger converts each raw form submission into the normalized Offerings and Sessions rows.
+3. **A standalone Apps Script project** ("CPC Classes") containing `cpc-class-builder.gs` and `cpc-web-app.gs`. The builder creates the form and spreadsheet and provides `migrateSheets`, the weekly backups, and `submitTestOffering`; the web app file is the HTTP API. The form-submission pipeline does NOT live here.
 
-A fourth artifact is not created by the script: a small script project bound to the spreadsheet. It provides the review sidebar (see "The review sidebar" below) and the submission notification email (see "Submission notification emails" below).
+A fourth artifact is not created by the script: the **sheet-bound project** ("Sheet review"). It owns every write to the Offerings and Sessions sheets: the `handleFormSubmit` intake trigger (`intake-pipeline.gs`), the Review menu and edit modal (`review.gs`, `edit-modal.html`), and the submission notification email (`ClassIntakeTrigger.gs`).
+
+> **Which project owns what.** The standalone project exists because a script cannot be bound to files it creates, and because the web app's `/exec` URL must survive spreadsheet rebuilds (a bound project dies with its spreadsheet). Everything else — anything that writes rows, shows UI in the sheet, or fires on form submit — belongs to the bound project. Never install a `handleFormSubmit` trigger from the standalone project; that is how submissions get normalized twice, or by stale code. The schema constants (`QUESTIONS`, `OFFERING_COLUMNS`, `SESSION_COLUMNS`) are duplicated in `cpc-class-builder.gs` and `intake-pipeline.gs` because Apps Script projects cannot import from each other: change them in both repo files in the same commit, then re-paste both projects. The repo copies in `google-scripts/` are always the source of truth; after any repo change to a `.gs` file, re-paste it into its Google project.
 
 > The spreadsheet is the editable source of truth. If a submission has a typo, fix it in the Offerings or Sessions tab. A submitted form cannot be edited or resubmitted; all a class owner could do is fill out the form again, which creates a duplicate offering with a `-2` suffix. Never ask for that; make the correction in the spreadsheet.
 
@@ -24,11 +26,11 @@ These are the recurring jobs. Everything below this section is setup work that h
 
 **Rotate the volunteer code.** In the Apps Script editor: gear icon (Project Settings) > Script Properties > edit the `volunteerCode` value > Save. Announce the new code in the next volunteer email. Takes effect immediately, no redeployment. Matching ignores case and surrounding spaces. If the property is missing entirely, all signups are rejected.
 
-**Fix a submission.** Edit the Offerings or Sessions row directly in the spreadsheet. Type dates as `2026-07-15` and times as `18:00` (the cells are plain text and stay that way). Never change `offeringId` or `sessionId` once a class page is live, and never ask a class owner to fill out the form a second time; that creates a duplicate offering, not a correction. **A viewer is available to review and edit class info. Click on Review and select Open row viewer.**
+**Fix a submission.** Edit the Offerings or Sessions row directly in the spreadsheet. Type dates as `2026-07-15` and times as `18:00` (the cells are plain text and stay that way). Never change `offeringId` or `sessionId` once a class page is live, and never ask a class owner to fill out the form a second time; that creates a duplicate offering, not a correction. **The comfortable way: click the row, then Review > Open edit modal** — every field in labeled boxes, sessions editable at the bottom (see `class-sheet-user-manual.md`).
 
 
 
-![open row viewer](images/open-sidebar.jpg)
+![review menu](images/review-menu.jpg)
 
 
 
@@ -45,22 +47,24 @@ These are the recurring jobs. Everything below this section is setup work that h
 Adding a question to the form while classes are live does NOT require a rebuild. The trigger writes rows by column name, not position, so live sheets can grow new columns safely.
 
 1. Open the live form in the Forms editor and add the question by hand.
-2. In the script, add the field to `QUESTIONS`, to `OFFERING_COLUMNS` (or `SESSION_COLUMNS`), to `buildOfferingRecord`, and to `createIntakeForm` (so future rebuilds match). Save.
-3. Run `migrateSheets` from the function dropdown. It appends the missing column to the live sheet and logs what it did. All existing offerings, sessions, and host signups stay exactly as they were; old rows just have an empty cell in the new column.
+2. In the repo, add the field to BOTH script files: `google-scripts/intake/cpc-class-builder.gs` (`QUESTIONS`, `OFFERING_COLUMNS` or `SESSION_COLUMNS`, `createIntakeForm`) and `google-scripts/sheet-review/intake-pipeline.gs` (`QUESTIONS`, the column constant, `buildOfferingRecord`). Re-paste each file into its Google project and save.
+3. In the standalone project, run `migrateSheets` from the function dropdown. It appends the missing column to the live sheet and logs what it did. All existing offerings, sessions, and host signups stay exactly as they were; old rows just have an empty cell in the new column.
 4. Backfill old rows by hand if the new field applies to them, and update the site code to use the new field.
+
+> Renaming a form question deserves its own warning: `event.namedValues` is keyed by the Form Responses sheet's **header row**, which does not update when a question is retitled in the Forms editor. After a rename, also edit the matching header cell in Form Responses 1 (the one legitimate edit in that tab), and remember that `submitTestOffering` fills the form by question title too.
 
 ## Building from scratch (or rebuilding)
 
 A full rebuild is only for destructive schema changes: renaming or removing columns or questions. Save those for the off-season. (Adding fields is handled without a rebuild; see the previous section.)
 
-1. Go to https://script.google.com while signed in as `devoweb91@gmail.com` and open the project (or create a new one).
-2. Paste the current `cpc-class-intake-prototype.gs` over the entire contents of Code.gs and save.
+1. Go to https://script.google.com while signed in as `devoweb91@gmail.com` and open the standalone project (or create a new one).
+2. Paste the current `google-scripts/intake/cpc-class-builder.gs` over the builder file and save (`cpc-web-app.gs` stays as is unless it changed in the repo).
 3. Open the Triggers panel (clock icon in the left sidebar) and delete any existing triggers. Stale triggers point at deleted spreadsheets and will fail silently.
 4. Trash the old form and old spreadsheet in Drive, then empty the Drive trash. The old and new files share the same name, and leaving both around is how the wrong one gets deleted later.
-5. Select `buildPrototype` in the function dropdown in the toolbar and click Run. Grant permissions if asked.
+5. Select `buildPrototype` in the function dropdown in the toolbar and click Run. Grant permissions if asked. Note: it deliberately installs NO form-submit trigger; the intake pipeline lives in the bound project (next step).
 6. Open the execution log. It prints three URLs: the spreadsheet, the form's edit view, and the form's live view. Save these somewhere.
-7. Re-install the bound project. It was bound to the old spreadsheet and died with it: open the new spreadsheet, Extensions > Apps Script, paste `Code.gs`, add the `ReviewSidebar` HTML file (see "The review sidebar" below), add `ClassIntakeTrigger.gs` and its installable trigger, and re-add the notification note question to the form (see "Submission notification emails" below).
-8. Run `installBackupTrigger` from the function dropdown. Step 3 deleted the weekly backup trigger along with everything else.
+7. Re-install the bound project. It was bound to the old spreadsheet and died with it: open the new spreadsheet, Extensions > Apps Script, and paste the repo's `google-scripts/sheet-review/` files (`intake-pipeline.gs`, `review.gs`, `edit-modal.html` as an HTML file named `edit_modal`, and `ClassIntakeTrigger.gs`). Run `installIntakeTrigger` once from the function dropdown, re-create the `ClassIntakeTrigger` installable trigger and the `notifyRecipients` Script Property, and re-add the notification note question to the form (see "Submission notification emails" below).
+8. In the standalone project, run `installBackupTrigger` from the function dropdown. Step 3 deleted the weekly backup trigger along with everything else.
 
 Order matters in steps 3 through 5: triggers first, then old files, then rebuild. Running `buildPrototype` before cleaning up leaves you with two identically named forms and spreadsheets.
 
@@ -68,7 +72,7 @@ Order matters in steps 3 through 5: triggers first, then old files, then rebuild
 
 A rebuild replaces some pieces and leaves others alone. Knowing which is which prevents both missed steps and unnecessary ones.
 
-**Destroyed and replaced:** the spreadsheet (all offering, session, and host data is gone; a rebuild is only for the off-season), the form and therefore its public `/viewform` URL (class owners holding the old link get a dead page, so re-share the new link after republishing), the `spreadsheetId` and `formId` Script Properties (rewritten automatically by `buildPrototype`), the bound review sidebar script (step 7), and the weekly backup trigger (step 8; the backup folder and its copies survive).
+**Destroyed and replaced:** the spreadsheet (all offering, session, and host data is gone; a rebuild is only for the off-season), the form and therefore its public `/viewform` URL (class owners holding the old link get a dead page, so re-share the new link after republishing), the `spreadsheetId` and `formId` Script Properties (rewritten automatically by `buildPrototype`), the entire bound project (step 7), and the weekly backup trigger (step 8; the backup folder and its copies survive).
 
 **Survives untouched:** the Apps Script project itself, the web app deployment and its `/exec` URL (the site config needs no change), the `buildToken` and `volunteerCode` Script Properties (no need to rerun `setupWebApp` or re-announce the code), and everything in the site repo.
 
@@ -157,29 +161,27 @@ A second CORS trap, encountered and solved during testing: if browser fetches fa
 
 `signup-test.html` in the repo is a standalone test page for the whole browser-facing flow. Open it locally, paste the /exec URL, and it lists sessions and lets you claim one, exercising the same GET and text/plain POST the real class pages will use. It doubles as the reference implementation for the site's signup modal.
 
-## The review sidebar
+## The review tooling (edit modal)
 
-The `google-scripts/review-sidebar/` files add a "Review" menu to the spreadsheet that opens a sidebar showing the selected row as a labeled, editable record. Long prose fields (descriptions, materials) get roomy auto-growing text boxes instead of a cramped cell, which is the sane way to review and correct submissions in the Offerings tab.
+The Review menu and its edit modal live in the bound project's `review.gs` and `edit-modal.html`. The menu offers "Open edit modal" (edit the selected offering with its sessions), "Add new class" (staff entry without the form), "Refresh expired highlights", and "Publish site". Operation is documented for reviewers in `class-sheet-user-manual.md`.
 
-**It goes in its own script project, not the intake project.** The intake/web-app project is a standalone script, and the sidebar needs a container-bound one: the `onOpen` trigger that creates the menu only fires in bound scripts, and `SpreadsheetApp.getUi()` throws outside a bound context. Pasting the sidebar files into the intake project produces no error and no menu.
+**It must live in the bound project, not the standalone one.** The `onOpen` trigger that creates the menu only fires in bound scripts, and `SpreadsheetApp.getUi()` throws outside a bound context. Pasting the files into the standalone project produces no error and no menu.
 
-To install: open the spreadsheet itself, then Extensions > Apps Script. That creates (or opens) the script bound to this spreadsheet. Paste `Code.gs` over the default file. Then click + next to Files, choose HTML, name it exactly `ReviewSidebar`, and paste the HTML file's contents. Save both, reload the spreadsheet, and the Review menu appears after a few seconds. The first use triggers the usual authorization flow, including the "Google hasn't verified this app" interstitial (Advanced > Go to project); each reviewer authorizes once.
+The first use triggers the usual authorization flow, including the "Google hasn't verified this app" interstitial (Advanced > Go to project); each reviewer authorizes once. A full rebuild kills the bound project with its spreadsheet; re-pasting the `sheet-review` files is part of the rebuild procedure above.
 
-To operate: click any cell in a row, open Review > Open row viewer, and the sidebar shows that row with the column headers as field labels. Edit directly in the sidebar; a Save/Discard bar appears when anything differs from the sheet. Save writes only the changed cells and refreshes from the sheet. While unsaved edits exist, the sidebar deliberately stops following your cell selection so clicking around cannot wipe work in progress. Formula cells render read-only. Edits behave like typing into the cell, so the plain-text date and time cells stay plain text; use the same ISO forms as always (`2026-07-15`, `18:00`).
-
-Maintenance is nearly zero. Field labels come from the header row at read time, so adding columns (including via `migrateSheets`) requires no sidebar changes. The one thing that breaks it is a full rebuild: `buildPrototype` creates a brand-new spreadsheet, and the bound sidebar script dies with the old one. Re-install the two files into the new spreadsheet after every rebuild; it is a two-minute paste job, but it is not automatic.
+> An earlier iteration, the review *sidebar* (row viewer), was superseded by the edit modal. Its files are parked in `google-scripts/OBSOLETE/review-sidebar/`; if a `ReviewSidebar` HTML file still exists in the live bound project, it is dead weight and can be deleted.
 
 ## Submission notification emails
 
 Every form submission triggers a notification email to a short list of reviewers. The email contains all submitted facts in column order, the offering ID (same slug convention as the Offerings tab), and, when the class owner filled it in, their optional message from the form's last question ("Note for the announcement email"). That question is optional and feeds only the email; the offerings pipeline ignores it.
 
-The mechanism lives in the spreadsheet-bound "Sheet review" project, in `ClassIntakeTrigger.gs` (repo copy in `google-scripts/review-sidebar/`), wired to an installable "On form submit" trigger. It writes nothing to the sheet; the intake project's `handleFormSubmit` remains the only writer. Recipients live in the bound project's `notifyRecipients` Script Property as a comma-separated list, so an admin can change them from Project Settings without touching code (see "Change notification recipients" under Routine tasks). Note this is the bound project's Script Properties, not the intake project's, which has its own. ⚠️ **The property still holds a placeholder address; set the real reviewer emails once they are known.**
+The mechanism lives in the spreadsheet-bound "Sheet review" project, in `ClassIntakeTrigger.gs` (repo copy in `google-scripts/sheet-review/`), wired to an installable "On form submit" trigger. It writes nothing to the sheet; the intake project's `handleFormSubmit` remains the only writer. Recipients live in the bound project's `notifyRecipients` Script Property as a comma-separated list, so an admin can change them from Project Settings without touching code (see "Change notification recipients" under Routine tasks). Note this is the bound project's Script Properties, not the intake project's, which has its own. ⚠️ **The property still holds a placeholder address; set the real reviewer emails once they are known.**
 
 The email is sent from the Google account that owns the trigger, so the trigger should be installed by the org account in production. Quota is generous for this use: 100 recipients/day on a consumer Gmail account, 1,500/day on Workspace.
 
 Two rebuild caveats, both consequences of `buildPrototype` creating a brand-new form and spreadsheet:
 
-1. The bound project dies with the old spreadsheet, exactly like the review sidebar, taking its Script Properties with it. After a rebuild, paste `ClassIntakeTrigger.gs` into the new bound project, re-create the `notifyRecipients` Script Property (Project Settings > Script Properties), and re-create the installable trigger (Triggers > Add Trigger > function `onFormSubmit`, event source "From spreadsheet", event type "On form submit"; a simple trigger cannot send email).
+1. The bound project dies with the old spreadsheet, taking its Script Properties with it. After a rebuild, paste `ClassIntakeTrigger.gs` into the new bound project, re-create the `notifyRecipients` Script Property (Project Settings > Script Properties), and re-create the installable trigger (Triggers > Add Trigger > function `onFormSubmit`, event source "From spreadsheet", event type "On form submit"; a simple trigger cannot send email).
 2. The "Note for the announcement email" question was added to the live form by hand and is not part of `createIntakeForm`, so a rebuilt form will not have it. Re-add it manually (Paragraph type, optional, at the end of the form), or fold it into the intake script's form builder before the next rebuild.
 
 ## Still to build

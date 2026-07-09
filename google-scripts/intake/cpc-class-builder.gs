@@ -1,61 +1,26 @@
 /**
- * Center for People and Craft — Class Intake Prototype
- * =====================================================
+ * Center for People and Craft — Class Intake Builder (standalone).
  *
- * Creates the class-owner intake Google Form, a linked test spreadsheet,
- * and the onFormSubmit trigger that normalizes each submission into the
- * sheets the static site will consume at build time.
+ * This file belongs to the STANDALONE Apps Script project ("CPC
+ * Classes"), alongside cpc-web-app.gs. It contains only what must be
+ * standalone: the one-time builder (it creates the form and the
+ * spreadsheet, so it cannot be bound to them), the additive schema
+ * migration, the weekly backups, and the test submitter.
  *
- * Data model
- * ----------
- * A form submission describes one OFFERING (a scheduled instance of a
- * class). The trigger expands it into:
+ * The form submission pipeline (handleFormSubmit and its helpers)
+ * does NOT live here. It lives in the sheet-bound "Sheet review"
+ * project (google-scripts/sheet-review/intake-pipeline.gs) so that
+ * every write to the Offerings and Sessions sheets comes from one
+ * project. Do not re-add pipeline functions here, and never install
+ * a handleFormSubmit trigger from this project — that is how
+ * submissions get normalized twice (or, worse, by stale code).
  *
- *   Offerings — one row per offering, holds all prose and fees.
- *   Sessions  — one row per dated session, keyed to its offering.
- *               Each session needs exactly one volunteer host, so the
- *               host columns (hostName, hostEmail, signedUpAt) live
- *               directly on the session row: empty means the slot is
- *               open. The future signup web app (doPost) fills them,
- *               and the class page reads them at load time (doGet).
+ * The schema constants (QUESTIONS, OFFERING_COLUMNS, SESSION_COLUMNS)
+ * are deliberately duplicated between this file and intake-pipeline.gs
+ * because Apps Script projects cannot import from each other. When one
+ * changes, change both, in the repo, and re-paste both projects.
  *
- * Org-wide boilerplate (accessibility text, cancellation policy,
- * location, scholarship link) intentionally lives in the site repo
- * config, not in this spreadsheet.
- *
- * Setup
- * -----
- * 1. Go to https://script.google.com and create a new project.
- * 2. Replace the default Code.gs content with this file.
- * 3. Run `buildPrototype` once. Grant the requested permissions.
- * 4. Open the View > Logs (or Executions) panel for the spreadsheet
- *    and form URLs.
- * 5. Optionally run `submitTestOffering` to push a realistic test
- *    submission through the whole pipeline.
- *
- * Notes
- * -----
- * - Session dates and start/end times use native Forms picker widgets.
- *   Because a date item holds exactly one date, the form offers
- *   SESSION_DATE_QUESTION_COUNT optional date pickers; the trigger
- *   collects whichever are filled.
- * - Picker answers arrive in the trigger as locale-formatted strings.
- *   The normalizers below accept ISO (YYYY-MM-DD) and US (M/D/YYYY)
- *   date forms plus 12h and 24h time forms. If the form owner's locale
- *   ever differs, extend parseDateAnswer accordingly.
- * - Images travel outside this pipeline by design: instructors email
- *   image files to the webmaster and enter only the FILE NAMES in the
- *   form. The webmaster commits the files to the site repo under
- *   /assets/images/classes/<givebutter-campaign-slug>/, where the
- *   build picks them up. (FormApp cannot create file-upload questions
- *   programmatically, and a manual upload question would force
- *   respondents to sign in to Google.)
- * - The Sessions/Offerings sheets are the editable store. Corrections
- *   after submission happen there. A submitted form cannot be edited
- *   or resubmitted; a second submission only creates a duplicate.
- * - ADDING a field mid-season does NOT require a rebuild: edit the
- *   live form, update the constants here, and run migrateSheets (see
- *   its docs below). Only renames and removals need the full rebuild.
+ * Setup and rebuild procedures live in docs/cpc-google-howto.md.
  */
 
 /* ------------------------------------------------------------------ */
@@ -65,17 +30,10 @@
 const PROTOTYPE_NAME = 'CPC Class Intake (Prototype)';
 
 /**
- * When set, every form submission triggers a notification email to
- * this address asking for review, with a link to the spreadsheet.
- * Leave empty to disable notifications.
- */
-const ADMIN_NOTIFICATION_EMAIL = '';
-
-/**
- * Form question titles. The trigger reads submissions via
- * event.namedValues, which is keyed by these exact strings, so they
- * are defined once here and used both when building the form and when
- * reading responses.
+ * Form question titles. The bound project's trigger reads submissions
+ * via event.namedValues, which is keyed by these exact strings. This
+ * copy MUST stay identical to QUESTIONS in intake-pipeline.gs; it is
+ * used here to build the form and to fill the test submission.
  */
 const QUESTIONS = {
   submitterName: 'Your name',
@@ -97,7 +55,14 @@ const QUESTIONS = {
   instructorLinks: 'Instructor links (website, Instagram, ...)',
   classImage: 'Class image file name',
   instructorPhoto: 'Instructor photo file name',
-  givebutterUrl: 'Givebutter registration URL'
+  registrationUrl: 'Online registration URL',
+  instructor2Name: 'Second instructor name',
+  instructor2Bio: 'Second instructor bio',
+  instructor2Links: 'Second instructor links (website, Instagram, ...)',
+  instructor2Photo: 'Second instructor photo file name',
+  ageAbilityNote: 'Age & ability notes',
+  whatToBring: 'What to bring',
+  accessibilityNote: 'Accessibility note'
 };
 
 /**
@@ -134,6 +99,28 @@ const ABILITY_CHOICES = [
   'All levels'
 ];
 
+/** MUST match SCHEDULE_TYPE_CHOICES in intake-pipeline.gs. */
+const SCHEDULE_TYPE_CHOICES = ['sessions', 'recurring'];
+
+/** MUST match REGISTRATION_TYPE_CHOICES in intake-pipeline.gs. */
+const REGISTRATION_TYPE_CHOICES = ['online-registration', 'walk-in'];
+
+/** MUST match RECURRING_DAY_CHOICES in intake-pipeline.gs. */
+const RECURRING_DAY_CHOICES = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday'
+];
+
+/**
+ * Offerings sheet columns. MUST stay identical to OFFERING_COLUMNS in
+ * intake-pipeline.gs (the bound project owns the writes; this copy
+ * builds the sheet and drives migrateSheets).
+ */
 const OFFERING_COLUMNS = [
   'offeringId',
   'status',
@@ -153,12 +140,27 @@ const OFFERING_COLUMNS = [
   'instructorLinks',
   'classImage',
   'instructorPhoto',
-  'givebutterUrl',
+  'imageFolder',
+  'registrationUrl',
   'submitterName',
   'submitterEmail',
-  'submittedAt'
+  'submittedAt',
+  'instructor2Name',
+  'instructor2Bio',
+  'instructor2Links',
+  'instructor2Photo',
+  'ageAbilityNote',
+  'scheduleType',
+  'recurringDay',
+  'recurringStart',
+  'recurringEnd',
+  'recurringExceptions',
+  'registrationType',
+  'whatToBring',
+  'accessibilityNote'
 ];
 
+/** Sessions sheet columns. MUST match SESSION_COLUMNS in intake-pipeline.gs. */
 const SESSION_COLUMNS = [
   'sessionId',
   'offeringId',
@@ -179,26 +181,34 @@ const SESSION_COLUMNS = [
 /* ------------------------------------------------------------------ */
 
 /**
- * Entry point. Creates the spreadsheet, the form, links the two,
- * prepares the normalized sheets, and installs the submit trigger.
- * Safe to inspect afterwards via the URLs written to the log.
+ * Entry point. Creates the spreadsheet and the form, links the two,
+ * and stores their IDs. Safe to inspect afterwards via the URLs
+ * written to the log.
+ *
+ * NOTE: this deliberately does NOT install the form-submit trigger.
+ * The intake pipeline lives in the sheet-bound project; after a
+ * rebuild, paste the sheet-review files into the new spreadsheet's
+ * bound project and run installIntakeTrigger there (see the rebuild
+ * procedure in cpc-google-howto.md).
  */
 function buildPrototype() {
   const spreadsheet = createPrototypeSpreadsheet();
   const form = createIntakeForm();
 
   form.setDestination(FormApp.DestinationType.SPREADSHEET, spreadsheet.getId());
-  installSubmitTrigger(spreadsheet);
   storePrototypeIds(spreadsheet, form);
 
   Logger.log('Spreadsheet: %s', spreadsheet.getUrl());
   Logger.log('Form (edit): %s', form.getEditUrl());
   Logger.log('Form (live): %s', form.getPublishedUrl());
+  Logger.log(
+    'REMINDER: install the intake pipeline in the new spreadsheet\'s bound project (see rebuild procedure).'
+  );
 }
 
 /**
- * Create the test spreadsheet with the three normalized sheets and
- * frozen header rows.
+ * Create the spreadsheet with the two normalized sheets and frozen
+ * header rows. The form link adds its own "Form Responses" sheet.
  * @returns {GoogleAppsScript.Spreadsheet.Spreadsheet} The new spreadsheet
  */
 function createPrototypeSpreadsheet() {
@@ -207,8 +217,6 @@ function createPrototypeSpreadsheet() {
   createHeaderedSheet(spreadsheet, 'Offerings', OFFERING_COLUMNS);
   createHeaderedSheet(spreadsheet, 'Sessions', SESSION_COLUMNS);
 
-  // Remove the default empty sheet; the form link adds its own
-  // "Form Responses" sheet later.
   const defaultSheet = spreadsheet.getSheetByName('Sheet1');
   if (defaultSheet !== null) {
     spreadsheet.deleteSheet(defaultSheet);
@@ -253,6 +261,7 @@ function createIntakeForm() {
   addParagraphQuestion(form, QUESTIONS.shortSummary, true);
   addParagraphQuestion(form, QUESTIONS.fullDescription, true);
   addParagraphQuestion(form, QUESTIONS.whatToExpect, false);
+  addParagraphQuestion(form, QUESTIONS.whatToBring, false);
   addSessionDateQuestions(form);
   addTimeQuestion(form, QUESTIONS.startTime, true);
   addTimeQuestion(form, QUESTIONS.endTime, true);
@@ -261,6 +270,8 @@ function createIntakeForm() {
   addTextQuestion(form, QUESTIONS.materialsFeeNote, false, 'e.g. "Paid to instructor"');
   addNumberQuestion(form, QUESTIONS.minimumAge, false);
   addChoiceQuestion(form, QUESTIONS.abilityLevel, ABILITY_CHOICES, true);
+  addTextQuestion(form, QUESTIONS.ageAbilityNote, false);
+  addParagraphQuestion(form, QUESTIONS.accessibilityNote, false);
   addTextQuestion(form, QUESTIONS.instructorName, true);
   addParagraphQuestion(form, QUESTIONS.instructorBio, false);
   addTextQuestion(form, QUESTIONS.instructorLinks, false);
@@ -276,11 +287,17 @@ function createIntakeForm() {
     false,
     'e.g. "jane-doe.jpg". Email the photo to the webmaster; enter only its file name here.'
   );
+  addTextQuestion(form, QUESTIONS.instructor2Name, false, 'Only for classes with two instructors.');
+  addParagraphQuestion(form, QUESTIONS.instructor2Bio, false);
+  addTextQuestion(form, QUESTIONS.instructor2Links, false);
+  addTextQuestion(form, QUESTIONS.instructor2Photo, false);
   addTextQuestion(
     form,
-    QUESTIONS.givebutterUrl,
+    QUESTIONS.registrationUrl,
     false,
-    'Paste the full embed URL from Givebutter\'s embed dialog (it contains "/embed/" and an element id). A plain campaign URL also works.'
+    'Paste the full embed URL from the registration platform\'s embed ' +
+      'dialog if it offers one; a plain campaign/event URL also works. ' +
+      'Leave blank for walk-in classes.'
   );
 
   return form;
@@ -362,15 +379,8 @@ function addChoiceQuestion(form, title, choices, required) {
 }
 
 /**
- * Install the installable onFormSubmit trigger on the spreadsheet.
- * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} spreadsheet - Linked spreadsheet
- */
-function installSubmitTrigger(spreadsheet) {
-  ScriptApp.newTrigger('handleFormSubmit').forSpreadsheet(spreadsheet).onFormSubmit().create();
-}
-
-/**
- * Remember the created document IDs so other functions can find them.
+ * Remember the created document IDs so other functions (including
+ * cpc-web-app.gs in this project) can find them.
  * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} spreadsheet - The spreadsheet
  * @param {GoogleAppsScript.Forms.Form} form - The form
  */
@@ -378,6 +388,48 @@ function storePrototypeIds(spreadsheet, form) {
   PropertiesService.getScriptProperties().setProperties({
     spreadsheetId: spreadsheet.getId(),
     formId: form.getId()
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Column validations                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Apply data-validation dropdowns to the enum columns of the live
+ * Offerings sheet: scheduleType, registrationType, recurringDay, and
+ * category. Values outside the list produce a warning, not a hard
+ * reject, so legacy rows and edge cases stay editable. Idempotent;
+ * run it once after migrateSheets adds the columns, and again after
+ * any rebuild.
+ */
+function applyColumnValidations() {
+  const spreadsheet = SpreadsheetApp.openById(
+    PropertiesService.getScriptProperties().getProperty('spreadsheetId')
+  );
+  const sheet = spreadsheet.getSheetByName('Offerings');
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+
+  const validations = {
+    category: CATEGORY_CHOICES,
+    abilityLevel: ABILITY_CHOICES,
+    scheduleType: SCHEDULE_TYPE_CHOICES,
+    registrationType: REGISTRATION_TYPE_CHOICES,
+    recurringDay: RECURRING_DAY_CHOICES
+  };
+
+  Object.keys(validations).forEach((columnName) => {
+    const columnIndex = headers.indexOf(columnName);
+    if (columnIndex === -1) {
+      Logger.log('Column "%s" not found; run migrateSheets first.', columnName);
+      return;
+    }
+    const rule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(validations[columnName], true)
+      .setAllowInvalid(true)
+      .build();
+    sheet.getRange(2, columnIndex + 1, sheet.getMaxRows() - 1, 1).setDataValidation(rule);
+    Logger.log('Validation applied to "%s".', columnName);
   });
 }
 
@@ -390,18 +442,17 @@ function storePrototypeIds(spreadsheet, form) {
  * constants above, WITHOUT touching existing data. Run this after
  * adding a field mid-season instead of rebuilding:
  *
- * 1. Add the new question to the live form in the Forms editor.
- * 2. Add the field to QUESTIONS, OFFERING_COLUMNS (or
- *    SESSION_COLUMNS), and buildOfferingRecord above; also add it to
- *    createIntakeForm so future rebuilds match.
- * 3. Save, then run this function once. It appends any missing
- *    columns to the live sheets. Existing rows keep all their data
- *    (including host signups) and show empty cells in the new column.
+ * 1. Add the new question to the live form in the Forms editor (skip
+ *    this step for sheet-only columns like imageFolder).
+ * 2. Add the field to the constants here AND in the bound project's
+ *    intake-pipeline.gs (QUESTIONS, OFFERING_COLUMNS or
+ *    SESSION_COLUMNS, and buildOfferingRecord); re-paste both.
+ * 3. Run this function once. It appends any missing columns to the
+ *    live sheets. Existing rows keep all their data (including host
+ *    signups) and show empty cells in the new column.
  *
- * Because appendObjectRow writes by header name, column order never
- * matters. Renaming or removing columns is NOT handled here; those
- * are destructive changes and still require the full rebuild, ideally
- * off-season.
+ * Renaming or removing columns is NOT handled here; those are
+ * destructive changes and still require the full rebuild, off-season.
  */
 function migrateSheets() {
   const spreadsheet = SpreadsheetApp.openById(
@@ -438,6 +489,15 @@ function syncSheetColumns(sheet, columns) {
   if (missingInSheet.length === 0 && unknownInSheet.length === 0) {
     Logger.log('%s: columns already in sync', sheet.getName());
   }
+}
+
+/**
+ * Read a sheet's header row.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Source sheet
+ * @returns {string[]} Header labels
+ */
+function readHeaderColumns(sheet) {
+  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
 }
 
 /* ------------------------------------------------------------------ */
@@ -534,329 +594,15 @@ function pruneOldBackups(backupFolder) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Submit trigger                                                      */
-/* ------------------------------------------------------------------ */
-
-/**
- * Installable onFormSubmit handler. Normalizes one form submission
- * into an Offerings row plus one Sessions row per session date.
- * @param {GoogleAppsScript.Events.SheetsOnFormSubmit} event - Form submit event
- */
-function handleFormSubmit(event) {
-  const rawAnswers = readAnswers(event.namedValues);
-  const answers = {
-    ...rawAnswers,
-    startTime: parseTimeAnswer(rawAnswers.startTime),
-    endTime: parseTimeAnswer(rawAnswers.endTime)
-  };
-  const sessionDates = readSessionDates(event.namedValues);
-  const status = sessionDates.length > 0 ? 'open' : 'needs-review';
-
-  const spreadsheet = SpreadsheetApp.openById(
-    PropertiesService.getScriptProperties().getProperty('spreadsheetId')
-  );
-  const offeringsSheet = spreadsheet.getSheetByName('Offerings');
-  const sessionsSheet = spreadsheet.getSheetByName('Sessions');
-
-  const existingIds = readColumnValues(offeringsSheet, 1);
-  const offeringId = createUniqueOfferingId(answers.classTitle, sessionDates[0], existingIds);
-
-  appendObjectRow(offeringsSheet, buildOfferingRecord(offeringId, status, answers));
-
-  buildSessionRecords(offeringId, answers, sessionDates).forEach((record) => {
-    appendObjectRow(sessionsSheet, record);
-  });
-
-  notifyAdminOfSubmission(answers.classTitle, offeringId, spreadsheet.getUrl());
-}
-
-/**
- * Email the admin that a submission awaits review, if notifications
- * are enabled via ADMIN_NOTIFICATION_EMAIL.
- * @param {string} classTitle - Submitted class title
- * @param {string} offeringId - Stamped offering ID
- * @param {string} spreadsheetUrl - Link to the spreadsheet
- */
-function notifyAdminOfSubmission(classTitle, offeringId, spreadsheetUrl) {
-  if (ADMIN_NOTIFICATION_EMAIL === '') {
-    return;
-  }
-  MailApp.sendEmail(
-    ADMIN_NOTIFICATION_EMAIL,
-    `CPC class submission awaiting review: ${classTitle}`,
-    `A new offering was submitted (${offeringId}).\n\n` +
-      `It will not appear on the website until you set its "approved" ` +
-      `column to "yes" in the Offerings sheet:\n${spreadsheetUrl}`
-  );
-}
-
-/**
- * Flatten event.namedValues (question title -> array of answers) into
- * a record keyed by the QUESTIONS keys.
- * @param {Object<string, string[]>} namedValues - Raw submission values
- * @returns {Object<string, string>} Answers keyed by field name
- */
-function readAnswers(namedValues) {
-  return Object.keys(QUESTIONS).reduce((accumulator, fieldName) => {
-    const rawValues = namedValues[QUESTIONS[fieldName]];
-    const value = Array.isArray(rawValues) ? String(rawValues[0] ?? '').trim() : '';
-    return { ...accumulator, [fieldName]: value };
-  }, {});
-}
-
-/**
- * Collect the filled session date pickers into sorted, de-duplicated
- * ISO date strings.
- * @param {Object<string, string[]>} namedValues - Raw submission values
- * @returns {string[]} Sorted, de-duplicated ISO date strings
- */
-function readSessionDates(namedValues) {
-  const parsedDates = SESSION_DATE_QUESTIONS.map((title) => {
-    const rawValues = namedValues[title];
-    return parseDateAnswer(Array.isArray(rawValues) ? rawValues[0] : '');
-  }).filter((isoDate) => isoDate !== null);
-
-  return [...new Set(parsedDates)].sort();
-}
-
-/**
- * Normalize one date picker answer to an ISO date string. Picker
- * answers arrive as locale-formatted strings; this accepts ISO
- * (YYYY-MM-DD, YYYY/MM/DD) and US (M/D/YYYY) forms.
- * @param {string} rawValue - Raw date answer
- * @returns {string|null} ISO date string, or null when blank/unparseable
- */
-function parseDateAnswer(rawValue) {
-  const text = String(rawValue ?? '').trim();
-  if (text.length === 0) {
-    return null;
-  }
-
-  const isoMatch = text.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-  if (isoMatch !== null) {
-    return toIsoDate(isoMatch[1], isoMatch[2], isoMatch[3]);
-  }
-
-  const usMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (usMatch !== null) {
-    return toIsoDate(usMatch[3], usMatch[1], usMatch[2]);
-  }
-
-  return null;
-}
-
-/**
- * Assemble and validate an ISO date string from parts.
- * @param {string|number} year - Four-digit year
- * @param {string|number} month - Month (1-12)
- * @param {string|number} day - Day of month
- * @returns {string|null} Valid ISO date string or null
- */
-function toIsoDate(year, month, day) {
-  const candidate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  return isValidIsoDate(candidate) ? candidate : null;
-}
-
-/**
- * Check that a string is a real calendar date in YYYY-MM-DD form.
- * @param {string} candidate - Candidate date string
- * @returns {boolean} True when the string is a valid ISO calendar date
- */
-function isValidIsoDate(candidate) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(candidate)) {
-    return false;
-  }
-  const parsed = new Date(`${candidate}T00:00:00Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === candidate;
-}
-
-/**
- * Normalize one time picker answer to 24h HH:MM. Accepts "18:00",
- * "18:00:00", "6:00 PM", and "6:00:00 PM". Unrecognized values are
- * returned unchanged so nothing is silently lost.
- * @param {string} rawValue - Raw time answer
- * @returns {string} Normalized HH:MM string, or the raw value
- */
-function parseTimeAnswer(rawValue) {
-  const text = String(rawValue ?? '').trim();
-  const match = text.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
-  if (match === null) {
-    return text;
-  }
-
-  const meridiem = match[3] === undefined ? null : match[3].toUpperCase();
-  const rawHour = Number(match[1]);
-  const hour =
-    meridiem === 'PM' && rawHour !== 12
-      ? rawHour + 12
-      : meridiem === 'AM' && rawHour === 12
-        ? 0
-        : rawHour;
-
-  return `${String(hour).padStart(2, '0')}:${match[2]}`;
-}
-
-/**
- * Build a stable, human-readable offering ID: title slug plus first
- * session date, e.g. "staked-side-table-20260715".
- * @param {string} classTitle - Class title
- * @param {string|undefined} firstSessionDate - First ISO session date, if any
- * @returns {string} Offering ID
- */
-function createOfferingId(classTitle, firstSessionDate) {
-  const datePart = firstSessionDate !== undefined ? firstSessionDate.replace(/-/g, '') : 'undated';
-  return `${slugify(classTitle)}-${datePart}`;
-}
-
-/**
- * Make an offering ID unique against already-stored IDs by appending
- * a numeric suffix when needed (covers e.g. Wednesday and Thursday
- * groups of the same class starting the same week, or resubmissions).
- * @param {string} classTitle - Class title
- * @param {string|undefined} firstSessionDate - First ISO session date, if any
- * @param {string[]} existingIds - Offering IDs already in the sheet
- * @returns {string} Unique offering ID
- */
-function createUniqueOfferingId(classTitle, firstSessionDate, existingIds) {
-  const baseId = createOfferingId(classTitle, firstSessionDate);
-  if (!existingIds.includes(baseId)) {
-    return baseId;
-  }
-  let suffix = 2;
-  while (existingIds.includes(`${baseId}-${suffix}`)) {
-    suffix += 1;
-  }
-  return `${baseId}-${suffix}`;
-}
-
-/**
- * Convert a title to a URL-safe slug.
- * @param {string} text - Input text
- * @returns {string} Lowercase, hyphen-separated slug
- */
-function slugify(text) {
-  return String(text ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-/**
- * Build the Offerings record for one submission.
- * @param {string} offeringId - Unique offering ID
- * @param {string} status - "open" or "needs-review"
- * @param {Object<string, string>} answers - Flattened form answers
- * @returns {Object<string, string>} Record keyed by OFFERING_COLUMNS names
- */
-function buildOfferingRecord(offeringId, status, answers) {
-  return {
-    offeringId: offeringId,
-    status: status,
-    approved: '',
-    classTitle: answers.classTitle,
-    category: answers.category,
-    shortSummary: answers.shortSummary,
-    fullDescription: answers.fullDescription,
-    whatToExpect: answers.whatToExpect,
-    tuition: answers.tuition,
-    materialsFee: answers.materialsFee,
-    materialsFeeNote: answers.materialsFeeNote,
-    minimumAge: answers.minimumAge,
-    abilityLevel: answers.abilityLevel,
-    instructorName: answers.instructorName,
-    instructorBio: answers.instructorBio,
-    instructorLinks: answers.instructorLinks,
-    classImage: answers.classImage,
-    instructorPhoto: answers.instructorPhoto,
-    givebutterUrl: answers.givebutterUrl,
-    submitterName: answers.submitterName,
-    submitterEmail: answers.submitterEmail,
-    submittedAt: new Date().toISOString()
-  };
-}
-
-/**
- * Build one Sessions record per session date.
- * @param {string} offeringId - Parent offering ID
- * @param {Object<string, string>} answers - Flattened form answers
- * @param {string[]} sessionDates - Sorted ISO session dates
- * @returns {Object<string, string|number>[]} Records keyed by SESSION_COLUMNS names
- */
-function buildSessionRecords(offeringId, answers, sessionDates) {
-  return sessionDates.map((sessionDate, index) => ({
-    sessionId: `${offeringId}-s${index + 1}`,
-    offeringId: offeringId,
-    classTitle: answers.classTitle,
-    sessionDate: sessionDate,
-    sessionNumber: index + 1,
-    sessionCount: sessionDates.length,
-    startTime: answers.startTime,
-    endTime: answers.endTime,
-    hostName: '',
-    hostEmail: '',
-    signedUpAt: '',
-    status: 'open'
-  }));
-}
-
-/**
- * Append a record to a sheet, placing each value under its named
- * header column. Being header-driven (rather than positional) means
- * columns can be added to a live sheet without misaligning writes;
- * see migrateSheets below.
- *
- * The row is formatted as plain text BEFORE the values are written so
- * Sheets stores exactly what the trigger produced (ISO dates like
- * "2026-07-15", 24h times like "18:00") instead of coercing them into
- * locale-formatted date and time cells. The build-time fetcher then
- * reads back the same unambiguous strings that were written.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Target sheet
- * @param {Object<string, string|number>} record - Record keyed by column name
- */
-function appendObjectRow(sheet, record) {
-  const headers = readHeaderColumns(sheet);
-  const rowIndex = sheet.getLastRow() + 1;
-  const rowRange = sheet.getRange(rowIndex, 1, 1, headers.length);
-  rowRange.setNumberFormat('@');
-  rowRange.setValues([headers.map((columnName) => record[columnName] ?? '')]);
-}
-
-/**
- * Read a sheet's header row.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Source sheet
- * @returns {string[]} Header labels
- */
-function readHeaderColumns(sheet) {
-  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
-}
-
-/**
- * Read all values from one column, skipping the header row.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} sheet - Source sheet
- * @param {number} columnIndex - 1-based column index
- * @returns {string[]} Cell values as strings
- */
-function readColumnValues(sheet, columnIndex) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) {
-    return [];
-  }
-  return sheet
-    .getRange(2, columnIndex, lastRow - 1, 1)
-    .getValues()
-    .map((row) => String(row[0]));
-}
-
-/* ------------------------------------------------------------------ */
 /* Test helper                                                         */
 /* ------------------------------------------------------------------ */
 
 /**
  * Push a realistic multi-session test submission through the form so
- * the whole pipeline (form -> responses sheet -> trigger -> normalized
- * sheets) can be verified without typing anything by hand.
+ * the whole pipeline (form -> responses sheet -> bound trigger ->
+ * normalized sheets) can be verified without typing anything by hand.
+ * Delete the resulting rows (Offerings, Sessions, Form Responses)
+ * after checking them.
  */
 function submitTestOffering() {
   const form = FormApp.openById(PropertiesService.getScriptProperties().getProperty('formId'));
@@ -874,11 +620,13 @@ function submitTestOffering() {
       'we cover all of the fundamental skills of staked furniture, and how ' +
       'these skills can be used to make a world of other pieces for your home.',
     [QUESTIONS.whatToExpect]: 'A fundamental woodworking class with hand tools.',
+    [QUESTIONS.whatToBring]: 'Closed-toe shoes; all tools are provided.',
     [QUESTIONS.tuition]: '225',
     [QUESTIONS.materialsFee]: '50',
     [QUESTIONS.materialsFeeNote]: 'Paid to instructor',
     [QUESTIONS.minimumAge]: '16',
     [QUESTIONS.abilityLevel]: 'Advanced beginner',
+    [QUESTIONS.ageAbilityNote]: 'Some hand-tool experience helps but is not required.',
     [QUESTIONS.instructorName]: 'Jacob Mathioudis-Goudey',
     [QUESTIONS.instructorBio]:
       'Jacob is a woodworker and furniture maker located in Minneapolis. His ' +
@@ -886,7 +634,7 @@ function submitTestOffering() {
     [QUESTIONS.instructorLinks]: 'instagram.com/@jake.mg.furniture',
     [QUESTIONS.classImage]: 'side-table.jpg',
     [QUESTIONS.instructorPhoto]: 'jacob.jpg',
-    [QUESTIONS.givebutterUrl]: 'https://givebutter.com/example-staked-side-table'
+    [QUESTIONS.registrationUrl]: 'https://givebutter.com/example-staked-side-table'
   };
 
   // Months are zero-based in the Date constructor: 6 = July.

@@ -11,10 +11,7 @@
 
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
-import cpcClasses, {
-  findFirstSessionDate,
-  normalizeOfferings
-} from '../plugins/metalsmith-cpc-classes.js';
+import cpcClasses, { findFirstSessionDate, normalizeOfferings } from '../plugins/metalsmith-cpc-classes.js';
 
 /**
  * Create a minimal Metalsmith stand-in: just metadata() and debug().
@@ -53,9 +50,7 @@ const samplePayload = {
     {
       offeringId: 'later-class-20260801',
       classTitle: 'Later Class',
-      sessions: [
-        { sessionId: 'later-class-20260801-s1', sessionDate: '2026-08-01' }
-      ]
+      sessions: [{ sessionId: 'later-class-20260801-s1', sessionDate: '2026-08-01' }]
     },
     {
       offeringId: 'undated-class',

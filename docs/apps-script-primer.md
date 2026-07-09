@@ -6,11 +6,11 @@ Google Apps Script for someone who knows HTML and JavaScript but has not worked 
 
 This system uses two separate Apps Script projects, and the distinction between them is the single most important Apps Script concept for maintaining it.
 
-A *standalone* project lives on its own at https://script.google.com, unattached to any document. Our intake project (`cpc-class-intake-prototype.gs` plus `cpc-web-app.gs`) is standalone: it has to be, because it *creates* the form and spreadsheet rather than living inside them. It reaches the spreadsheet by stored ID, and it can be deployed as a web app.
+A *standalone* project lives on its own at https://script.google.com, unattached to any document. Our builder/API project (`cpc-class-builder.gs` plus `cpc-web-app.gs`, repo folder `google-scripts/intake/`) is standalone: it has to be, because it *creates* the form and spreadsheet rather than living inside them. It reaches the spreadsheet by stored ID, and it can be deployed as a web app.
 
-A *bound* project is attached to one specific document and travels with it. You create one by opening the document and choosing Extensions > Apps Script. Our review sidebar is bound to the spreadsheet, because the things it needs are only available to bound scripts: the `onOpen` trigger that adds the Review menu, and `SpreadsheetApp.getUi()`, which is the only way to show menus and sidebars in a spreadsheet. A bound script also gets `SpreadsheetApp.getActiveSpreadsheet()` and the user's current selection for free.
+A *bound* project is attached to one specific document and travels with it. You create one by opening the document and choosing Extensions > Apps Script. Our review tooling (the Review menu and edit modal, repo folder `google-scripts/sheet-review/`) is bound to the spreadsheet, because the things it needs are only available to bound scripts: the `onOpen` trigger that adds the Review menu, and `SpreadsheetApp.getUi()`, which is the only way to show menus and dialogs in a spreadsheet. A bound script also gets `SpreadsheetApp.getActiveSpreadsheet()` and the user's current selection for free. The form-submission intake trigger lives in the bound project too, so that every write to the normalized sheets comes from one project.
 
-The practical consequences: code that shows UI in the spreadsheet must go in the bound project; code that serves HTTP or builds documents goes in the standalone one. And since a bound script belongs to its document, trashing the spreadsheet (as a full rebuild does) takes the sidebar script with it.
+The practical consequences: code that shows UI in the spreadsheet must go in the bound project; code that serves HTTP or builds documents goes in the standalone one. And since a bound script belongs to its document, trashing the spreadsheet (as a full rebuild does) takes the bound project with it.
 
 ## The language and runtime
 
@@ -18,7 +18,7 @@ Apps Script is server-side JavaScript on V8, the same engine as Node and Chrome.
 
 The differences are structural. There is no `npm`, no `require`, no `import`. Google injects global service objects instead: `SpreadsheetApp`, `FormApp`, `HtmlService`, `LockService`, `PropertiesService`, `ScriptApp`, `UrlFetchApp`, `Utilities`, and `console`. They are always available, never installed.
 
-There is no module system between your own files either. Every `.gs` file in a project shares one global namespace, as if concatenated. That is why `cpc-web-app.gs` can call helpers and read constants defined in `cpc-class-intake-prototype.gs` with no imports, and why the two files must not define functions with the same name.
+There is no module system between your own files either. Every `.gs` file in a project shares one global namespace, as if concatenated. A function defined in one file is callable from any other file in the same project, and two files must not define functions with the same name — the last-loaded definition silently wins. The flip side: separate projects share nothing, which is why the schema constants are deliberately duplicated between `cpc-class-builder.gs` and `intake-pipeline.gs`.
 
 Scripts do not run continuously. There is no server process. Every execution is a cold start caused by an event: someone opens the spreadsheet, submits the form, clicks Save in the sidebar, or hits the web app URL. The function runs, returns, and the environment is gone. State that must survive between executions lives in the spreadsheet or in Script Properties.
 

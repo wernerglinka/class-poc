@@ -65,6 +65,21 @@ one directly:
    sessions appear in the Sessions tab, and its ID and submission date
    are filled in automatically.
 
+## Weekly drop-in classes (like yoga)
+
+Some classes repeat every week and have no fixed dates. For these, set
+**Schedule type** to `recurring` in the edit window and fill in the
+recurring day and start/end times (like `12:00` and `13:00`). Leave the
+Sessions list at the bottom empty — the website shows "Every Friday,
+12:00 PM - 1:00 PM" instead of a date list. If a week is skipped
+(a holiday, say), add that date to **Recurring: skip dates** as
+`2026-07-03` and the website will say so.
+
+If students simply show up and pay at class instead of registering
+online, also set **Registration type** to `walk-in`. The class page
+then shows the fee and a "how to join" note instead of a Register
+button.
+
 ## Rows with a reddish background
 
 When you open the spreadsheet, any class whose dates have **all

@@ -15,14 +15,19 @@ import cpcClassPages, {
   buildDetailsProse,
   buildGivebutterEmbedUrl,
   buildInstructorCtas,
+  buildPageFile,
+  buildRecurringScheduleLine,
   buildScheduleLine,
   buildSections,
   buildSessionItems,
   extractGivebutterSlug,
   extractGivebutterWidgetId,
   extractInstructors,
+  formatRecurringExceptions,
   formatTime,
   imageFolderSlug,
+  normalizeRegistrationType,
+  normalizeScheduleType,
   resolveImagePath,
   resolveOfferingImages,
   slugify
@@ -53,7 +58,7 @@ const sampleOffering = {
   instructorLinks: 'instagram.com/@jake.mg.furniture',
   instructorPhoto: 'https://example.com/jacob.jpg',
   classImageUrl: 'https://example.com/table.jpg',
-  givebutterUrl: 'https://givebutter.com/example',
+  registrationUrl: 'https://givebutter.com/example',
   firstSessionDate: '2026-07-15',
   sessions: [
     { sessionId: 's1', sessionDate: '2026-07-15', startTime: '18:00', endTime: '21:00', hostName: 'Pat' },
@@ -61,6 +66,91 @@ const sampleOffering = {
     { sessionId: 's3', sessionDate: '2026-07-29', startTime: '18:00', endTime: '21:00', hostName: '' }
   ]
 };
+
+/**
+ * A staff-entered recurring walk-in class, modeled on Yoga for the
+ * People: weekly schedule on the offering row, no session rows, fee
+ * paid at class, no online registration.
+ */
+const recurringOffering = {
+  ...sampleOffering,
+  offeringId: 'yoga-for-the-people',
+  classTitle: 'Yoga for the People',
+  category: 'Movement',
+  scheduleType: 'recurring',
+  recurringDay: 'Friday',
+  recurringStart: '12:00',
+  recurringEnd: '13:00',
+  recurringExceptions: '2026-09-04, 2026-07-03',
+  registrationType: 'walk-in',
+  tuition: '10-30',
+  materialsFee: '',
+  materialsFeeNote: 'sliding scale, paid directly to instructor',
+  whatToBring: 'Comfortable clothing; bringing your own mat is optional.',
+  accessibilityNote: 'Money should not be a barrier to practice; talk to the instructor.',
+  registrationUrl: '',
+  sessions: [],
+  firstSessionDate: ''
+};
+
+describe('normalizeScheduleType / normalizeRegistrationType', () => {
+  it('defaults legacy rows with empty cells to sessions and online registration', () => {
+    assert.equal(normalizeScheduleType(sampleOffering), 'sessions');
+    assert.equal(normalizeScheduleType({ ...sampleOffering, scheduleType: '' }), 'sessions');
+    assert.equal(normalizeRegistrationType(sampleOffering), 'online-registration');
+    assert.equal(normalizeRegistrationType({ ...sampleOffering, registrationType: '' }), 'online-registration');
+  });
+
+  it('recognizes recurring and walk-in values', () => {
+    assert.equal(normalizeScheduleType(recurringOffering), 'recurring');
+    assert.equal(normalizeRegistrationType(recurringOffering), 'walk-in');
+  });
+});
+
+describe('buildPageFile body classes', () => {
+  const config = { layout: 'pages/sections.njk', apiUrl: '' };
+
+  it('stamps the registration and schedule hooks (single-dash naming)', () => {
+    assert.equal(
+      buildPageFile(recurringOffering, cpcData, config).bodyClasses,
+      'class-page registration-walk-in schedule-recurring'
+    );
+    assert.equal(
+      buildPageFile(sampleOffering, cpcData, config).bodyClasses,
+      'class-page registration-online-registration schedule-sessions'
+    );
+  });
+});
+
+describe('buildRecurringScheduleLine', () => {
+  it('builds the full schedule line', () => {
+    assert.equal(buildRecurringScheduleLine(recurringOffering), 'Every Friday, 12:00 PM - 1:00 PM');
+  });
+
+  it('drops the times when either is missing', () => {
+    assert.equal(buildRecurringScheduleLine({ ...recurringOffering, recurringEnd: '' }), 'Every Friday');
+  });
+
+  it('returns empty when the day is missing', () => {
+    assert.equal(buildRecurringScheduleLine({ ...recurringOffering, recurringDay: '' }), '');
+  });
+});
+
+describe('formatRecurringExceptions', () => {
+  it('sorts and joins skip dates readably', () => {
+    assert.equal(formatRecurringExceptions('2026-09-04, 2026-07-03'), 'No class on July 3 or September 4');
+  });
+
+  it('handles a single skip date', () => {
+    assert.equal(formatRecurringExceptions('2026-07-03'), 'No class on July 3');
+  });
+
+  it('drops garbage and returns empty when nothing parses', () => {
+    assert.equal(formatRecurringExceptions('next friday, , soon'), '');
+    assert.equal(formatRecurringExceptions(''), '');
+    assert.equal(formatRecurringExceptions(undefined), '');
+  });
+});
 
 describe('formatTime', () => {
   it('converts 24h to 12h display', () => {
@@ -112,7 +202,10 @@ describe('buildDetailsProse', () => {
     const prose = buildDetailsProse(sampleOffering, cpcData);
     assert.match(prose, /^<ul class="class-details-list">/);
     assert.match(prose, /<li><strong>Tuition: \$225<\/strong> per participant<\/li>/);
-    assert.match(prose, /<li><a href="https:\/\/example\.com\/scholarship"><strong>Apply for a scholarship<\/strong><\/a><\/li>/);
+    assert.match(
+      prose,
+      /<li><a href="https:\/\/example\.com\/scholarship"><strong>Apply for a scholarship<\/strong><\/a><\/li>/
+    );
     assert.match(prose, /<li><strong>Materials fee: \$50<\/strong> \(Paid to instructor\)<\/li>/);
     assert.match(prose, /<li><strong>Age \/ Ability level:<\/strong> 16\+, Advanced beginner<\/li>/);
     assert.match(prose, /<\/ul>$/);
@@ -133,6 +226,34 @@ describe('buildDetailsProse', () => {
   it('returns empty when there are no details at all', () => {
     const bare = { ...sampleOffering, tuition: '', materialsFee: '', minimumAge: '', abilityLevel: '' };
     assert.equal(buildDetailsProse(bare, { ...cpcData, scholarshipUrl: '' }), '');
+  });
+
+  it('leads with the schedule for recurring classes, exceptions on their own line', () => {
+    const prose = buildDetailsProse(recurringOffering, cpcData);
+    assert.match(
+      prose,
+      /<li><strong>Schedule:<\/strong> Every Friday, 12:00 PM - 1:00 PM<br>No class on July 3 or September 4<\/li>/
+    );
+    assert.ok(prose.indexOf('Schedule:') < prose.indexOf('Class fee:'), 'schedule renders first');
+    assert.doesNotMatch(buildDetailsProse(sampleOffering, cpcData), /Schedule:/, 'dated classes use the session list');
+  });
+
+  it('phrases the fee as a class fee for walk-in classes', () => {
+    const prose = buildDetailsProse(recurringOffering, cpcData);
+    assert.match(
+      prose,
+      /<li><strong>Class fee: \$10-30<\/strong> \(sliding scale, paid directly to instructor\)<\/li>/
+    );
+    assert.doesNotMatch(prose, /per participant/);
+  });
+
+  it('lists what to bring when present', () => {
+    const prose = buildDetailsProse(recurringOffering, cpcData);
+    assert.match(
+      prose,
+      /<li><strong>What to bring:<\/strong> Comfortable clothing; bringing your own mat is optional\.<\/li>/
+    );
+    assert.doesNotMatch(buildDetailsProse(sampleOffering, cpcData), /What to bring/);
   });
 });
 
@@ -195,7 +316,7 @@ describe('buildSections', () => {
   it('renders the self-sizing widget when the embed URL carries an element id', () => {
     const withElementId = {
       ...sampleOffering,
-      givebutterUrl: 'https://givebutter.com/embed/c/example?goalBar=false&gba_gb.element.id=gGRrMX'
+      registrationUrl: 'https://givebutter.com/embed/c/example?goalBar=false&gba_gb.element.id=gGRrMX'
     };
     const register = buildSections(withElementId, cpcData)[2];
     assert.equal(register.mediaType, 'givebutter');
@@ -206,7 +327,7 @@ describe('buildSections', () => {
   it('falls back to the iframe when the account id is not configured', () => {
     const withElementId = {
       ...sampleOffering,
-      givebutterUrl: 'https://givebutter.com/embed/c/example?goalBar=false&gba_gb.element.id=gGRrMX'
+      registrationUrl: 'https://givebutter.com/embed/c/example?goalBar=false&gba_gb.element.id=gGRrMX'
     };
     const register = buildSections(withElementId, { ...cpcData, givebutterAccountId: undefined })[2];
     assert.equal(register.mediaType, 'iframe');
@@ -230,7 +351,7 @@ describe('buildSections', () => {
       whatToExpect: '',
       sessions: [],
       classImageUrl: '',
-      givebutterUrl: ''
+      registrationUrl: ''
     };
     const sections = buildSections(bare, cpcData);
     assert.deepEqual(
@@ -244,8 +365,47 @@ describe('buildSections', () => {
     assert.equal(sections[0].containerFields.background.imageScreen, 'none');
   });
 
+  it('renders walk-in classes with a how-to-join note and no register CTA', () => {
+    const sections = buildSections(recurringOffering, cpcData);
+    const hero = sections[0];
+    const register = sections[2];
+
+    assert.equal(hero.text.subTitle, 'Every Friday, 12:00 PM - 1:00 PM', 'recurring schedule leads the hero');
+    assert.equal(hero.ctas.length, 0, 'walk-in classes get no register button');
+    assert.equal(register.mediaType, 'text');
+    assert.equal(register.mediaText.title, 'How to join');
+    assert.equal(register.iframe, undefined);
+    assert.equal(register.givebutter, undefined);
+  });
+
+  it('suppresses the register CTA for walk-in classes even with a URL present', () => {
+    const walkInWithUrl = { ...recurringOffering, registrationUrl: 'https://example.com/somewhere' };
+    const hero = buildSections(walkInWithUrl, cpcData)[0];
+    assert.equal(hero.ctas.length, 0);
+  });
+
+  it('layers the class accessibility note between the org disclosures', () => {
+    const register = buildSections(recurringOffering, cpcData)[2];
+    assert.deepEqual(
+      register.disclosures.map((disclosure) => disclosure.title),
+      ['Accessibility', 'Accessibility notes for this class', 'Cancellation policy']
+    );
+    assert.equal(register.disclosures[1].prose, 'Money should not be a barrier to practice; talk to the instructor.');
+  });
+
+  it('omits the session list for recurring classes', () => {
+    const details = buildSections(recurringOffering, cpcData, 'https://example.com/exec')[1];
+    assert.equal(details.sessions, undefined, 'no session list, so no host UI');
+  });
+
+  it('overrides the walk-in note from org config when provided', () => {
+    const withNote = { ...cpcData, walkInNote: 'Doors open ten minutes early.' };
+    const register = buildSections(recurringOffering, withNote)[2];
+    assert.equal(register.mediaText.prose, 'Doors open ten minutes early.');
+  });
+
   it('keeps the what-to-expect column when only the embed is missing', () => {
-    const sections = buildSections({ ...sampleOffering, givebutterUrl: '' }, cpcData);
+    const sections = buildSections({ ...sampleOffering, registrationUrl: '' }, cpcData);
     const register = sections[2];
     assert.equal(register.text.title, 'What to expect');
     assert.equal(register.iframe, undefined);
@@ -347,9 +507,7 @@ describe('extractInstructors', () => {
       instructorLinks: '',
       instructorPhoto: 'solo.jpg'
     });
-    assert.deepEqual(instructors, [
-      { name: 'Solo Teacher', bio: 'The only one.', links: '', photoUrl: 'solo.jpg' }
-    ]);
+    assert.deepEqual(instructors, [{ name: 'Solo Teacher', bio: 'The only one.', links: '', photoUrl: 'solo.jpg' }]);
   });
 
   it('returns empty when no instructor fields are filled', () => {
@@ -404,7 +562,7 @@ describe('image resolution', () => {
     // Givebutter slugs are non-unique in practice; the folder must not
     // change when the campaign URL does.
     const withCampaign = imageFolderSlug(sampleOffering);
-    const withoutCampaign = imageFolderSlug({ ...sampleOffering, givebutterUrl: '' });
+    const withoutCampaign = imageFolderSlug({ ...sampleOffering, registrationUrl: '' });
     assert.equal(withCampaign, withoutCampaign);
   });
 

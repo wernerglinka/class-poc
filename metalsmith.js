@@ -25,12 +25,12 @@ import Metalsmith from 'metalsmith'; // The core static site generator
 import componentDependencyBundler from 'metalsmith-bundled-components';
 import menus from 'metalsmith-menu-plus'; // Generates navigation menus
 import htmlMinifier from 'metalsmith-optimize-html'; // Minifies HTML in production
-import collectionPages from 'metalsmith-sectioned-blog-pagination'; // Paging params for collection landing pages
 import optimizeImages from 'metalsmith-optimize-images'; // Optimizes images for web
 import safeLinks from 'metalsmith-safe-links';
+import collectionPages from 'metalsmith-sectioned-blog-pagination'; // Paging params for collection landing pages
 import seo from 'metalsmith-seo'; // Adds SEO metadata to pages
-import cpcClasses from './plugins/metalsmith-cpc-classes.js'; // Fetches class data from the Google web app
 import cpcClassPages from './plugins/metalsmith-cpc-class-pages.js'; // Generates one page per class offering
+import cpcClasses from './plugins/metalsmith-cpc-classes.js'; // Fetches class data from the Google web app
 
 /**
  * Load environment variables from .env (CPC_API_URL, CPC_SHEET_TOKEN).
@@ -110,16 +110,7 @@ metalsmith
   .clean(true)
   // Ignore macOS system files
   .ignore(['**/.DS_Store'])
-  .watch(
-    isProduction
-      ? false
-      : [
-          'src/',
-          'lib/layouts/',
-          'lib/assets/',
-          'lib/data/'
-        ]
-  )
+  .watch(isProduction ? false : ['src/', 'lib/layouts/', 'lib/assets/', 'lib/data/'])
   // Pass NODE_ENV to plugins
   .env('NODE_ENV', process.env.NODE_ENV)
   // Where to find source files
@@ -185,7 +176,8 @@ metalsmith
     collections({
       classes: {
         pattern: 'classes/*.md',
-        sort: 'card.date:asc'
+        sort: 'card.date:asc',
+        limit: Infinity
       }
     })
   )
@@ -196,7 +188,7 @@ metalsmith
    */
   .use(
     collectionPages({
-      pagesPerPage: 12,
+      pagesPerPage: 6,
       blogDirectory: 'classes/',
       mainTemplate: 'classes.md'
     })
