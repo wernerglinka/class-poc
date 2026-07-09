@@ -246,8 +246,11 @@ export function buildDetailsProse(offering, cpcData) {
     items.push(`<strong>Age / Ability level:</strong> ${ageAndAbility}${note !== '' ? `<br>${note}` : ''}`);
   }
 
+  // Walk-in classes surface what to bring in the registration
+  // section, under the how-to-join note; listing it here too would
+  // duplicate it on the page.
   const whatToBring = String(offering.whatToBring ?? '').trim();
-  if (whatToBring !== '') {
+  if (whatToBring !== '' && normalizeRegistrationType(offering) !== 'walk-in') {
     items.push(`<strong>What to bring:</strong> ${whatToBring}`);
   }
 
@@ -664,11 +667,16 @@ const registrationSection = (offering, cpcData, embedUrl) => {
 
   // Walk-in classes have no registration embed; the media column
   // carries a short how-to-join note instead (override the default
-  // wording with walkInNote in lib/data/cpc.json).
+  // wording with walkInNote in lib/data/cpc.json), with the offering's
+  // what-to-bring text beneath it. What to bring lives here rather
+  // than in the details list for walk-in classes (see
+  // buildDetailsProse).
   if (isWalkIn) {
-    const walkInProse =
+    const walkInNote =
       cpcData.walkInNote ??
       'No registration needed — this is a drop-in class. Just come a few minutes early; the fee is paid at class.';
+    const whatToBring = String(offering.whatToBring ?? '').trim();
+    const walkInProse = whatToBring !== '' ? `${walkInNote}\n\n### What to bring\n\n${whatToBring}` : walkInNote;
     return multiMediaSection({
       classes: 'class-registration',
       id: 'register',

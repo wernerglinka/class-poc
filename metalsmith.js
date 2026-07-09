@@ -190,7 +190,10 @@ metalsmith
     collectionPages({
       pagesPerPage: 6,
       blogDirectory: 'classes/',
-      mainTemplate: 'classes.md'
+      mainTemplate: 'classes.md',
+      // Count pages from the collection, not a classes/ directory scan,
+      // so non-class files under classes/ can never skew the page count
+      collectionName: 'classes'
     })
   )
 

@@ -18,7 +18,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -38,6 +38,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * @type {string}
  */
 const projectRoot = join(__dirname, '..');
+
+/**
+ * Whether this project currently has blog content. The starter these
+ * tests came from ships a demo blog; the class-catalog POC removed it
+ * but may grow its own blog section later. Blog-specific assertions
+ * are gated on this flag so they pass today and reactivate on their
+ * own the day src/blog/ returns.
+ * @type {boolean}
+ */
+const blogSourceExists = existsSync(join(projectRoot, 'src/blog'));
 
 /**
  * Build Integration Test Suite
@@ -150,9 +160,17 @@ describe('Build Integration', () => {
         const indexPath = join(testBuildDir, 'index.html');
         assert.ok(existsSync(indexPath), 'index.html should be generated');
 
-        // Check that blog posts were created
-        const blogPostPath = join(testBuildDir, 'blog/getting-started-with-structured-content/index.html');
-        assert.ok(existsSync(blogPostPath), 'Blog post HTML should be generated');
+        // Check that every blog post gets a clean-URL page (no-op
+        // until the project has a blog section)
+        if (blogSourceExists) {
+          const posts = readdirSync(join(projectRoot, 'src/blog')).filter(
+            (name) => name.endsWith('.md') && name !== 'index.md'
+          );
+          for (const post of posts) {
+            const blogPostPath = join(testBuildDir, 'blog', post.replace(/\.md$/, ''), 'index.html');
+            assert.ok(existsSync(blogPostPath), `Blog post HTML should be generated for ${post}`);
+          }
+        }
 
         done();
       });
@@ -184,33 +202,37 @@ describe('Build Integration', () => {
      *
      * @param {Function} done - Mocha callback for async test completion
      */
-    it('should create blog collections correctly', (_t, done) => {
-      const metalsmith = Metalsmith(projectRoot)
-        .clean(false)
-        .source('./src')
-        .destination(testBuildDir)
-        .use(drafts(false))
-        .use(
-          collections({
-            blog: {
-              pattern: 'blog/*.md',
-              sort: 'card.date:asc'
-            }
-          })
-        );
+    it(
+      'should create blog collections correctly',
+      { skip: blogSourceExists ? false : 'no src/blog in this project yet' },
+      (_t, done) => {
+        const metalsmith = Metalsmith(projectRoot)
+          .clean(false)
+          .source('./src')
+          .destination(testBuildDir)
+          .use(drafts(false))
+          .use(
+            collections({
+              blog: {
+                pattern: 'blog/*.md',
+                sort: 'card.date:asc'
+              }
+            })
+          );
 
-      metalsmith.build((err) => {
-        assert.ok(!err, `Build should complete without errors: ${err ? err.message : ''}`);
+        metalsmith.build((err) => {
+          assert.ok(!err, `Build should complete without errors: ${err ? err.message : ''}`);
 
-        const metadata = metalsmith.metadata();
-        assert.ok(metadata.collections, 'Collections should be created');
-        assert.ok(metadata.collections.blog, 'Blog collection should exist');
-        assert.ok(Array.isArray(metadata.collections.blog), 'Blog collection should be an array');
-        assert.ok(metadata.collections.blog.length > 0, 'Blog collection should have posts');
+          const metadata = metalsmith.metadata();
+          assert.ok(metadata.collections, 'Collections should be created');
+          assert.ok(metadata.collections.blog, 'Blog collection should exist');
+          assert.ok(Array.isArray(metadata.collections.blog), 'Blog collection should be an array');
+          assert.ok(metadata.collections.blog.length > 0, 'Blog collection should have posts');
 
-        done();
-      });
-    });
+          done();
+        });
+      }
+    );
   });
 
   /**
@@ -255,7 +277,10 @@ describe('Build Integration', () => {
         // Check that clean URLs are generated (directories with index.html)
         assert.ok(existsSync(join(testBuildDir, 'index.html')), 'Root index.html should exist');
         assert.ok(existsSync(join(testBuildDir, 'about/index.html')), 'About page should have clean URL');
-        assert.ok(existsSync(join(testBuildDir, 'blog/index.html')), 'Blog index should have clean URL');
+        assert.ok(existsSync(join(testBuildDir, 'classes/index.html')), 'Classes page should have clean URL');
+        if (blogSourceExists) {
+          assert.ok(existsSync(join(testBuildDir, 'blog/index.html')), 'Blog index should have clean URL');
+        }
 
         done();
       });

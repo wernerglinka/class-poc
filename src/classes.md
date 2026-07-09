@@ -65,6 +65,14 @@ sections:
     isFullScreen: false
     isReverse: false
     hasPagingParams: true
+    # Placeholder values; metalsmith-sectioned-blog-pagination fills
+    # them in at build time (it only updates keys that already exist)
+    pagingParams:
+      numberOfBlogs: 0
+      numberOfPages: 0
+      pageLength: 0
+      pageStart: 0
+      pageNumber: 1
     containerFields:
       inContainer: false
       isAnimated: true

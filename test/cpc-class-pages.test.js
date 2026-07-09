@@ -247,13 +247,18 @@ describe('buildDetailsProse', () => {
     assert.doesNotMatch(prose, /per participant/);
   });
 
-  it('lists what to bring when present', () => {
-    const prose = buildDetailsProse(recurringOffering, cpcData);
+  it('lists what to bring when present, except for walk-in classes', () => {
+    const withBring = { ...sampleOffering, whatToBring: 'Closed-toe shoes.' };
     assert.match(
-      prose,
-      /<li><strong>What to bring:<\/strong> Comfortable clothing; bringing your own mat is optional\.<\/li>/
+      buildDetailsProse(withBring, cpcData),
+      /<li><strong>What to bring:<\/strong> Closed-toe shoes\.<\/li>/
     );
     assert.doesNotMatch(buildDetailsProse(sampleOffering, cpcData), /What to bring/);
+    assert.doesNotMatch(
+      buildDetailsProse(recurringOffering, cpcData),
+      /What to bring/,
+      'walk-in classes carry it in the registration section instead'
+    );
   });
 });
 
@@ -374,8 +379,18 @@ describe('buildSections', () => {
     assert.equal(hero.ctas.length, 0, 'walk-in classes get no register button');
     assert.equal(register.mediaType, 'text');
     assert.equal(register.mediaText.title, 'How to join');
+    assert.match(
+      register.mediaText.prose,
+      /### What to bring\n\nComfortable clothing; bringing your own mat is optional\./,
+      'what to bring renders beneath the how-to-join note'
+    );
     assert.equal(register.iframe, undefined);
     assert.equal(register.givebutter, undefined);
+  });
+
+  it('omits the what-to-bring block when the offering has none', () => {
+    const register = buildSections({ ...recurringOffering, whatToBring: '' }, cpcData)[2];
+    assert.doesNotMatch(register.mediaText.prose, /What to bring/);
   });
 
   it('suppresses the register CTA for walk-in classes even with a URL present', () => {
@@ -401,7 +416,7 @@ describe('buildSections', () => {
   it('overrides the walk-in note from org config when provided', () => {
     const withNote = { ...cpcData, walkInNote: 'Doors open ten minutes early.' };
     const register = buildSections(recurringOffering, withNote)[2];
-    assert.equal(register.mediaText.prose, 'Doors open ten minutes early.');
+    assert.match(register.mediaText.prose, /^Doors open ten minutes early\./);
   });
 
   it('keeps the what-to-expect column when only the embed is missing', () => {

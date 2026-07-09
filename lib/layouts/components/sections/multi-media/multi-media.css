@@ -53,12 +53,17 @@
       A text block in the media slot (mediaType "text") reads as prose,
       not as a framed media object: no border, natural block flow, and
       some breathing room against the offset glass card next to it.
+      The column direction keeps a title stacked above its prose (the
+      media slot's row flex would otherwise place them side by side)
+      while preserving the slot's vertical centering.
     */
     .media.is-text {
       border: none;
       overflow: visible;
       padding: var(--space-s-m);
       background-color: var(--color-background-light);
+      flex-direction: column;
+      align-items: stretch;
     }
 
     /*

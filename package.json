@@ -41,12 +41,12 @@
     "release:major": "./scripts/release.sh major --ci"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
+    "@biomejs/biome": "^2.5.3",
     "auto-changelog": "^2.6.0",
     "browser-sync": "^3.0.4",
     "gray-matter": "^4.0.3",
-    "js-yaml": "^4.1.0",
-    "release-it": "^20.2.0"
+    "js-yaml": "^5.2.1",
+    "release-it": "^20.2.1"
   },
   "dependencies": {
     "@metalsmith/collections": "^2.0.0",
@@ -57,22 +57,22 @@
     "@wernerglinka/marked-image-with-class": "^1.0.0",
     "@wernerglinka/marked-link-with-class": "^1.0.0",
     "@wernerglinka/marked-paragraph-with-class": "^1.0.1",
-    "autoprefixer": "^10.5.0",
+    "autoprefixer": "^10.5.2",
     "cssnano": "^8.0.2",
     "depcheck": "^1.4.7",
     "jstransformer-nunjucks": "^1.2.0",
-    "marked": "^18.0.5",
+    "marked": "^18.0.6",
     "metalsmith": "^2.7.0",
     "metalsmith-bundled-components": "^1.2.0",
     "metalsmith-menu-plus": "^1.0.1",
     "metalsmith-optimize-html": "^0.10.0",
     "metalsmith-optimize-images": "^0.12.0",
     "metalsmith-safe-links": "^2.1.0",
-    "metalsmith-sectioned-blog-pagination": "^1.3.1",
+    "metalsmith-sectioned-blog-pagination": "^1.4.0",
     "metalsmith-seo": "^1.1.3",
     "metalsmith-sitemap": "^1.2.2",
-    "postcss": "^8.5.15",
-    "shiki": "^4.2.0"
+    "postcss": "^8.5.16",
+    "shiki": "^4.3.1"
   },
   "engines": {
     "node": ">=22.0.0"
